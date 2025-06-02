@@ -18,8 +18,14 @@ export const useAuth = () => {
     user.value = u;
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+  const signUp = async (name: string, email: string, password: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { name },
+      },
+    });
     if (error) throw error;
     user.value = data.user;
   };

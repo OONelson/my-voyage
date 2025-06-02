@@ -33,6 +33,11 @@ const router = createRouter({
       component: () => import("../views/StartVoyageView.vue"),
       props: true,
     },
+    {
+      path: "/:pathMatch(.*)*",
+      name: "notFound",
+      component: () => import("../views/NotFoundView.vue"),
+    },
   ],
 });
 
