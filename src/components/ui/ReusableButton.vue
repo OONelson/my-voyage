@@ -6,7 +6,7 @@
     :disabled="disabled"
     :icon="icon"
     @click="handleClick"
-    class="px-4 py-1 text-background"
+    class="px-4 py-1 text-buttonLightcolor cursor-pointer"
   >
     {{ label }}
     <template v-if="$slots.icon">
@@ -18,40 +18,28 @@
 <script setup lang="ts">
 import type { PropType } from "vue";
 
-const props = defineProps({
-  label: {
-    type: String,
-    default: "Button",
-  },
-  variant: {
-    type: String as PropType<"solid" | "outline" | "ghost" | "link">,
-    default: "solid",
-  },
-  color: {
-    type: String as PropType<
-      | "primary"
-      | "secondary"
-      | "success"
-      | "info"
-      | "warning"
-      | "error"
-      | "neutral"
-    >,
-    default: "primary",
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  icon: {
-    type: String,
-    default: undefined,
-  },
-});
+const {
+  loading,
+  onClick = () => {},
+  variant,
+  label,
+  icon,
+  disabled,
+} = withDefaults(
+  defineProps<{
+    loading?: boolean;
+    onClick?: () => void;
+    variant?: "primary" | "secondary" | "danger" | "warning" | "ghost";
+    label: string;
+    icon?: () => void;
+    disabled?: boolean;
+  }>(),
+  {
+    loading: false,
+    variant: "primary",
+    disabled: false,
+  }
+);
 
 const emit = defineEmits<{
   (e: "click", event: MouseEvent): void;

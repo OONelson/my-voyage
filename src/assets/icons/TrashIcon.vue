@@ -1,10 +1,10 @@
 <template>
   <svg
-    viewBox="0 0 24 24"
-    fill="none"
-    width="18"
-    height="18"
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    :fill="fillColor"
+    :width="size"
+    :height="size"
   >
     <g
       stroke="currentColor"
@@ -18,3 +18,17 @@
     </g>
   </svg>
 </template>
+<script lang="ts">
+export default {
+  name: "TrashIcon",
+  props: {
+    fillColor: {
+      type: String,
+      default: "#f4f4f4",
+    },
+    size: {
+      default: "18",
+    },
+  },
+};
+</script>

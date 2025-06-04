@@ -1,9 +1,10 @@
 <template>
   <svg
-    viewBox="0 0 24 24"
-    width="16"
-    height="16"
     xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    :fill="fillColor"
+    :width="size"
+    :height="size"
   >
     <g
       fill="none"
@@ -17,3 +18,17 @@
     </g>
   </svg>
 </template>
+<script lang="ts">
+export default {
+  name: "EditIcon",
+  props: {
+    fillColor: {
+      type: String,
+      default: "#f4f4f4",
+    },
+    size: {
+      default: "18",
+    },
+  },
+};
+</script>

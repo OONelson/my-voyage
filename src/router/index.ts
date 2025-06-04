@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import WelcomeView from "../views/WelcomeView.vue";
 import { useAuth } from "../composables/useAuth";
 
 const router = createRouter({
@@ -7,36 +7,41 @@ const router = createRouter({
   routes: [
     {
       path: "/",
+      name: "Welcome",
+      component: WelcomeView,
+    },
+    {
+      path: "/home",
       name: "home",
-      component: HomeView,
+      component: () => import("@/views/HomeView.vue"),
     },
     {
       path: "/auth",
       name: "login",
-      component: () => import("../views/Login.vue"),
+      component: () => import("@/views/Login.vue"),
     },
     {
       path: "/voyages",
       name: "voyages",
-      component: () => import("../views/VoyagesView.vue"),
+      component: () => import("@/views/VoyagesView.vue"),
       props: true,
     },
     {
       path: "/voyages/:id",
       name: "singleVoyage",
-      component: () => import("../views/SingleVoyageView.vue"),
+      component: () => import("@/views/SingleVoyageView.vue"),
       props: true,
     },
     {
       path: "/start-voyage",
       name: "startVoyage",
-      component: () => import("../views/StartVoyageView.vue"),
+      component: () => import("@/views/StartVoyageView.vue"),
       props: true,
     },
     {
       path: "/:pathMatch(.*)*",
       name: "notFound",
-      component: () => import("../views/NotFoundView.vue"),
+      component: () => import("@/views/NotFoundView.vue"),
     },
   ],
 });

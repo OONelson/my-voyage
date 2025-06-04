@@ -1,7 +1,8 @@
 <template>
-  <div>
-    <h1>header</h1>
-  </div>
+  <header>
+    <h4>myVoyage</h4>
+    <navLink>about</navLink>
+  </header>
 </template>
 
 <script setup lang="ts"></script>

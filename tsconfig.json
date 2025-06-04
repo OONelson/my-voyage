@@ -6,6 +6,9 @@
   ],
   "include": ["/shims-vue.d.ts"],
   "compilerOptions": {
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }
