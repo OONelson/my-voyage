@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import WelcomeView from "../views/WelcomeView.vue";
+import HomeView from "@/views/HomeView.vue";
 import { useAuth } from "../composables/useAuth";
 
 const router = createRouter({
@@ -7,13 +7,8 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      name: "Welcome",
-      component: WelcomeView,
-    },
-    {
-      path: "/home",
       name: "home",
-      component: () => import("@/views/HomeView.vue"),
+      component: HomeView,
     },
     {
       path: "/auth",

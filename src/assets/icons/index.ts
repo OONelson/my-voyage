@@ -6,3 +6,4 @@ export { default as EditIcon } from "./EditIcon.vue";
 export { default as GoogleIcon } from "./GoogleIcon.vue";
 export { default as EyeIcon } from "./EyeIcon.vue";
 export { default as EyeSlashIcon } from "./EyeSlashIcon.vue";
+export { default as Menu } from "./Menu.vue";
