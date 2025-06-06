@@ -1,6 +1,6 @@
 export { default as ArrowBack } from "./ArrowBack.vue";
 export { default as ArrowForward } from "./ArrowForward.vue";
-export { default as HorizontalDots } from "./HorizontalDots.vue";
+export { default as VerticalThreeDots } from "./VerticalThreeDots.vue";
 export { default as TrashIcon } from "./TrashIcon.vue";
 export { default as EditIcon } from "./EditIcon.vue";
 export { default as GoogleIcon } from "./GoogleIcon.vue";
@@ -8,3 +8,4 @@ export { default as EyeIcon } from "./EyeIcon.vue";
 export { default as EyeSlashIcon } from "./EyeSlashIcon.vue";
 export { default as CloseIcon } from "./CloseIcon.vue";
 export { default as Menu } from "./Menu.vue";
+export { default as Info } from "./InfoIcon.vue";
