@@ -1,0 +1,26 @@
+<template>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    :width="size"
+    :height="size"
+  >
+    <path
+      d="m12 13.4-4.9 4.9q-.275.275-.7.275t-.7-.275-.275-.7.275-.7l4.9-4.9-4.9-4.9q-.275-.275-.275-.7t.275-.7.7-.275.7.275l4.9 4.9 4.9-4.9q.275-.275.7-.275t.7.275.275.7-.275.7L13.4 12l4.9 4.9q.275.275.275.7t-.275.7-.7.275-.7-.275z"
+    />
+  </svg>
+</template>
+<script lang="ts">
+export default {
+  name: "closeIcon",
+  props: {
+    fillColor: {
+      type: String,
+      default: "#f4f4f4",
+    },
+    size: {
+      default: "18",
+    },
+  },
+};
+</script>

@@ -27,12 +27,7 @@ const router = createRouter({
       component: () => import("@/views/SingleVoyageView.vue"),
       props: true,
     },
-    {
-      path: "/start-voyage",
-      name: "startVoyage",
-      component: () => import("@/views/StartVoyageView.vue"),
-      props: true,
-    },
+
     {
       path: "/:pathMatch(.*)*",
       name: "notFound",
