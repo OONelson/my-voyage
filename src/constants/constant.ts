@@ -12,6 +12,8 @@ type VoyageTypeInfo = {
   user_id: number;
   location: string;
   date: Date;
+  rating: 1 | 2 | 3 | 4 | 5;
+  comment?: string;
   createdAt: Date;
 };
 
@@ -34,6 +36,7 @@ export const Voyages = computed<VoyageTypeInfo[]>(() => [
     user_id: 101,
     location: "Bali, Indonesia",
     date: new Date("2023-07-15"),
+    rating: 1,
     createdAt: new Date("2023-06-01T10:00:00Z"),
   },
   {
@@ -43,6 +46,7 @@ export const Voyages = computed<VoyageTypeInfo[]>(() => [
     user_id: 102,
     location: "Berlin, Germany",
     date: new Date("2023-09-22"),
+    rating: 5,
     createdAt: new Date("2023-08-10T14:30:00Z"),
   },
   {
@@ -52,6 +56,7 @@ export const Voyages = computed<VoyageTypeInfo[]>(() => [
     user_id: 103,
     location: "Rocky Mountains, USA",
     date: new Date("2023-05-30"),
+    rating: 2,
     createdAt: new Date("2023-05-15T09:15:00Z"),
   },
   {
@@ -61,6 +66,7 @@ export const Voyages = computed<VoyageTypeInfo[]>(() => [
     user_id: 104,
     location: "Kyoto, Japan",
     date: new Date("2023-11-05"),
+    rating: 3,
     createdAt: new Date("2023-10-20T11:45:00Z"),
   },
   {
@@ -70,6 +76,7 @@ export const Voyages = computed<VoyageTypeInfo[]>(() => [
     user_id: 105,
     location: "California, USA",
     date: new Date("2023-08-12"),
+    rating: 5,
     createdAt: new Date("2023-07-25T16:20:00Z"),
   },
 ]);

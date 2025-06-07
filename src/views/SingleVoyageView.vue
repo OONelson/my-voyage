@@ -1,5 +1,5 @@
 <template>
-  <main class="single-voyage" v-if="voyage">
+  <main class="max-w-[800px] my-2 mx-auto px-3" v-if="voyage">
     <article class="rounded-lg p-2 my-2 bg-white shadow-md">
       <img
         v-if="voyage.imageUrl"
@@ -12,12 +12,19 @@
         <VerticalThreeDots fillColor="textblack100" />
       </div>
       <p>{{ voyage.location }} • {{ formatDate(voyage.date) }}</p>
+
+      <div class="mt-3 pt-3 border-t text-sm text-gray-500">
+        <Rating :rating="voyage.rating" show-comment />
+      </div>
     </article>
-    <div class="notes">
+    <div class="bg-[#f8f8f8] rounded-lg p-2 mb-2">
       <h3>Notes</h3>
       <p>{{ voyage.notes }}</p>
     </div>
-    <router-link to="/voyages" class="back-link">← Back to Voyages</router-link>
+    <router-link to="/voyages" class="flex items-center">
+      <ArrowBack fillColor="#498a80" />
+      <span class="text-accent50"> Back to Voyages </span>
+    </router-link>
   </main>
   <div v-else>
     <p>Loading voyage...</p>
@@ -27,7 +34,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
-import { MergedVoyages } from "@/constants/constant.ts"; // Adjust import path
+import { MergedVoyages } from "@/constants/constant.ts";
+import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
+import ArrowBack from "../assets/icons/ArrowBack.vue";
 
 const route = useRoute();
 const voyage = ref(null);
@@ -46,29 +55,4 @@ const formatDate = (date) => {
 };
 </script>
 
-<style scoped>
-.single-voyage {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-.voyage-image {
-  width: 100%;
-  border-radius: 8px;
-  margin: 1rem 0;
-}
-.meta {
-  color: #666;
-  font-size: 1.1rem;
-}
-.notes {
-  background: #f8f8f8;
-  padding: 1rem;
-  border-radius: 8px;
-}
-.back-link {
-  display: inline-block;
-  margin-top: 2rem;
-  color: #42b983;
-}
-</style>
+<style scoped></style>

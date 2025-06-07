@@ -11,6 +11,7 @@ export default {
         background100: "#fcfcfc",
         background200: "#fbf9f5",
         text: "#717171",
+        textblack50: "#4c4c4c",
         textblack100: "#272727",
         textblack200: "#121212",
         textblack300: "#020202",
