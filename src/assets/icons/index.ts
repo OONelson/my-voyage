@@ -9,3 +9,4 @@ export { default as EyeSlashIcon } from "./EyeSlashIcon.vue";
 export { default as CloseIcon } from "./CloseIcon.vue";
 export { default as Menu } from "./Menu.vue";
 export { default as Info } from "./InfoIcon.vue";
+export { default as Logo } from "./Logo.vue";

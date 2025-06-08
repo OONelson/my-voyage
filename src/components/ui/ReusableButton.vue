@@ -16,30 +16,22 @@
 </template>
 
 <script setup lang="ts">
-import type { PropType } from "vue";
-
-const {
-  loading,
-  onClick = () => {},
-  variant,
-  label,
-  icon,
-  disabled,
-} = withDefaults(
-  defineProps<{
-    loading?: boolean;
-    onClick?: () => void;
-    variant?: "primary" | "secondary" | "danger" | "warning" | "ghost";
-    label: string;
-    icon?: () => void;
-    disabled?: boolean;
-  }>(),
-  {
-    loading: false,
-    variant: "primary",
-    disabled: false,
-  }
-);
+const props = defineProps<{
+  loading?: boolean;
+  onClick?: () => void;
+  variant?: "ghost" | "link" | "solid" | "outline" | "soft" | "subtle";
+  label?: string;
+  icon?: string;
+  disabled?: boolean;
+  color?:
+    | "primary"
+    | "secondary"
+    | "success"
+    | "info"
+    | "warning"
+    | "error"
+    | "neutral";
+}>();
 
 const emit = defineEmits<{
   (e: "click", event: MouseEvent): void;

@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     Header: typeof import('./src/components/Header.vue')['default']
     Hero: typeof import('./src/components/Hero.vue')['default']
+    MapView: typeof import('./src/components/MapView.vue')['default']
     Rating: typeof import('./src/components/Rating.vue')['default']
     ReusableButton: typeof import('./src/components/ui/ReusableButton.vue')['default']
     ReusableInput: typeof import('./src/components/ui/ReusableInput.vue')['default']

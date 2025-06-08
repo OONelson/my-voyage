@@ -18,9 +18,13 @@
       </div>
     </article>
     <div class="bg-[#f8f8f8] rounded-lg p-2 mb-2">
-      <h3>Notes</h3>
+      <div class="flex justify-between items-center pb-2">
+        <h4 class="text-textblack100 font-normal text-xl">Notes</h4>
+        <EditIcon fill-color="textblack100" />
+      </div>
       <p>{{ voyage.notes }}</p>
     </div>
+    <MapView />
     <router-link to="/voyages" class="flex items-center">
       <ArrowBack fillColor="#498a80" />
       <span class="text-accent50"> Back to Voyages </span>
@@ -34,9 +38,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import MapView from "../components/MapView.vue";
 import { MergedVoyages } from "@/constants/constant.ts";
 import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
+import EditIcon from "../assets/icons/EditIcon.vue";
 
 const route = useRoute();
 const voyage = ref(null);

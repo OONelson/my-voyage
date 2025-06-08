@@ -1,12 +1,13 @@
 <template>
   <form
     @submit.prevent="handleLogin"
-    className=" flex flex-col justify-center items-start px-2"
+    className="flex flex-col justify-center items-start px-2"
   >
     <div class="py-3">
       <ArrowBack fillColor="textblack300" />
     </div>
     <div class="mb-10">
+      <Logo />
       <h3 class="text-textblack300 font-semibold">
         {{ isLogin ? "Welcome back" : "Sign Up" }}
       </h3>
@@ -38,9 +39,9 @@
       <ReusableButton
         type="button"
         id="togglePassword"
+        @click="togglePasswordVisibility"
         class="absolute inset-y-0 right-10 flex items-center px-3 text-black hover:text-gray-700"
-      >
-      </ReusableButton>
+      />
     </div>
 
     <ReusableButton
@@ -53,9 +54,9 @@
     </ReusableButton>
 
     <div class="flex justify-center items-center my-4">
-      <div class="flex-grow w-[100px] border-t border-border200" />
+      <div class="flex-grow w-[130px] border-t border-border200" />
       <span class="mx-4 text-sm text-gray-500 uppercase">or</span>
-      <div class="flex-grow w-[100px] border-t border-border200" />
+      <div class="flex-grow w-[130px] border-t border-border200" />
     </div>
 
     <button
@@ -77,11 +78,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent } from "vue";
+defineOptions({ name: "UserLoginView" });
+import { ref } from "vue";
 import { useAuth } from "../composables/useAuth";
 import ArrowForward from "../assets/icons/ArrowForward.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
 import GoogleIcon from "../assets/icons/GoogleIcon.vue";
+import Logo from "../assets/icons/Logo.vue";
+import ReusableButton from "../components/ui/ReusableButton.vue";
+import ReusableInput from "../components/ui/ReusableInput.vue";
 
 const username = ref<string>("");
 const email = ref<string>("");

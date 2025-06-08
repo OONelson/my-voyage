@@ -36,8 +36,7 @@
 
 <script setup lang="ts">
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import { NavPaths } from "@/constants/constant.ts";
-import { computed } from "vue";
+import { NavPaths } from "../constants/constant.ts";
 import { useRoute } from "vue-router";
 
 interface NavItem {
@@ -69,7 +68,6 @@ const close = () => {
 </script>
 
 <style scoped>
-/* Transition effects */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;

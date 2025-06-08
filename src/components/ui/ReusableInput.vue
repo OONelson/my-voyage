@@ -1,5 +1,5 @@
 <template>
-  <div :class="{ 'text-red-500 font-medium': error }">
+  <div>
     <label v-if="label" :for="id" class="text-textblack100 font-medium">
       {{ label }}
     </label>
@@ -13,14 +13,14 @@
         :disabled="disabled"
         :required="required"
         @input="onInput"
-        class="appearance-none mt-1.5 mb-4 border rounded-lg shadow-sm w-full py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100 focus:bg-inputColor200"
+        class="mt-1.5 mb-4 border rounded-lg shadow-sm min-w-[315px] py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100 focus:bg-inputColor200"
       />
 
       <button
         v-if="hasToggle"
         type="button"
         @click="togglePasswordVisibility"
-        class="absolute right-1.5 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+        class="w-min absolute right-1.5 top-1/2 transform -translate-y-1/2"
         :aria-label="showPassword ? 'Hide password' : 'Show password'"
       >
         <EyeIcon v-if="showPassword" fillColor="textblack100" />
@@ -28,9 +28,9 @@
       </button>
     </div>
 
-    <div v-if="error" class="error-message">
+    <!-- <div v-if="error" class="error-message">
       {{ error }}
-    </div>
+    </div> -->
   </div>
 </template>
 
