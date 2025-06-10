@@ -6,7 +6,7 @@
       </span>
     </div>
 
-    <span v-if="showComment" class="ml-2 text-sm text-gray-600">
+    <span v-if="showComment" class="ml-2 text-sm text-textblack100 font-medium">
       {{ getRatingComment(rating) }}
     </span>
   </div>
@@ -14,6 +14,10 @@
 <script setup lang="ts">
 import type { Rating } from "../types/Voyage";
 import { getRatingColor, getRatingComment } from "../utils/ratingUtils";
+
+defineOptions({
+  name: "VoyageRating",
+});
 
 defineProps<{
   rating: Rating;

@@ -4,10 +4,10 @@
       class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow mb-5 px-2 py-2"
       :class="{ 'shadow-md': scrolled }"
     >
-      <div class="flex items-center justify-center">
+      <router-link to="/" class="flex items-center justify-center">
         <Logo />
-        <h3 class="text-textblack100">voyages</h3>
-      </div>
+      </router-link>
+      <h3 class="text-textblack100">voyages</h3>
       <Menu @click="openMenu" fillColor="text-textblack100" size="22" />
     </div>
     <SideSlider :isOpen="isMenuOpen" @close="closeMenu" />
@@ -26,12 +26,50 @@
         />
         <div class="flex justify-between items-center">
           <h4 class="pt-2 text-textblack100 font-medium">{{ voyage.title }}</h4>
-          <VerticalThreeDots fillColor="textblack100" />
+          <div @click.stop="openModal(voyage.id)" class="cursor-pointer">
+            <VerticalThreeDots fillColor="textblack100" />
+          </div>
+
+          <ReusableModal
+            :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
+            size="sm"
+            @close="closeModal"
+          >
+            <div>
+              <div class="flex justify-end pb-2" @click="closeModal">
+                <CloseIcon fillColor="border300" />
+              </div>
+              <div class="space-y-1">
+                <div
+                  class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                >
+                  <span> Edit Voyage </span>
+                  <EditIcon />
+                </div>
+                <!-- <button class="w-full px-2 hover:bg-gray-100 rounded">
+                  Share Voyage
+                </button> -->
+                <div
+                  class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+                  @click="deleteVoyage(voyage.id)"
+                >
+                  <span> Delete Voyage </span>
+                  <TrashIcon />
+                </div>
+              </div>
+            </div>
+          </ReusableModal>
         </div>
         <p class="text-textblack50">
-          {{ voyage.location }} • {{ formatDate(voyage.date) }}
+          {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
         </p>
-        <div class="mt-3 pt-3 border-t text-sm text-gray-500">
+        <p>
+          <span class="text-textblack100 font-medium"> Created: </span>
+          <span class="textblack50">
+            {{ relativeCreatedAt(voyage.createdAt) }}
+          </span>
+        </p>
+        <div class="mt-3 pt-3 border-t text-sm">
           <Rating :rating="voyage.rating" show-comment />
         </div>
       </article>
@@ -43,19 +81,42 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { MergedVoyages as mergedVoyagesData } from "../constants/constant";
+import { dateAndTime } from "../utils/date-and-timeUtils";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Menu from "@/assets/icons/Menu.vue";
 import Rating from "@/components/Rating.vue";
 import SideSlider from "@/components/SideSlider.vue";
+import ReusableModal from "@/components/ui/ReusableModal.vue";
 import Logo from "../assets/icons/Logo.vue";
+import CloseIcon from "../assets/icons/CloseIcon.vue";
+import EditIcon from "../assets/icons/EditIcon.vue";
+import TrashIcon from "../assets/icons/TrashIcon.vue";
+
+const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
 const router = useRouter();
 
-const scrolled = ref(false);
+const scrolled = ref<boolean>(false);
 
-const isMenuOpen = ref(false);
+const isMenuOpen = ref<boolean>(false);
 
+const isSmallModalOpen = ref<boolean>(false);
+const currentVoyageId = ref<string | number | null>(null);
 const MergedVoyages = ref(mergedVoyagesData);
+
+// Three dots action
+const openModal = (voyageId: string | number | null) => {
+  currentVoyageId.value = voyageId;
+  isSmallModalOpen.value = true;
+};
+const closeModal = () => {
+  isSmallModalOpen.value = false;
+  currentVoyageId.value = null;
+};
+const deleteVoyage = (voyageId: string | number | null) => {
+  // Your delete logic here
+  closeModal();
+};
 
 const openMenu = () => {
   isMenuOpen.value = true;
@@ -66,14 +127,6 @@ const closeMenu = () => {
 };
 const navigateToVoyage = (id: number) => {
   router.push(`/voyages/${id}`);
-};
-
-const formatDate = (date: Date) => {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 };
 
 onMounted(() => {

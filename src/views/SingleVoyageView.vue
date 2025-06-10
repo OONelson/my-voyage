@@ -9,11 +9,51 @@
       />
       <div class="flex justify-between items-center">
         <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
-        <VerticalThreeDots fillColor="textblack100" />
+        <div @click.stop="openModal(voyage.id)" class="cursor-pointer">
+          <VerticalThreeDots fillColor="textblack100" />
+        </div>
       </div>
-      <p>{{ voyage.location }} • {{ formatDate(voyage.date) }}</p>
 
-      <div class="mt-3 pt-3 border-t text-sm text-gray-500">
+      <ReusableModal
+        :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
+        size="sm"
+        @close="closeModal"
+      >
+        <div>
+          <div class="flex justify-end pb-2" @click="closeModal">
+            <CloseIcon fillColor="border300" />
+          </div>
+          <div class="space-y-1">
+            <div
+              class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+            >
+              <span> Edit Voyage </span>
+              <EditIcon />
+            </div>
+            <!-- <button class="w-full px-2 hover:bg-gray-100 rounded">
+                  Share Voyage
+                </button> -->
+            <div
+              class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+              @click="deleteVoyage(voyage.id)"
+            >
+              <span> Delete Voyage </span>
+              <TrashIcon />
+            </div>
+          </div>
+        </div>
+      </ReusableModal>
+
+      <p class="text-textblack50">
+        {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
+      </p>
+      <p>
+        <span class="text-textblack100 font-medium"> Created: </span>
+        <span class="textblack50">
+          {{ relativeCreatedAt(voyage.createdAt) }}
+        </span>
+      </p>
+      <div class="mt-3 pt-3 border-t text-sm">
         <Rating :rating="voyage.rating" show-comment />
       </div>
     </article>
@@ -25,7 +65,7 @@
       <p>{{ voyage.notes }}</p>
     </div>
     <MapView />
-    <router-link to="/voyages" class="flex items-center">
+    <router-link to="/voyages" class="flex items-center py-4">
       <ArrowBack fillColor="#498a80" />
       <span class="text-accent50"> Back to Voyages </span>
     </router-link>
@@ -35,17 +75,37 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { dateAndTime } from "../utils/date-and-timeUtils";
 import MapView from "../components/MapView.vue";
+import ReusableModal from "../components/ui/ReusableModal.vue";
 import { MergedVoyages } from "@/constants/constant.ts";
 import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
+import CloseIcon from "../assets/icons/CloseIcon.vue";
+import TrashIcon from "../assets/icons/TrashIcon.vue";
 
+const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const route = useRoute();
 const voyage = ref(null);
+const isSmallModalOpen = ref<boolean>(false);
+const currentVoyageId = ref<string | number | null>(null);
+
+const openModal = (voyageId: string | number | null) => {
+  currentVoyageId.value = voyageId;
+  isSmallModalOpen.value = true;
+};
+const closeModal = () => {
+  isSmallModalOpen.value = false;
+  currentVoyageId.value = null;
+};
+const deleteVoyage = (voyageId: string | number | null) => {
+  // Your delete logic here
+  closeModal();
+};
 
 onMounted(() => {
   const voyageId = Number(route.params.id);

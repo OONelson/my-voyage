@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { PropType, computed, useSlots } from "vue";
+import { type PropType, computed, useSlots } from "vue";
 
 const props = defineProps({
   isOpen: Boolean,
@@ -57,10 +57,10 @@ const emit = defineEmits<{
 }>();
 
 const sizeClasses = computed(() => ({
-  "max-w-sm": props.size === "sm",
-  "max-w-md": props.size === "md",
-  "max-w-lg": props.size === "lg",
-  "max-w-xl": props.size === "xl",
+  "max-w-[200px]": props.size === "sm",
+  "max-w-[400px]": props.size === "md",
+  "max-w-[500px]": props.size === "lg",
+  "max-w-[600px]": props.size === "xl",
 }));
 
 const closeModal = () => {
