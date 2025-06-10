@@ -1,16 +1,32 @@
 <template>
   <main>
-    <div
+    <header
       class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow mb-5 px-2 py-2"
       :class="{ 'shadow-md': scrolled }"
     >
-      <router-link to="/" class="flex items-center justify-center">
-        <Logo />
-      </router-link>
-      <h3 class="text-textblack100">voyages</h3>
-      <Menu @click="openMenu" fillColor="text-textblack100" size="22" />
-    </div>
-    <SideSlider :isOpen="isMenuOpen" @close="closeMenu" />
+      <div class="flex items-center">
+        <router-link to="/" class="flex items-center justify-center">
+          <Logo />
+        </router-link>
+        <h3 class="text-textblack100">voyages</h3>
+      </div>
+      <div
+        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-10 cursor-pointer"
+      >
+        <UTooltip text="Benjamin Canac">
+          <UAvatar
+            src="https://github.com/benjamincanac.png"
+            alt="Benjamin Canac"
+            full
+            @click="openProfileModal"
+          />
+        </UTooltip>
+      </div>
+    </header>
+
+    <!-- Profile modal -->
+    <UserModal />
+
     <section class="px-3 flex flex-col justify-center items-center">
       <article
         v-for="voyage in MergedVoyages"
@@ -83,9 +99,7 @@ import { useRouter } from "vue-router";
 import { MergedVoyages as mergedVoyagesData } from "../constants/constant";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
-import Menu from "@/assets/icons/Menu.vue";
 import Rating from "@/components/Rating.vue";
-import SideSlider from "@/components/SideSlider.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import Logo from "../assets/icons/Logo.vue";
 import CloseIcon from "../assets/icons/CloseIcon.vue";
@@ -98,7 +112,7 @@ const router = useRouter();
 
 const scrolled = ref<boolean>(false);
 
-const isMenuOpen = ref<boolean>(false);
+const isProfileModal = ref<boolean>(false);
 
 const isSmallModalOpen = ref<boolean>(false);
 const currentVoyageId = ref<string | number | null>(null);
@@ -118,12 +132,12 @@ const deleteVoyage = (voyageId: string | number | null) => {
   closeModal();
 };
 
-const openMenu = () => {
-  isMenuOpen.value = true;
+const openProfileModal = () => {
+  isProfileModal.value = true;
 };
 
 const closeMenu = () => {
-  isMenuOpen.value = false;
+  isProfileModal.value = false;
 };
 const navigateToVoyage = (id: number) => {
   router.push(`/voyages/${id}`);

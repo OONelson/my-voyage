@@ -81,7 +81,7 @@ import { useRoute } from "vue-router";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 import MapView from "../components/MapView.vue";
 import ReusableModal from "../components/ui/ReusableModal.vue";
-import { MergedVoyages } from "@/constants/constant.ts";
+import { MergedVoyages } from "../constants/constant.ts";
 import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
@@ -112,13 +112,13 @@ onMounted(() => {
   voyage.value = MergedVoyages.value.find((v) => v.id === voyageId);
 });
 
-const formatDate = (date) => {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
+// const formatDate = (date) => {
+//   return date.toLocaleDateString("en-US", {
+//     year: "numeric",
+//     month: "long",
+//     day: "numeric",
+//   });
+// };
 </script>
 
 <style scoped></style>
