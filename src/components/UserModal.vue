@@ -1,166 +1,151 @@
 <template>
-  <Transition name="fade">
-    <div
-      v-if="isOpen"
-      class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70 flex items-center justify-center p-4"
-      @click.self="close"
-    >
-      <!-- Settings Modal -->
-      <div
-        aria-labelledby="settings-title"
-        aria-modal="true"
-        class="w-full max-w-md bg-[#2c2c38] rounded-2xl p-6 text-white font-sans"
-        role="dialog"
-      >
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold" id="settings-title">Settings</h2>
-          <button
-            aria-label="Close settings"
-            class="text-gray-400 hover:text-gray-300 focus:outline-none"
-            @click="emit('close')"
-          >
-            <i class="fas fa-times text-lg"></i>
-          </button>
-        </div>
-
-        <!-- Tabs -->
-        <nav
-          aria-label="Settings tabs"
-          class="flex rounded-lg bg-[#4b4b5a] text-white text-sm font-normal mb-6 select-none"
-        >
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            class="flex-1 py-2"
-            :class="{
-              'rounded-l-lg': tab.id === 'general',
-              'rounded-r-lg': tab.id === 'about',
-              'bg-[#6b6b7a] rounded-lg font-semibold cursor-default':
-                activeTab === tab.id,
-              'hover:bg-[#5a5a6a]': activeTab !== tab.id,
-            }"
-            @click="activeTab = tab.id"
-          >
-            {{ tab.label }}
-          </button>
-        </nav>
-
-        <!-- Profile Tab Content -->
-        <form class="space-y-6 text-sm" v-if="activeTab === 'profile'">
-          <!-- Name Field -->
-          <div
-            class="flex justify-between items-center border-b border-[#44444f] pb-2"
-          >
-            <label class="text-white" for="name">Name</label>
-            <div class="flex items-center space-x-1">
-              <span class="font-semibold">{{ user.name }}</span>
-              <img
-                alt="Google logo"
-                class="inline-block h-5 w-5"
-                src="https://storage.googleapis.com/a1aa/image/fe59ea75-ae7a-49bc-e829-92e804a25f27.jpg"
-              />
-            </div>
-          </div>
-
-          <!-- Email Field -->
-          <div
-            class="flex justify-between items-center border-b border-[#44444f] pb-2"
-          >
-            <label class="text-white" for="email">Email address</label>
-            <span class="font-semibold">{{ maskedEmail }}</span>
-          </div>
-
-          <!-- Phone Field -->
-          <div
-            class="flex justify-between items-center border-b border-[#44444f] pb-2"
-          >
-            <label class="text-white" for="phone">Phone number</label>
-            <span class="font-semibold">{{ user.phone || "-" }}</span>
-          </div>
-
-          <!-- Toggle Setting -->
-          <div class="border-b border-[#44444f] pb-4">
-            <div class="flex justify-between items-center mb-1">
-              <label class="font-semibold cursor-pointer" for="improve">
-                Improve the model for everyone
-              </label>
-              <ToggleSwitch v-model="settings.improveModel" />
-            </div>
-            <p class="text-gray-500 text-xs leading-tight max-w-[18rem]">
-              Allow your content to be used to train our models and improve our
-              services. We secure your data privacy.
-            </p>
-          </div>
-
-          <!-- Export Data -->
-          <div class="border-b border-[#44444f] pb-4">
-            <p class="font-semibold mb-1">Export data</p>
-            <p class="text-gray-500 text-xs leading-tight mb-2 max-w-[18rem]">
-              This data includes your account information and all chat history.
-              Exporting may take some time. The download link will be valid for
-              7 days.
-            </p>
-            <button
-              class="text-white border border-gray-500 rounded-md px-4 py-1 text-sm hover:bg-gray-700 focus:outline-none"
-              type="button"
-              @click="exportData"
-            >
-              Export
-            </button>
-          </div>
-
-          <!-- Log Out -->
-          <div
-            class="flex justify-between items-center border-b border-[#44444f] pb-4"
-          >
-            <p class="font-normal">Log out of all devices</p>
-            <button
-              class="text-white border border-gray-500 rounded-md px-4 py-1 text-sm hover:bg-gray-700 focus:outline-none"
-              type="button"
-              @click="logoutAllDevices"
-            >
-              Log out
-            </button>
-          </div>
-
-          <!-- Delete Chats -->
-          <div
-            class="flex justify-between items-center border-b border-[#44444f] pb-4"
-          >
-            <p class="font-normal">Delete all chats</p>
-            <button
-              class="bg-red-600 rounded-md px-4 py-1 text-sm font-semibold hover:bg-red-700 focus:outline-none"
-              type="button"
-              @click="confirmDeleteChats"
-            >
-              Delete all
-            </button>
-          </div>
-
-          <!-- Delete Account -->
-          <div class="flex justify-between items-center">
-            <p class="font-normal">Delete account</p>
-            <button
-              class="bg-red-600 rounded-md px-4 py-1 text-sm font-semibold hover:bg-red-700 focus:outline-none"
-              type="button"
-              @click="confirmDeleteAccount"
-            >
-              Delete
-            </button>
-          </div>
-        </form>
-      </div>
+  <div class="w-full max-w-lg rounded-2xl">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
+      <CloseIcon
+        fillColor="border300"
+        class="flex justify-end"
+        @click="handleClose"
+      />
     </div>
-  </Transition>
+
+    <!-- Tabs -->
+    <nav
+      aria-label="Settings tabs"
+      class="h-12 flex rounded-lg bg-gray-100 text-gray-600 text-sm font-medium mb-8 select-none"
+    >
+      <button
+        v-for="tab in tabs"
+        :key="tab.id"
+        class="flex justify-center items-center flex-1 h-10 mt-1"
+        :class="{
+          'rounded-l-lg': tab.id === 'general',
+          'rounded-r-lg': tab.id === 'about',
+          'bg-white  text-accent200 shadow-sm rounded-lg font-semibold':
+            activeTab === tab.id,
+          'hover:bg-gray-50': activeTab !== tab.id,
+        }"
+        @click="activeTab = tab.id"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
+
+    <!-- Profile Tab Content -->
+    <form class="space-y-6" v-if="activeTab === 'profile'">
+      <!-- Name Field -->
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-3"
+      >
+        <label class="text-gray-700 font-medium">Name</label>
+        <div class="flex items-center space-x-2">
+          <span class="font-semibold text-gray-800">{{ user.name }}</span>
+          <img
+            alt="Google logo"
+            class="inline-block h-5 w-5"
+            src="https://storage.googleapis.com/a1aa/image/fe59ea75-ae7a-49bc-e829-92e804a25f27.jpg"
+          />
+        </div>
+      </div>
+
+      <!-- Email Field -->
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-3"
+      >
+        <label class="text-gray-700 font-medium">Email </label>
+        <span class="font-semibold text-gray-800">{{ maskedEmail }}</span>
+      </div>
+
+      <!-- Phone Field -->
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-3"
+      >
+        <label class="text-gray-700 font-medium">Phone number</label>
+        <span class="font-semibold text-gray-500">{{
+          user.phone || "Not set"
+        }}</span>
+      </div>
+
+      <!-- Export Data -->
+      <div class="border-b border-gray-200 pb-6">
+        <p class="font-medium text-gray-700 mb-2">Export data</p>
+        <p class="text-gray-500 text-sm mb-4">
+          This data includes your account information and all chat history.
+          Exporting may take some time. The download link will be valid for 7
+          days.
+        </p>
+        <ReusableButton
+          class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-50 focus:outline-none transition-colors"
+          type="button"
+          label="Export Data"
+          @click="exportData"
+        />
+      </div>
+
+      <!-- Log Out -->
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-6"
+      >
+        <p class="text-gray-700">Log out of all devices</p>
+        <ReusableButton
+          class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none transition-colors"
+          type="button"
+          @click="logoutAllDevices"
+          label="Log Out"
+        />
+      </div>
+
+      <!-- Delete Account -->
+      <div class="flex justify-between items-center pt-2">
+        <p class="text-gray-700">Delete account</p>
+        <ReusableButton
+          class="bg-red-50 text-red-600 border border-red-100 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:outline-none transition-colors"
+          type="button"
+          @click="confirmDeleteAccount"
+          label="Delete Account"
+        />
+      </div>
+    </form>
+
+    <section class="space-y-6" v-if="activeTab === 'general'">
+      <div class="flex justify-between items-center">
+        <span> Theme </span>
+        <select
+          v-model="value"
+          class="appearance-none bg-white text-gray-800 border border-gray-300 rounded-md shadow-sm py-1 px-3 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option
+            v-bind:key="item.value"
+            v-for="item in items"
+            :value="item.value"
+            class="bg-white hover:bg-gray-100"
+          >
+            {{ item.label }}
+          </option>
+        </select>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
+import CloseIcon from "../assets/icons/CloseIcon.vue";
+import ReusableButton from "./ui/ReusableButton.vue";
 
+const value = ref("system");
+const items = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
 // Emits
 const emit = defineEmits(["close"]);
 
+const handleClose = () => {
+  emit("close");
+};
 // Tabs
 const tabs = [
   { id: "general", label: "General" },
@@ -187,15 +172,6 @@ const maskedEmail = computed(() => {
   return `${username.substring(0, 2)}****${username.slice(-1)}@${domain}`;
 });
 
-// Settings
-interface Settings {
-  improveModel: boolean;
-}
-
-const settings = ref<Settings>({
-  improveModel: false,
-});
-
 // Methods
 const exportData = () => {
   console.log("Exporting data...");
@@ -205,13 +181,6 @@ const exportData = () => {
 const logoutAllDevices = () => {
   console.log("Logging out from all devices...");
   // Implement logout logic
-};
-
-const confirmDeleteChats = () => {
-  if (confirm("Are you sure you want to delete all chats?")) {
-    console.log("Deleting all chats...");
-    // Implement delete logic
-  }
 };
 
 const confirmDeleteAccount = () => {
@@ -227,15 +196,6 @@ const confirmDeleteAccount = () => {
 </script>
 
 <style scoped>
-/* Toggle Switch Styles */
-input:checked ~ .toggle-bg {
-  background-color: #71717a;
-}
-input:checked ~ .toggle-dot {
-  transform: translateX(1.25rem);
-  background-color: #d4d4d8;
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;

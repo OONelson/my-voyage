@@ -15,13 +15,13 @@
       <div class="flex flex-col gap-2">
         <ReusableButton
           @click="addSampleMarkers"
-          class="bg-accent100 text-white"
+          class="bg-accent100 text-white py-2"
           label="Add Markers"
         />
 
         <ReusableButton
           @click="removeAllMarkers"
-          class="bg-red-500 text-white"
+          class="bg-red-500 text-white px-2 py-2"
           label="Clear Markers"
         />
       </div>
@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useMap } from "../composables/useMap.ts";
-import type ReusableButton from "./ui/ReusableButton.vue";
+import ReusableButton from "./ui/ReusableButton.vue";
 
 type MapStyle = "streets" | "satellite" | "hybrid" | "light" | "dark";
 

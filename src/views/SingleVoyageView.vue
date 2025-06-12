@@ -26,13 +26,12 @@
           <div class="space-y-1">
             <div
               class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+              @click="editVoyage(voyage.id)"
             >
               <span> Edit Voyage </span>
               <EditIcon />
             </div>
-            <!-- <button class="w-full px-2 hover:bg-gray-100 rounded">
-                  Share Voyage
-                </button> -->
+
             <div
               class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
               @click="deleteVoyage(voyage.id)"
@@ -79,46 +78,36 @@
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { dateAndTime } from "../utils/date-and-timeUtils";
+import { useVoyageActions } from "../composables/useVoyageActions.ts";
 import MapView from "../components/MapView.vue";
 import ReusableModal from "../components/ui/ReusableModal.vue";
-import { MergedVoyages } from "../constants/constant.ts";
+import { MergedVoyages as mergedVoyagesData } from "../constants/constant";
+import Voyage from "../types/Voyage";
 import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
 import CloseIcon from "../assets/icons/CloseIcon.vue";
 import TrashIcon from "../assets/icons/TrashIcon.vue";
 
-const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const route = useRoute();
-const voyage = ref(null);
-const isSmallModalOpen = ref<boolean>(false);
-const currentVoyageId = ref<string | number | null>(null);
+const voyage = ref<Voyage | null>(null);
+const { relativeTripDate, relativeCreatedAt } = dateAndTime();
+const {
+  editVoyage,
+  confirmDeleteVoyage,
+  deleteVoyage,
+  openModal,
+  closeModal,
+  isSmallModalOpen,
+  currentVoyageId,
+} = useVoyageActions();
 
-const openModal = (voyageId: string | number | null) => {
-  currentVoyageId.value = voyageId;
-  isSmallModalOpen.value = true;
-};
-const closeModal = () => {
-  isSmallModalOpen.value = false;
-  currentVoyageId.value = null;
-};
-const deleteVoyage = (voyageId: string | number | null) => {
-  // Your delete logic here
-  closeModal();
-};
+const MergedVoyages = ref(mergedVoyagesData);
 
 onMounted(() => {
   const voyageId = Number(route.params.id);
   voyage.value = MergedVoyages.value.find((v) => v.id === voyageId);
 });
-
-// const formatDate = (date) => {
-//   return date.toLocaleDateString("en-US", {
-//     year: "numeric",
-//     month: "long",
-//     day: "numeric",
-//   });
-// };
 </script>
 
 <style scoped></style>

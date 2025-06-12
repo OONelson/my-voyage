@@ -8,10 +8,11 @@
         <router-link to="/" class="flex items-center justify-center">
           <Logo />
         </router-link>
-        <h3 class="text-textblack100">voyages</h3>
+        <h3 class="text-2xl text-textblack100">voyages</h3>
       </div>
       <div
-        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-10 cursor-pointer"
+        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 cursor-pointer"
+        @click="openProfileModal"
       >
         <UTooltip text="Benjamin Canac">
           <UAvatar
@@ -25,7 +26,9 @@
     </header>
 
     <!-- Profile modal -->
-    <UserModal />
+    <ReusableModal :isOpen="isProfileModal" @close="closeProfileModal">
+      <UserModal @close="closeProfileModal" />
+    </ReusableModal>
 
     <section class="px-3 flex flex-col justify-center items-center">
       <article
@@ -101,6 +104,7 @@ import { dateAndTime } from "../utils/date-and-timeUtils";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
+import UserModal from "@/components/UserModal.vue";
 import Logo from "../assets/icons/Logo.vue";
 import CloseIcon from "../assets/icons/CloseIcon.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
@@ -109,11 +113,8 @@ import TrashIcon from "../assets/icons/TrashIcon.vue";
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
 const router = useRouter();
-
 const scrolled = ref<boolean>(false);
-
 const isProfileModal = ref<boolean>(false);
-
 const isSmallModalOpen = ref<boolean>(false);
 const currentVoyageId = ref<string | number | null>(null);
 const MergedVoyages = ref(mergedVoyagesData);
@@ -136,7 +137,7 @@ const openProfileModal = () => {
   isProfileModal.value = true;
 };
 
-const closeMenu = () => {
+const closeProfileModal = () => {
   isProfileModal.value = false;
 };
 const navigateToVoyage = (id: number) => {
