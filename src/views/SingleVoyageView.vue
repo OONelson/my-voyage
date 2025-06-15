@@ -9,16 +9,12 @@
       />
       <div class="flex justify-between items-center">
         <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
-        <div @click.stop="openModal(voyage.id)" class="cursor-pointer">
+        <div @click.stop="openOptionsModal" class="cursor-pointer">
           <VerticalThreeDots fillColor="textblack100" />
         </div>
       </div>
 
-      <ReusableModal
-        :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
-        size="sm"
-        @close="closeModal"
-      >
+      <ReusableModal :isOpen="isSmallModalOpen" size="sm" @close="closeModal">
         <div>
           <div class="flex justify-end pb-2" @click="closeModal">
             <CloseIcon fillColor="border300" />
@@ -26,7 +22,7 @@
           <div class="space-y-1">
             <div
               class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
-              @click="editVoyage(voyage.id)"
+              @click="handleEdit"
             >
               <span> Edit Voyage </span>
               <EditIcon />
@@ -34,7 +30,7 @@
 
             <div
               class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
-              @click="deleteVoyage(voyage.id)"
+              @click="handleDelete"
             >
               <span> Delete Voyage </span>
               <TrashIcon />
@@ -81,8 +77,7 @@ import { dateAndTime } from "../utils/date-and-timeUtils";
 import { useVoyageActions } from "../composables/useVoyageActions.ts";
 import MapView from "../components/MapView.vue";
 import ReusableModal from "../components/ui/ReusableModal.vue";
-import { MergedVoyages as mergedVoyagesData } from "../constants/constant";
-import Voyage from "../types/Voyage";
+import type { VoyageTypeInfo } from "../types/Voyage";
 import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
 import ArrowBack from "../assets/icons/ArrowBack.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
@@ -90,23 +85,52 @@ import CloseIcon from "../assets/icons/CloseIcon.vue";
 import TrashIcon from "../assets/icons/TrashIcon.vue";
 
 const route = useRoute();
-const voyage = ref<Voyage | null>(null);
+const voyage = ref<VoyageTypeInfo | null>(null);
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const {
   editVoyage,
   confirmDeleteVoyage,
-  deleteVoyage,
   openModal,
   closeModal,
   isSmallModalOpen,
-  currentVoyageId,
+  // currentVoyageId,
 } = useVoyageActions();
 
-const MergedVoyages = ref(mergedVoyagesData);
+const handleEdit = () => {
+  if (voyage.value?.id) {
+    editVoyage(voyage.value.id);
+    closeModal();
+  }
+};
+
+const handleDelete = () => {
+  if (voyage.value?.id) {
+    confirmDeleteVoyage(voyage.value.id);
+    closeModal();
+  }
+};
+
+const openOptionsModal = () => {
+  if (voyage.value?.id) {
+    openModal(voyage.value.id);
+  }
+};
 
 onMounted(() => {
-  const voyageId = Number(route.params.id);
-  voyage.value = MergedVoyages.value.find((v) => v.id === voyageId);
+  try {
+    const voyageId = Number(route.params.id);
+    if (isNaN(voyageId)) return;
+
+    // // Replace with your actual data fetching
+    // const foundVoyage = voyages.value.find(
+    //   (v: VoyageTypeInfo) => v.id === voyageId
+    // );
+    // if (foundVoyage) {
+    //   voyage.value = foundVoyage;
+    // }
+  } catch (err) {
+    console.log(err);
+  }
 });
 </script>
 

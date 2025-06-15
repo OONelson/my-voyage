@@ -1,18 +1,33 @@
 import { useRouter } from "vue-router";
 import { ref, type Ref } from "vue";
-import type { Voyage } from "../types/Voyage";
+import type { VoyageTypeInfo } from "../types/Voyage";
+
+interface VoyageActions {
+  editVoyage: (voyageId: number) => void;
+  confirmDeleteVoyage: (voyageId: number) => void;
+  deleteVoyage: (voyageId: number) => void;
+  openModal: (voyageId: number) => void;
+  closeModal: () => void;
+  isSmallModalOpen: Ref<boolean>;
+  currentVoyageId: Ref<number | null>;
+}
 
 export function useVoyageActions(
-  voyages: Ref<Voyage[]>,
-  currentVoyage: Ref<Voyage | null>
-) {
+  voyages?: Ref<VoyageTypeInfo[]>
+): VoyageActions {
   const router = useRouter();
   const isSmallModalOpen = ref<boolean>(false);
-  const currentVoyageId = ref<string | number | null>(null);
+  const currentVoyageId = ref<number | null>(null);
 
-  const editVoyage = () => {
-    if (!currentVoyage.value?.id) return;
-    router.push(`/voyages/${currentVoyage.value.id}/edit`);
+  const editVoyage = (voyageId: number) => {
+    router.push(`/voyages/${voyageId}/edit`);
+  };
+
+  const deleteVoyage = (voyageId: number) => {
+    if (voyages) {
+      voyages.value = voyages.value.filter((v) => v.id !== voyageId);
+    }
+    router.push("/voyages");
   };
 
   const confirmDeleteVoyage = (voyageId: number) => {
@@ -21,12 +36,7 @@ export function useVoyageActions(
     }
   };
 
-  const deleteVoyage = (voyageId: number) => {
-    voyages.value = voyages.value.filter((v) => v.id !== voyageId);
-    router.push("/voyages");
-  };
-
-  const openModal = (voyageId: string | number | null) => {
+  const openModal = (voyageId: number) => {
     currentVoyageId.value = voyageId;
     isSmallModalOpen.value = true;
   };

@@ -32,7 +32,7 @@
 
     <section class="px-3 flex flex-col justify-center items-center">
       <article
-        v-for="voyage in MergedVoyages"
+        v-for="voyage in Voyages"
         :key="voyage.id"
         class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
         @click="navigateToVoyage(voyage.id)"
@@ -45,7 +45,10 @@
         />
         <div class="flex justify-between items-center">
           <h4 class="pt-2 text-textblack100 font-medium">{{ voyage.title }}</h4>
-          <div @click.stop="openModal(voyage.id)" class="cursor-pointer">
+          <div
+            @click.stop="() => openOptionsModal(voyage.id)"
+            class="cursor-pointer"
+          >
             <VerticalThreeDots fillColor="textblack100" />
           </div>
 
@@ -61,16 +64,14 @@
               <div class="space-y-1">
                 <div
                   class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                  @click="handleEdit"
                 >
                   <span> Edit Voyage </span>
                   <EditIcon />
                 </div>
-                <!-- <button class="w-full px-2 hover:bg-gray-100 rounded">
-                  Share Voyage
-                </button> -->
                 <div
                   class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
-                  @click="deleteVoyage(voyage.id)"
+                  @click="handleDelete"
                 >
                   <span> Delete Voyage </span>
                   <TrashIcon />
@@ -99,8 +100,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { MergedVoyages as mergedVoyagesData } from "../constants/constant";
 import { dateAndTime } from "../utils/date-and-timeUtils";
+import { Voyages } from "../constants/constant";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
@@ -109,39 +110,57 @@ import Logo from "../assets/icons/Logo.vue";
 import CloseIcon from "../assets/icons/CloseIcon.vue";
 import EditIcon from "../assets/icons/EditIcon.vue";
 import TrashIcon from "../assets/icons/TrashIcon.vue";
-
-const { relativeTripDate, relativeCreatedAt } = dateAndTime();
+import { useVoyageActions } from "../composables/useVoyageActions";
+import type { VoyageTypeInfo } from "../types/Voyage";
 
 const router = useRouter();
+const { relativeTripDate, relativeCreatedAt } = dateAndTime();
+
 const scrolled = ref<boolean>(false);
 const isProfileModal = ref<boolean>(false);
-const isSmallModalOpen = ref<boolean>(false);
-const currentVoyageId = ref<string | number | null>(null);
-const MergedVoyages = ref(mergedVoyagesData);
 
-// Three dots action
-const openModal = (voyageId: string | number | null) => {
-  currentVoyageId.value = voyageId;
-  isSmallModalOpen.value = true;
-};
-const closeModal = () => {
-  isSmallModalOpen.value = false;
-  currentVoyageId.value = null;
-};
-const deleteVoyage = (voyageId: string | number | null) => {
-  // Your delete logic here
-  closeModal();
+const voyages = ref<VoyageTypeInfo[]>([]);
+
+const {
+  editVoyage,
+  confirmDeleteVoyage,
+  openModal,
+  closeModal,
+  isSmallModalOpen,
+  currentVoyageId,
+} = useVoyageActions(voyages);
+
+// useVoyageActions
+const openOptionsModal = (voyageId: number) => {
+  openModal(voyageId);
 };
 
+const handleEdit = () => {
+  if (currentVoyageId.value) {
+    editVoyage(currentVoyageId.value);
+    closeModal();
+  }
+};
+
+const handleDelete = () => {
+  if (currentVoyageId.value) {
+    confirmDeleteVoyage(currentVoyageId.value);
+    closeModal();
+  }
+};
+
+// handler for navigating to the singleVoyage page
+const navigateToVoyage = (id: number) => {
+  router.push(`/voyages/${id}`);
+};
+
+// Profile modal
 const openProfileModal = () => {
   isProfileModal.value = true;
 };
 
 const closeProfileModal = () => {
   isProfileModal.value = false;
-};
-const navigateToVoyage = (id: number) => {
-  router.push(`/voyages/${id}`);
 };
 
 onMounted(() => {
