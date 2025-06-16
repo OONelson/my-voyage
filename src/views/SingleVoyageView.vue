@@ -1,5 +1,13 @@
 <template>
-  <main class="max-w-[800px] my-2 mx-auto px-3" v-if="voyage">
+  <div v-if="isPageLoading">
+    <SingleVoyageSkeleton />
+  </div>
+  <div v-else-if="error">
+    <p>{{ error }}</p>
+
+    <button @click="fetchVoyage(voyageId)">Retry</button>
+  </div>
+  <main class="max-w-[800px] my-2 mx-auto px-3" v-else-if="voyage">
     <article class="rounded-lg p-2 my-2 bg-white shadow-md">
       <img
         v-if="voyage.imageUrl"
@@ -65,36 +73,39 @@
       <span class="text-accent50"> Back to Voyages </span>
     </router-link>
   </main>
-  <div v-else>
-    <p>Loading voyage...</p>
-  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import MapView from "@/components/MapView.vue";
+import ReusableModal from "@/components/ui/ReusableModal.vue";
+import SingleVoyageSkeleton from "@/components/ui/SingleVoyageSkeleton.vue";
+import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
+import ArrowBack from "@/assets/icons/ArrowBack.vue";
+import EditIcon from "@/assets/icons/EditIcon.vue";
+import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 import { useVoyageActions } from "../composables/useVoyageActions.ts";
-import MapView from "../components/MapView.vue";
-import ReusableModal from "../components/ui/ReusableModal.vue";
+import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
 import type { VoyageTypeInfo } from "../types/Voyage";
-import VerticalThreeDots from "../assets/icons/VerticalThreeDots.vue";
-import ArrowBack from "../assets/icons/ArrowBack.vue";
-import EditIcon from "../assets/icons/EditIcon.vue";
-import CloseIcon from "../assets/icons/CloseIcon.vue";
-import TrashIcon from "../assets/icons/TrashIcon.vue";
+import { Voyages } from "../constants/constant";
 
 const route = useRoute();
 const voyage = ref<VoyageTypeInfo | null>(null);
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
+const voyageId = parseInt(route.params.id as string);
+
 const {
   editVoyage,
   confirmDeleteVoyage,
   openModal,
   closeModal,
   isSmallModalOpen,
-  // currentVoyageId,
+  fetchVoyage,
 } = useVoyageActions();
+const { isPageLoading, error, executeWithDelay } = useDelayedLoading();
 
 const handleEdit = () => {
   if (voyage.value?.id) {
@@ -116,22 +127,26 @@ const openOptionsModal = () => {
   }
 };
 
-onMounted(() => {
-  try {
-    const voyageId = Number(route.params.id);
-    if (isNaN(voyageId)) return;
-
-    // // Replace with your actual data fetching
-    // const foundVoyage = voyages.value.find(
-    //   (v: VoyageTypeInfo) => v.id === voyageId
-    // );
-    // if (foundVoyage) {
-    //   voyage.value = foundVoyage;
-    // }
-  } catch (err) {
-    console.log(err);
+const loadVoyageData = async () => {
+  // If voyages are passed as a route param (e.g., via query or params)
+  if (route.params.voyages) {
+    try {
+      const voyages = JSON.parse(route.params.voyages as string);
+      return voyages.find((v: VoyageTypeInfo) => v.id === voyageId) || null;
+    } catch (e) {
+      console.error("Error parsing voyage data", e);
+      // Fallback to fetching from API or constant
+    }
   }
+  return (
+    Voyages.find((v) => v.id === voyageId) || (await fetchVoyage(voyageId))
+  );
+};
+
+onMounted(async () => {
+  voyage.value = await executeWithDelay(loadVoyageData());
 });
 </script>
 
 <style scoped></style>
+../composables/useDelayedLoading.ts

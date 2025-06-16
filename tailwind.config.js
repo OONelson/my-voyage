@@ -26,6 +26,7 @@ export default {
         border100: "#e0e0e0",
         border200: "#c3c3c3",
         border300: "#272727",
+        skeleton: "#c7c9cc ",
       },
     },
   },

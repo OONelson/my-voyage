@@ -31,8 +31,12 @@
     </ReusableModal>
 
     <section class="px-3 flex flex-col justify-center items-center">
+      <div v-if="isPageLoading">
+        <VoyagesSkeleton v-for="n in voyages" :key="n" />
+      </div>
       <article
-        v-for="voyage in Voyages"
+        v-else
+        v-for="voyage in voyages"
         :key="voyage.id"
         class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
         @click="navigateToVoyage(voyage.id)"
@@ -100,35 +104,37 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { dateAndTime } from "../utils/date-and-timeUtils";
-import { Voyages } from "../constants/constant";
-import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
+import VoyagesSkeleton from "@/components/ui/VoyagesSkeleton.vue";
 import UserModal from "@/components/UserModal.vue";
-import Logo from "../assets/icons/Logo.vue";
-import CloseIcon from "../assets/icons/CloseIcon.vue";
-import EditIcon from "../assets/icons/EditIcon.vue";
-import TrashIcon from "../assets/icons/TrashIcon.vue";
+import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
+import Logo from "@/assets/icons/Logo.vue";
+import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import EditIcon from "@/assets/icons/EditIcon.vue";
+import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import { useVoyageActions } from "../composables/useVoyageActions";
+import { useDelayedLoading } from "../composables/useDelayedLoading";
+import { Voyages } from "../constants/constant";
 import type { VoyageTypeInfo } from "../types/Voyage";
+import { dateAndTime } from "../utils/date-and-timeUtils";
 
 const router = useRouter();
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
 const scrolled = ref<boolean>(false);
 const isProfileModal = ref<boolean>(false);
-
-const voyages = ref<VoyageTypeInfo[]>([]);
+const voyages = ref<VoyageTypeInfo[]>(Voyages);
 
 const {
-  editVoyage,
+  editVoyageInList,
   confirmDeleteVoyage,
   openModal,
   closeModal,
   isSmallModalOpen,
   currentVoyageId,
 } = useVoyageActions(voyages);
+const { isPageLoading, executeWithDelay } = useDelayedLoading();
 
 // useVoyageActions
 const openOptionsModal = (voyageId: number) => {
@@ -137,7 +143,7 @@ const openOptionsModal = (voyageId: number) => {
 
 const handleEdit = () => {
   if (currentVoyageId.value) {
-    editVoyage(currentVoyageId.value);
+    editVoyageInList(currentVoyageId.value);
     closeModal();
   }
 };
@@ -148,10 +154,21 @@ const handleDelete = () => {
     closeModal();
   }
 };
+const loadVoyages = async () => {
+  // Simulate API call
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  return Voyages;
+};
 
-// handler for navigating to the singleVoyage page
+onMounted(async () => {
+  voyages.value = await executeWithDelay(loadVoyages());
+});
+// Navigate to voyage details
 const navigateToVoyage = (id: number) => {
-  router.push(`/voyages/${id}`);
+  router.push({
+    path: `/voyages/${id}`,
+    state: { voyages: JSON.stringify(voyages.value) }, // Pass the data via route state as a string
+  });
 };
 
 // Profile modal

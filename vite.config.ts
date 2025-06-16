@@ -9,6 +9,9 @@ export default defineConfig({
     vue(),
     ui({
       ui: {
+        skeleton: {
+          base: "animate-pulse rounded-md bg-elevated",
+        },
         avatar: {
           slots: {
             root: "inline-flex items-center justify-center shrink-0 select-none rounded-full align-middle bg-elevated",
