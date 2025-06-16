@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import "./assets/style.scss";
 import App from "./App.vue";
 import router from "./router";
+import PrimeVue from "primevue/config";
 import { useAuth } from "./composables/useAuth";
 import { supabase } from "./config/supabase";
 
@@ -15,4 +16,5 @@ supabase.auth.getUser().then(({ data }) => {
 });
 
 app.use(router);
+app.use(PrimeVue);
 app.mount("#app");

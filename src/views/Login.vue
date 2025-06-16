@@ -80,13 +80,13 @@
 <script setup lang="ts">
 defineOptions({ name: "UserLoginView" });
 import { ref } from "vue";
+import ArrowForward from "@/assets/icons/ArrowForward.vue";
+import ArrowBack from "@/assets/icons/ArrowBack.vue";
+import GoogleIcon from "@/assets/icons/GoogleIcon.vue";
+import Logo from "@/assets/icons/Logo.vue";
+import ReusableButton from "@/components/ui/ReusableButton.vue";
+import ReusableInput from "@/components/ui/ReusableInput.vue";
 import { useAuth } from "../composables/useAuth";
-import ArrowForward from "../assets/icons/ArrowForward.vue";
-import ArrowBack from "../assets/icons/ArrowBack.vue";
-import GoogleIcon from "../assets/icons/GoogleIcon.vue";
-import Logo from "../assets/icons/Logo.vue";
-import ReusableButton from "../components/ui/ReusableButton.vue";
-import ReusableInput from "../components/ui/ReusableInput.vue";
 
 const username = ref<string>("");
 const email = ref<string>("");
@@ -97,7 +97,7 @@ const { login, loginWithGoogle, isLogin, toggleAuth } = useAuth();
 
 const handleLogin = async (): Promise<void> => {
   try {
-    await login(email.value, password.value);
+    await login({ email: email.value, password: password.value });
   } catch (e: unknown) {
     if (e instanceof Error) {
       alert(e.message);
