@@ -13,7 +13,7 @@
         :disabled="disabled"
         :required="required"
         @input="onInput"
-        class="mt-1.5 mb-4 border rounded-lg shadow-sm min-w-[300px] py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100 focus:bg-inputColor200"
+        class="mt-1.5 mb-4 border rounded-lg shadow-sm min-w-[300px] sm:w-full py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100 focus:bg-inputColor200"
       />
 
       <button

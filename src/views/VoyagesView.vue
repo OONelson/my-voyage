@@ -1,7 +1,7 @@
 <template>
   <main>
     <header
-      class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow mb-5 px-2 py-2"
+      class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow px-2 py-2"
       :class="{ 'shadow-md': scrolled }"
     >
       <div class="flex items-center">
@@ -11,7 +11,7 @@
         <h3 class="text-2xl text-textblack100">voyages</h3>
       </div>
       <div
-        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 cursor-pointer"
+        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 cursor-pointer"
         @click="openProfileModal"
       >
         <UTooltip text="Benjamin Canac">
@@ -30,7 +30,7 @@
       <UserModal @close="closeProfileModal" />
     </ReusableModal>
 
-    <section class="px-3 flex flex-col justify-center items-center">
+    <section class="px-3 flex flex-col justify-center items-center my-4">
       <div v-if="isPageLoading">
         <VoyagesSkeleton v-for="n in voyages" :key="n" />
       </div>
@@ -98,6 +98,14 @@
         </div>
       </article>
     </section>
+
+    <!-- Create New Voyage Icon -->
+    <div
+      @click="navigateToCreate"
+      class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer"
+    >
+      <AddIcon fillColor="#005b52" size="30" class="" />
+    </div>
   </main>
 </template>
 
@@ -111,6 +119,7 @@ import UserModal from "@/components/UserModal.vue";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Logo from "@/assets/icons/Logo.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import { useVoyageActions } from "../composables/useVoyageActions";
@@ -169,6 +178,11 @@ const navigateToVoyage = (id: number) => {
     path: `/voyages/${id}`,
     state: { voyages: JSON.stringify(voyages.value) }, // Pass the data via route state as a string
   });
+};
+
+// Naviagate to craete new voyage page
+const navigateToCreate = () => {
+  router.push("/voyages/create");
 };
 
 // Profile modal

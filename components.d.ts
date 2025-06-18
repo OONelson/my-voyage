@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    EditVoyageSkeleton: typeof import('./src/components/ui/EditVoyageSkeleton.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     Hero: typeof import('./src/components/Hero.vue')['default']
     MapView: typeof import('./src/components/MapView.vue')['default']
@@ -18,7 +19,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SideSlider: typeof import('./src/components/SideSlider.vue')['default']
-    SinglevoyageSkeleton: typeof import('./src/components/ui/SinglevoyageSkeleton.vue')['default']
+    SinglevoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']
     SingleVoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']
     UApp: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/App.vue')['default']
     UAvatar: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Avatar.vue')['default']

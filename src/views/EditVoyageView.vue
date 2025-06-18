@@ -1,6 +1,6 @@
 <template>
   <div v-if="isPageLoading">
-    <SingleVoyageSkeleton />
+    <EditVoyageSkeleton />
   </div>
   <div v-else-if="error">
     <p>{{ error }}</p>
@@ -14,7 +14,7 @@
   <main v-else class="max-w-[800px] bg-background100 py-2 mx-auto px-3">
     <div class="flex justify-between items-center mb-5">
       <h4 class="text-textblack100">Edit Voyage</h4>
-      <CloseIcon />
+      <CloseIcon @click="goBack" />
     </div>
     <form @submit.prevent="handleSubmit" class="space-y-4">
       <!-- Image Section -->
@@ -61,21 +61,7 @@
         <div>
           <label class="block text-textblack100 font-medium mb-1">Rating</label>
           <div class="flex space-x-1">
-            <!-- <button
-              v-for="star in 5"
-              :key="star"
-              type="button"
-              @click="formData.rating = star"
-              class="p-2 rounded-full"
-              :class="{
-                'text-yellow-400': star <= formData.rating,
-                'text-gray-300': star > formData.rating,
-              }"
-            >
-              ★
-            </button> -->
-
-            <div class="card flex justify-center">
+            <div class="flex justify-center">
               <Rating
                 v-model="formData.rating"
                 :stars="5"
@@ -86,20 +72,16 @@
         </div>
 
         <!-- Notes -->
-        <div>
+        <div class="py-3">
           <label class="block text-textblack100 font-medium mb-1">Notes</label>
-          <textarea
-            v-model="formData.notes"
-            rows="5"
-            class="w-full p-2 border rounded-md"
-          ></textarea>
+          <div class="border bg-white">
+            <Editor
+              v-model="formData.notes"
+              editorStyle="height: 220px"
+              :modules="modules"
+            />
+          </div>
         </div>
-
-        <!-- <template> -->
-        <div class="card">
-          <Editor v-model="value" editorStyle="height: 320px" />
-        </div>
-        <!-- </template> -->
       </div>
       <!-- Action Buttons -->
       <div class="flex justify-end space-x-3 pt-4">
@@ -125,22 +107,29 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
-import SingleVoyageSkeleton from "@/components/ui/SingleVoyageSkeleton.vue";
+import EditVoyageSkeleton from "@/components/ui/EditVoyageSkeleton.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
+import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import { Voyages } from "../constants/constant";
 import type { VoyageTypeInfo } from "../types/Voyage";
 import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
-import CloseIcon from "../assets/icons/CloseIcon.vue";
 
 const route = useRoute();
 const router = useRouter();
 const voyageId = parseInt(route.params.id as string);
-const value = ref("");
 
 const { isPageLoading, error, executeWithDelay } = useDelayedLoading();
 const isSubmitting = ref(false);
+
+const modules = {
+  toolbar: [
+    ["bold", "italic", "underline"],
+    [{ list: "ordered" }, { list: "bullet" }],
+    ["clean"],
+  ],
+};
 
 // File input ref for type safety
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -212,6 +201,11 @@ const populateForm = (voyage: VoyageTypeInfo) => {
 const formatDateForInput = (date: Date | string) => {
   const d = new Date(date);
   return d.toISOString().split("T")[0];
+};
+
+// Navigate to the previous page
+const goBack = () => {
+  router.go(-1);
 };
 
 const handleSubmit = async () => {

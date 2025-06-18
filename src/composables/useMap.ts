@@ -1,4 +1,3 @@
-// src/composables/useMap.ts
 import { ref, onUnmounted, type Ref } from "vue";
 import maplibregl, {
   type Map,

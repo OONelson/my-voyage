@@ -3,6 +3,12 @@ export default {
   content: ["./src/**/*.{html,js,ts,jsx,tsx,vue}"],
 
   theme: {
+    screens: {
+      sm: "430px",
+      md: "680px",
+      lg: "1024px",
+      xl: "1280px",
+    },
     extend: {
       backgroundImage: {
         "hero-image": "url('/src/assets/images/bg3.jpg')",
