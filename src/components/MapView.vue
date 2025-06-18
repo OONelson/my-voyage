@@ -1,6 +1,6 @@
 <template>
   <div class="h-screen flex flex-col">
-    <div class="flex gap-12 items-center p-4 bg-white shadow">
+    <div class="flex justify-between gap-12 items-center p-4 bg-white shadow">
       <select
         v-model="selectedStyle"
         @change="changeStyle(selectedStyle)"

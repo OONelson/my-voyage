@@ -7,15 +7,21 @@
 
     <button @click="fetchVoyage(voyageId)">Retry</button>
   </div>
-  <main class="max-w-[800px] my-2 mx-auto px-3" v-else-if="voyage">
+  <main
+    class="max-w-[800px] md:min-w-[300px] md:max-w-[600px] my-5 mx-auto px-3"
+    v-else-if="voyage"
+  >
     <article class="rounded-lg p-2 my-2 bg-white shadow-md">
-      <img
-        v-if="voyage.imageUrl"
-        :src="voyage.imageUrl"
-        :alt="voyage.title"
-        class="rounded-md"
-      />
-      <div class="flex justify-between items-center">
+      <div class="md:flex justify-center items-center relative">
+        <img
+          v-if="voyage.imageUrl"
+          :src="voyage.imageUrl"
+          :alt="voyage.title"
+          class="rounded-md w-full"
+        />
+        <HeartIcon class="absolute right-2 bottom-2" />
+      </div>
+      <div class="flex justify-between items-center pt-2">
         <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
         <div @click.stop="openOptionsModal" class="cursor-pointer">
           <VerticalThreeDots fillColor="textblack100" />
@@ -86,6 +92,7 @@ import ArrowBack from "@/assets/icons/ArrowBack.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
+import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 import { useVoyageActions } from "../composables/useVoyageActions.ts";
 import { useDelayedLoading } from "../composables/useDelayedLoading.ts";

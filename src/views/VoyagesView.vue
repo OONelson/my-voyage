@@ -30,73 +30,79 @@
       <UserModal @close="closeProfileModal" />
     </ReusableModal>
 
-    <section class="px-3 flex flex-col justify-center items-center my-4">
-      <div v-if="isPageLoading">
+    <section>
+      <div v-if="isPageLoading" class="md:grid grid-cols-2 gap-4">
         <VoyagesSkeleton v-for="n in voyages" :key="n" />
       </div>
-      <article
+      <div
         v-else
-        v-for="voyage in voyages"
-        :key="voyage.id"
-        class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
-        @click="navigateToVoyage(voyage.id)"
+        class="px-3 flex flex-col justify-center md:items-start items-center md:grid grid-cols-2 lg:grid-cols-3 gap-4 my-4"
       >
-        <img
-          v-if="voyage.imageUrl"
-          :src="voyage.imageUrl"
-          :alt="voyage.title"
-          class="rounded-md w-full"
-        />
-        <div class="flex justify-between items-center">
-          <h4 class="pt-2 text-textblack100 font-medium">{{ voyage.title }}</h4>
-          <div
-            @click.stop="() => openOptionsModal(voyage.id)"
-            class="cursor-pointer"
-          >
-            <VerticalThreeDots fillColor="textblack100" />
-          </div>
-
-          <ReusableModal
-            :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
-            size="sm"
-            @close="closeModal"
-          >
-            <div>
-              <div class="flex justify-end pb-2" @click="closeModal">
-                <CloseIcon fillColor="border300" />
-              </div>
-              <div class="space-y-1">
-                <div
-                  class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
-                  @click="handleEdit"
-                >
-                  <span> Edit Voyage </span>
-                  <EditIcon />
-                </div>
-                <div
-                  class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
-                  @click="handleDelete"
-                >
-                  <span> Delete Voyage </span>
-                  <TrashIcon />
-                </div>
-              </div>
+        <article
+          v-for="voyage in voyages"
+          :key="voyage.id"
+          class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
+          @click="navigateToVoyage(voyage.id)"
+        >
+          <img
+            v-if="voyage.imageUrl"
+            :src="voyage.imageUrl"
+            :alt="voyage.title"
+            class="rounded-md w-full"
+          />
+          <div class="flex justify-between items-center">
+            <h4 class="pt-2 text-textblack100 font-medium">
+              {{ voyage.title }}
+            </h4>
+            <div
+              @click.stop="() => openOptionsModal(voyage.id)"
+              class="cursor-pointer"
+            >
+              <VerticalThreeDots fillColor="textblack100" />
             </div>
-          </ReusableModal>
-        </div>
-        <p class="text-textblack50">
-          {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
-        </p>
-        <p>
-          <span class="text-textblack100 font-medium"> Created: </span>
-          <span class="textblack50">
-            {{ relativeCreatedAt(voyage.createdAt) }}
-          </span>
-        </p>
-        <div class="mt-3 pt-3 border-t text-sm">
-          <Rating :rating="voyage.rating" show-comment />
-        </div>
-      </article>
+
+            <ReusableModal
+              :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
+              size="sm"
+              @close="closeModal"
+            >
+              <div>
+                <div class="flex justify-end pb-2" @click="closeModal">
+                  <CloseIcon fillColor="border300" />
+                </div>
+                <div class="space-y-1">
+                  <div
+                    class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                    @click="handleEdit"
+                  >
+                    <span> Edit Voyage </span>
+                    <EditIcon />
+                  </div>
+                  <div
+                    class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+                    @click="handleDelete"
+                  >
+                    <span> Delete Voyage </span>
+                    <TrashIcon />
+                  </div>
+                </div>
+              </div>
+            </ReusableModal>
+          </div>
+          <p class="text-textblack50">
+            {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
+          </p>
+          <p>
+            <span class="text-textblack100 font-medium"> Created: </span>
+            <span class="textblack50">
+              {{ relativeCreatedAt(voyage.createdAt) }}
+            </span>
+          </p>
+          <div class="mt-3 pt-3 border-t text-sm">
+            <Rating :rating="voyage.rating" show-comment />
+          </div>
+        </article>
+      </div>
     </section>
 
     <!-- Create New Voyage Icon -->
