@@ -11,7 +11,7 @@
         <h3 class="text-2xl text-textblack100">voyages</h3>
       </div>
       <div
-        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 cursor-pointer"
+        class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
         @click="openProfileModal"
       >
         <UTooltip text="Benjamin Canac">
@@ -30,8 +30,11 @@
       <UserModal @close="closeProfileModal" />
     </ReusableModal>
 
-    <section>
-      <div v-if="isPageLoading" class="md:grid grid-cols-2 gap-4">
+    <section @click.stop="isMenuOpen = false" class="lg:px-5">
+      <div
+        v-if="isPageLoading"
+        class="md:grid grid-cols-2 lg:grid-cols-3 gap-4"
+      >
         <VoyagesSkeleton v-for="n in voyages" :key="n" />
       </div>
       <div
@@ -44,12 +47,19 @@
           class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
           @click="navigateToVoyage(voyage.id)"
         >
-          <img
-            v-if="voyage.imageUrl"
-            :src="voyage.imageUrl"
-            :alt="voyage.title"
-            class="rounded-md w-full"
-          />
+          <picture class="md:flex justify-center items-center relative">
+            <img
+              v-if="voyage.imageUrl"
+              :src="voyage.imageUrl"
+              :alt="voyage.title"
+              class="rounded-md w-full"
+            />
+            <HeartIcon
+              size="30"
+              class="absolute right-2 top-2 cursor-pointer"
+            />
+          </picture>
+
           <div class="flex justify-between items-center">
             <h4 class="pt-2 text-textblack100 font-medium">
               {{ voyage.title }}
@@ -107,11 +117,38 @@
 
     <!-- Create New Voyage Icon -->
     <div
-      @click="navigateToCreate"
-      class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer"
+      @click="toggleMenu"
+      class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
+      :class="isMenuOpen ? 'rotate-45' : 'rotate-0'"
     >
       <AddIcon fillColor="#005b52" size="30" class="" />
     </div>
+
+    <!-- popup menu -->
+    <transition name="fab-menu">
+      <div
+        v-if="isMenuOpen"
+        class="fixed right-10 bottom-16 w-48 bg-white rounded-lg shadow-xl py-1 z-50"
+      >
+        <!-- Favorites Option -->
+        <div
+          @click="navigateToFavorites"
+          class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center border-b"
+        >
+          <HeartIcon class="mr-2" size="22" fillColor="#005b52" />
+          <span class="text-textblack100">Favorites</span>
+        </div>
+
+        <!-- Create Voyage Option -->
+        <div
+          @click="navigateToCreate"
+          class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center"
+        >
+          <AddIcon class="mr-2" size="22" fillColor="#005b52" />
+          <span class="text-textblack100">Create Voyage</span>
+        </div>
+      </div>
+    </transition>
   </main>
 </template>
 
@@ -128,6 +165,7 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
+import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import { useVoyageActions } from "../composables/useVoyageActions";
 import { useDelayedLoading } from "../composables/useDelayedLoading";
 import { Voyages } from "../constants/constant";
@@ -140,6 +178,7 @@ const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const scrolled = ref<boolean>(false);
 const isProfileModal = ref<boolean>(false);
 const voyages = ref<VoyageTypeInfo[]>(Voyages);
+const isMenuOpen = ref(false);
 
 const {
   editVoyageInList,
@@ -186,11 +225,6 @@ const navigateToVoyage = (id: number) => {
   });
 };
 
-// Naviagate to craete new voyage page
-const navigateToCreate = () => {
-  router.push("/voyages/create");
-};
-
 // Profile modal
 const openProfileModal = () => {
   isProfileModal.value = true;
@@ -200,6 +234,23 @@ const closeProfileModal = () => {
   isProfileModal.value = false;
 };
 
+const toggleMenu = () => {
+  isMenuOpen.value = !isMenuOpen.value;
+  console.log("done");
+};
+
+// Naviagate to craete new voyage page
+
+const navigateToCreate = () => {
+  router.push("/voyages/create");
+  isMenuOpen.value = false;
+};
+
+const navigateToFavorites = () => {
+  router.push("/vpyages/favorites");
+  isMenuOpen.value = false;
+};
+
 onMounted(() => {
   window.addEventListener("scroll", () => {
     scrolled.value = window.scrollY > 10;
@@ -207,4 +258,15 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.fab-menu-enter-active,
+.fab-menu-leave-active {
+  transition: all 0.2s ease;
+}
+
+.fab-menu-enter-from,
+.fab-menu-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+</style>

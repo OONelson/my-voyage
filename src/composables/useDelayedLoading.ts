@@ -1,6 +1,6 @@
 import { ref } from "vue";
 
-export function useDelayedLoading(minDelayMs: number = 2000) {
+export const useDelayedLoading = (minDelayMs: number = 2000) => {
   const isPageLoading = ref(true);
   const error = ref<string | null>(null);
 
@@ -34,4 +34,4 @@ export function useDelayedLoading(minDelayMs: number = 2000) {
     error,
     executeWithDelay,
   };
-}
+};

@@ -16,9 +16,9 @@ interface VoyageActions {
   fetchVoyage: (voyageId: number) => void;
 }
 
-export function useVoyageActions(
+export const useVoyageActions = (
   voyages?: Ref<VoyageTypeInfo[]>
-): VoyageActions {
+): VoyageActions => {
   const router = useRouter();
   const isSmallModalOpen = ref<boolean>(false);
   const currentVoyageId = ref<number | null>(null);
@@ -91,4 +91,4 @@ export function useVoyageActions(
     currentVoyageId,
     isLoading,
   };
-}
+};

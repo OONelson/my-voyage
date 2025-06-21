@@ -1,7 +1,9 @@
 <template>
   <article class="flex flex-col items-center gap-4 mt-5">
     <div>
-      <USkeleton class="h-[200px] w-[300px] base rounded-md bg-skeleton mb-2" />
+      <USkeleton
+        class="h-[200px] w-[300px] md:w-[600px] md:h-[300px] base rounded-md bg-skeleton mb-2"
+      />
 
       <div class="grid gap-2">
         <div class="flex justify-between items-center gap-20">

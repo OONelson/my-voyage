@@ -138,12 +138,28 @@ import ReusableInput from "@/components/ui/ReusableInput.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import { useDelayedLoading } from "../composables/useDelayedLoading";
+import { useImageUpload } from "../composables/useImageUpload";
 
 const { isPageLoading } = useDelayedLoading();
+const {
+  openFileInput,
+  handleDrop,
+  handleImageUpload,
+  // isLoading,
+  imageUrl,
+  dragOver,
+} = useImageUpload();
 
 const router = useRouter();
 const isSubmitting = ref(false);
-const dragOver = ref(false);
+const formData = ref({
+  title: "",
+  imageUrl: imageUrl,
+  notes: "",
+  location: "",
+  date: "",
+  rating: 0,
+});
 
 const modules = {
   toolbar: [
@@ -162,48 +178,11 @@ const setLoadingTimeout = () => {
   }, 3000);
 };
 
-// Call when needed
 setLoadingTimeout();
 
-// Clean up on component unmount
 onUnmounted(() => {
   clearTimeout(loadingTimeout);
 });
-
-// File input ref
-const fileInput = ref<HTMLInputElement | null>(null);
-
-// Form data
-const formData = ref({
-  title: "",
-  imageUrl: "",
-  notes: "",
-  location: "",
-  date: "",
-  rating: 0,
-});
-
-const openFileInput = () => {
-  fileInput.value?.click();
-};
-
-const handleDrop = (e: DragEvent) => {
-  dragOver.value = false;
-  const files = e.dataTransfer?.files;
-  if (files && files.length > 0 && files[0].type.startsWith("image/")) {
-    processImage(files[0]);
-  }
-};
-
-const processImage = (file: Blob) => {
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (typeof e.target?.result === "string") {
-      formData.value.imageUrl = e.target.result;
-    }
-  };
-  reader.readAsDataURL(file);
-};
 
 const goBack = () => {
   router.push("/voyages");
@@ -212,13 +191,10 @@ const goBack = () => {
 const handleSubmit = async () => {
   isSubmitting.value = true;
   try {
-    // In a real app, you would call an API here
     console.log("Creating voyage:", formData.value);
 
-    // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Redirect after successful creation
     router.push({
       path: "/voyages",
       query: {
@@ -231,21 +207,9 @@ const handleSubmit = async () => {
     isSubmitting.value = false;
   }
 };
-
-const handleImageUpload = (e: Event) => {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      formData.value.imageUrl = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-};
 </script>
 
 <style scoped>
-/* Custom styling for the rating stars */
 :deep(.custom-rating .p-rating-icon) {
   color: #fbbf24;
   transition: color 0.2s;

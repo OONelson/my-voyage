@@ -12,15 +12,15 @@
     v-else-if="voyage"
   >
     <article class="rounded-lg p-2 my-2 bg-white shadow-md">
-      <div class="md:flex justify-center items-center relative">
+      <picture class="md:flex justify-center items-center relative">
         <img
           v-if="voyage.imageUrl"
           :src="voyage.imageUrl"
           :alt="voyage.title"
           class="rounded-md w-full"
         />
-        <HeartIcon class="absolute right-2 bottom-2" />
-      </div>
+        <HeartIcon size="30" class="absolute right-2 top-2 cursor-pointer" />
+      </picture>
       <div class="flex justify-between items-center pt-2">
         <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
         <div @click.stop="openOptionsModal" class="cursor-pointer">
