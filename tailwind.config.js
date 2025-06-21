@@ -8,7 +8,7 @@ export default {
       sm: "425px",
       md: "760px",
       lg: "1024px",
-      xl: "1280px",
+      xl: "1380px",
     },
     extend: {
       backgroundImage: {

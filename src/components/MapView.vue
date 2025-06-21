@@ -1,5 +1,5 @@
 <template>
-  <div class="h-screen flex flex-col">
+  <div class="h-screen flex flex-col lg:min-w-[760px] xl:min-w-[800px]">
     <div class="flex justify-between gap-12 items-center p-4 bg-white shadow">
       <select
         v-model="selectedStyle"
@@ -9,10 +9,8 @@
         <option value="streets">Streets</option>
         <option value="satellite">Satellite</option>
         <option value="hybrid">Hybrid</option>
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
       </select>
-      <div class="flex flex-col gap-2">
+      <div class="flex lg:flex-row flex-col gap-2">
         <ReusableButton
           @click="addSampleMarkers"
           class="bg-accent100 text-white py-2"
@@ -50,8 +48,7 @@ import { Voyages } from "../constants/constant";
 import { locationToCoordinates } from "../utils/geoCode";
 import type { VoyageTypeInfo } from "../types/Voyage";
 
-type MapStyle = "streets" | "satellite" | "hybrid" | "light" | "dark";
-
+type MapStyle = "streets" | "satellite" | "hybrid";
 const {
   mapContainer,
   map,

@@ -8,73 +8,90 @@
     <button @click="fetchVoyage(voyageId)">Retry</button>
   </div>
   <main
-    class="max-w-[800px] md:min-w-[300px] md:max-w-[600px] my-5 mx-auto px-3"
+    class="w-full md:min-w-[300px] my-5 mx-auto px-3 xl:px-10"
     v-else-if="voyage"
   >
-    <article class="rounded-lg p-2 my-2 bg-white shadow-md">
-      <picture class="md:flex justify-center items-center relative">
-        <img
-          v-if="voyage.imageUrl"
-          :src="voyage.imageUrl"
-          :alt="voyage.title"
-          class="rounded-md w-full"
-        />
-        <HeartIcon size="30" class="absolute right-2 top-2 cursor-pointer" />
-      </picture>
-      <div class="flex justify-between items-center pt-2">
-        <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
-        <div @click.stop="openOptionsModal" class="cursor-pointer">
-          <VerticalThreeDots fillColor="textblack100" />
-        </div>
-      </div>
-
-      <ReusableModal :isOpen="isSmallModalOpen" size="sm" @close="closeModal">
-        <div>
-          <div class="flex justify-end pb-2" @click="closeModal">
-            <CloseIcon fillColor="border300" />
-          </div>
-          <div class="space-y-1">
+    <section
+      class="lg:flex justify-between items-center gap-8 xl:gap-[5rem] lg:w-[950px] xl:w-full"
+    >
+      <div>
+        <article
+          class="rounded-lg p-2 my-2 bg-white shadow-md lg:min-w-[500px] xl:min-w-[600px]"
+        >
+          <picture class="md:flex justify-center items-center relative">
+            <img
+              v-if="voyage.imageUrl"
+              :src="voyage.imageUrl"
+              :alt="voyage.title"
+              class="rounded-md w-full"
+            />
             <div
-              class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
-              @click="handleEdit"
+              class="absolute right-2 top-2 cursor-pointer bg-white/90 rounded-full h-8 w-8 flex justify-center items-center"
             >
-              <span> Edit Voyage </span>
-              <EditIcon />
+              <HeartIcon size="22" />
             </div>
-
-            <div
-              class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
-              @click="handleDelete"
-            >
-              <span> Delete Voyage </span>
-              <TrashIcon />
+          </picture>
+          <div class="flex justify-between items-center pt-2">
+            <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
+            <div @click.stop="openOptionsModal" class="cursor-pointer">
+              <VerticalThreeDots fillColor="textblack100" />
             </div>
           </div>
-        </div>
-      </ReusableModal>
 
-      <p class="text-textblack50">
-        {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
-      </p>
-      <p>
-        <span class="text-textblack100 font-medium"> Created: </span>
-        <span class="textblack50">
-          {{ relativeCreatedAt(voyage.createdAt) }}
-        </span>
-      </p>
-      <div class="mt-3 pt-3 border-t text-sm">
-        <Rating :rating="voyage.rating" show-comment />
+          <ReusableModal
+            :isOpen="isSmallModalOpen"
+            :size="size"
+            @close="closeModal"
+          >
+            <div>
+              <div class="flex justify-end pb-2" @click="closeModal">
+                <CloseIcon fillColor="border300" />
+              </div>
+              <div class="space-y-1">
+                <div
+                  class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                  @click="handleEdit"
+                >
+                  <span> Edit Voyage </span>
+                  <EditIcon />
+                </div>
+
+                <div
+                  class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+                  @click="handleDelete"
+                >
+                  <span> Delete Voyage </span>
+                  <TrashIcon />
+                </div>
+              </div>
+            </div>
+          </ReusableModal>
+
+          <p class="text-textblack50">
+            {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
+          </p>
+          <p>
+            <span class="text-textblack100 font-medium"> Created: </span>
+            <span class="textblack50">
+              {{ relativeCreatedAt(voyage.createdAt) }}
+            </span>
+          </p>
+          <div class="mt-3 pt-3 border-t text-sm">
+            <Rating :rating="voyage.rating" show-comment />
+          </div>
+        </article>
+        <!-- <div> -->
+        <div class="bg-[#f8f8f8] rounded-lg p-2 mb-2">
+          <div class="flex justify-between items-center pb-2">
+            <h4 class="text-textblack100 font-normal text-xl">Notes</h4>
+          </div>
+          <p>{{ voyage.notes }}</p>
+        </div>
       </div>
-    </article>
-    <div class="bg-[#f8f8f8] rounded-lg p-2 mb-2">
-      <div class="flex justify-between items-center pb-2">
-        <h4 class="text-textblack100 font-normal text-xl">Notes</h4>
-        <EditIcon fill-color="textblack100" />
-      </div>
-      <p>{{ voyage.notes }}</p>
-    </div>
-    <MapView />
-    <router-link to="/voyages" class="flex items-center py-4">
+      <MapView />
+      <!-- </div> -->
+    </section>
+    <router-link to="/voyages" class="flex items-center py-4 w-max">
       <ArrowBack fillColor="#498a80" />
       <span class="text-accent50"> Back to Voyages </span>
     </router-link>
@@ -111,6 +128,7 @@ const {
   closeModal,
   isSmallModalOpen,
   fetchVoyage,
+  size,
 } = useVoyageActions();
 const { isPageLoading, error, executeWithDelay } = useDelayedLoading();
 
@@ -130,7 +148,7 @@ const handleDelete = () => {
 
 const openOptionsModal = () => {
   if (voyage.value?.id) {
-    openModal(voyage.value.id);
+    openModal(voyage.value.id, "sm");
   }
 };
 
@@ -156,4 +174,3 @@ onMounted(async () => {
 </script>
 
 <style scoped></style>
-../composables/useDelayedLoading.ts

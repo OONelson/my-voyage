@@ -8,7 +8,7 @@
 
       <div class="flex items-center justify-center min-h-screen p-4">
         <div
-          class="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-auto"
+          class="relative bg-white rounded-lg shadow-xl mx-auto"
           :class="sizeClasses"
           @click.stop
         >
@@ -57,10 +57,10 @@ const emit = defineEmits<{
 }>();
 
 const sizeClasses = computed(() => ({
-  "max-w-[200px]": props.size === "sm",
-  "max-w-[400px]": props.size === "md",
-  "max-w-[500px]": props.size === "lg",
-  "max-w-[600px]": props.size === "xl",
+  "w-[250px]": props.size === "sm",
+  "w-[400px]": props.size === "md",
+  "w-[500px]": props.size === "lg",
+  "w-[600px]": props.size === "xl",
 }));
 
 const closeModal = () => {

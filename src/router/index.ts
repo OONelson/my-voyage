@@ -39,9 +39,9 @@ const router = createRouter({
       component: () => import("@/views/CreateVoyage.vue"),
     },
     {
-      path: "/voyages/create",
-      name: "CreateVoyage",
-      component: () => import("@/views/CreateVoyage.vue"),
+      path: "/voyages/favourites",
+      name: "FavouritesVoyage",
+      component: () => import("@/views/FavouriteVoyages.vue"),
     },
     {
       path: "/:pathMatch(.*)*",

@@ -1,131 +1,139 @@
 <template>
-  <div v-if="isPageLoading">
-    <EditVoyageSkeleton />
-  </div>
-  <main v-else class="max-w-[800px] bg-background100 py-2 mx-auto px-3">
-    <div class="flex justify-between items-center mb-5">
-      <h4 class="text-textblack100">Create New Voyage</h4>
-      <CloseIcon @click="goBack" />
+  <section class="flex justify-center items-center">
+    <div v-if="isPageLoading">
+      <EditVoyageSkeleton />
     </div>
-    <form @submit.prevent="handleSubmit" class="space-y-4">
-      <!-- Image Section -->
-      <div class="space-y-2 relative">
-        <input
-          type="file"
-          @change="handleImageUpload"
-          accept="image/*"
-          class="hidden"
-          ref="fileInput"
-        />
-
-        <div
-          class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
-          :class="{
-            'border-2 border-accent50 border-dashed': !formData.imageUrl,
-            'border opacity-60': formData.imageUrl,
-          }"
-          @click="openFileInput"
-          @dragover.prevent="dragOver = true"
-          @dragleave="dragOver = false"
-          @drop.prevent="handleDrop"
-        >
-          <!-- Drag overlay state -->
-          <div
-            v-if="dragOver"
-            class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md"
-          >
-            <span class="text-accent50 font-medium">Drop image here</span>
-          </div>
-
-          <!-- Image preview -->
-          <img
-            v-if="formData.imageUrl"
-            :src="formData.imageUrl"
-            class="rounded-md w-full h-full object-cover"
+    <main v-else class="bg-background100 py-2 mx-auto px-3 my-5">
+      <div class="flex justify-between items-center mb-5">
+        <h4 class="text-textblack100">Create New Voyage</h4>
+        <CloseIcon @click="goBack" />
+      </div>
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- Image Section -->
+        <div class="space-y-2 relative">
+          <input
+            type="file"
+            @change="handleImageUpload"
+            accept="image/*"
+            class="hidden"
+            ref="fileInput"
           />
 
-          <!-- Empty state -->
-          <template v-else>
-            <span class="text-textblack50">Drag & drop or click to upload</span>
-            <EditIcon fillColor="textblack300" size="24" />
-          </template>
-
-          <!-- Edit overlay (shown when image exists) -->
           <div
-            v-if="formData.imageUrl"
-            class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
+            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
+            :class="{
+              'border-2 border-accent50 border-dashed': !formData.imageUrl,
+              'border opacity-60': formData.imageUrl,
+            }"
+            @click="openFileInput"
+            @dragover.prevent="dragOver = true"
+            @dragleave="dragOver = false"
+            @drop.prevent="handleDrop"
           >
-            <EditIcon fillColor="white" size="30" class="opacity-90" />
-          </div>
-        </div>
-      </div>
+            <!-- Drag overlay state -->
+            <div
+              v-if="dragOver"
+              class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md"
+            >
+              <span class="text-accent50 font-medium">Drop image here</span>
+            </div>
 
-      <!-- Title -->
-      <div>
-        <ReusableInput
-          label="Title"
-          type="text"
-          v-model="formData.title"
-          placeholder="A weekend in Monaco"
-          required
-        />
-        <ReusableInput
-          label="Location"
-          type="text"
-          v-model="formData.location"
-          placeholder="Monaco"
-          required
-        />
-        <ReusableInput
-          label="Date"
-          type="date"
-          v-model="formData.date"
-          required
-        />
+            <!-- Image preview -->
+            <img
+              v-if="formData.imageUrl"
+              :src="formData.imageUrl"
+              class="rounded-md w-full h-full object-cover"
+            />
 
-        <!-- Rating -->
-        <div>
-          <label class="block text-textblack100 font-medium mb-1">Rating</label>
-          <div class="flex space-x-1">
-            <div class="flex justify-center">
-              <Rating
-                v-model="formData.rating"
-                :stars="5"
-                class="custom-rating"
-              />
+            <!-- Empty state -->
+            <template v-else>
+              <span class="text-textblack50"
+                >Drag & drop or click to upload</span
+              >
+              <EditIcon fillColor="textblack300" size="24" />
+            </template>
+
+            <!-- Edit overlay (shown when image exists) -->
+            <div
+              v-if="formData.imageUrl"
+              class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
+            >
+              <EditIcon fillColor="white" size="30" class="opacity-90" />
             </div>
           </div>
         </div>
 
-        <!-- Notes -->
-        <div class="py-3">
-          <label class="block text-textblack100 font-medium mb-1">Notes</label>
-          <div class="border bg-white">
-            <Editor
-              v-model="formData.notes"
-              editorStyle="height: 220px"
-              :modules="modules"
-            />
+        <!-- Title -->
+        <div>
+          <ReusableInput
+            label="Title"
+            type="text"
+            v-model="formData.title"
+            placeholder="A weekend in Monaco"
+            required
+          />
+          <ReusableInput
+            label="Location"
+            type="text"
+            v-model="formData.location"
+            placeholder="Monaco"
+            required
+          />
+          <ReusableInput
+            label="Date"
+            type="date"
+            v-model="formData.date"
+            required
+          />
+
+          <!-- Rating -->
+          <div>
+            <label class="block text-textblack100 font-medium mb-1"
+              >Rating</label
+            >
+            <div class="flex space-x-1">
+              <div class="flex justify-center">
+                <Rating
+                  v-model="formData.rating"
+                  :stars="5"
+                  class="custom-rating"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="py-3">
+            <label class="block text-textblack100 font-medium mb-1"
+              >Notes</label
+            >
+            <div class="border bg-white">
+              <Editor
+                v-model="formData.notes"
+                editorStyle="height: 220px"
+                :modules="modules"
+              />
+            </div>
           </div>
         </div>
-      </div>
-      <!-- Action Buttons -->
-      <div class="flex justify-end space-x-3 pt-4">
-        <button
-          @click="goBack"
-          class="px-4 py-2 border rounded text-textblack100 hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-        <ReusableButton
-          type="submit"
-          class="px-4 py-2 bg-accent50 text-white rounded hover:bg-accent70"
-          :disabled="isSubmitting"
-          :label="isSubmitting ? 'Creating...' : 'Create Voyage'"
-        />
-      </div>
-    </form>
-  </main>
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-3 pt-4">
+          <button
+            @click="goBack"
+            class="px-4 py-2 border rounded text-textblack100 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <ReusableButton
+            type="submit"
+            class="px-4 py-2 bg-accent50 text-white rounded hover:bg-accent70"
+            :disabled="isSubmitting"
+            :label="isSubmitting ? 'Creating...' : 'Create Voyage'"
+          />
+        </div>
+      </form>
+    </main>
+  </section>
 </template>
 
 <script setup lang="ts">

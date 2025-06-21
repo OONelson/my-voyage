@@ -8,12 +8,13 @@ interface VoyageActions {
   editVoyageInList: (voyageId: number) => void;
   confirmDeleteVoyage: (voyageId: number) => void;
   deleteVoyage: (voyageId: number) => void;
-  openModal: (voyageId: number) => void;
+  openModal: (voyageId: number, modalSize: "sm" | "md" | "lg" | "xl") => void;
   closeModal: () => void;
   isSmallModalOpen: Ref<boolean>;
   currentVoyageId: Ref<number | null>;
   isLoading: Ref<boolean>;
   fetchVoyage: (voyageId: number) => void;
+  size: Ref<"sm" | "md" | "lg" | "xl">;
 }
 
 export const useVoyageActions = (
@@ -24,6 +25,7 @@ export const useVoyageActions = (
   const currentVoyageId = ref<number | null>(null);
   const isLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
+  const size = ref<"sm" | "md" | "lg" | "xl">("md");
 
   const fetchVoyage = async (voyageId: number) => {
     isLoading.value = true;
@@ -70,7 +72,11 @@ export const useVoyageActions = (
     }
   };
 
-  const openModal = (voyageId: number) => {
+  const openModal = (
+    voyageId: number,
+    modalSize: "sm" | "md" | "lg" | "xl"
+  ) => {
+    size.value = modalSize;
     currentVoyageId.value = voyageId;
     isSmallModalOpen.value = true;
   };
@@ -90,5 +96,6 @@ export const useVoyageActions = (
     isSmallModalOpen,
     currentVoyageId,
     isLoading,
+    size,
   };
 };

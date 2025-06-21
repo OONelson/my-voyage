@@ -1,8 +1,10 @@
 <template>
-  <article class="flex flex-col items-center gap-4 mt-5">
-    <div>
+  <article
+    class="flex lg:justify-between lg:flex-row flex-col items-center gap-4 lg:gap-[5rem] mt-5 lg:px-8"
+  >
+    <div class="lg:pt-[50px]">
       <USkeleton
-        class="h-[200px] w-[300px] md:w-[600px] md:h-[300px] base rounded-md bg-skeleton mb-2"
+        class="h-[200px] w-[300px] md:w-[600px] md:h-[300px] lg:w-[600px] lg:h-[400px] base rounded-md bg-skeleton mb-2"
       />
 
       <div class="grid gap-2">

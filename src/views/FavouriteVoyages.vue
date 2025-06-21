@@ -8,7 +8,7 @@
         <router-link to="/" class="flex items-center justify-center">
           <Logo />
         </router-link>
-        <h3 class="text-2xl text-textblack100">voyages</h3>
+        <h3 class="text-2xl text-textblack100">Favorites</h3>
       </div>
       <div
         class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
@@ -35,14 +35,24 @@
         v-if="isPageLoading"
         class="md:grid grid-cols-2 lg:grid-cols-3 gap-4"
       >
-        <VoyagesSkeleton v-for="n in voyages" :key="n" />
+        <VoyagesSkeleton v-for="n in 6" :key="n" />
+      </div>
+      <div
+        v-else-if="favoriteVoyages.length === 0"
+        class="flex flex-col items-center justify-center h-[60vh]"
+      >
+        <HeartIcon size="60" fillColor="#e5e7eb" />
+        <p class="text-textblack50 mt-4 text-center">
+          You haven't favorited any voyages yet.<br />
+          Start exploring and add some favorites!
+        </p>
       </div>
       <div
         v-else
         class="px-3 flex flex-col justify-center md:items-start items-center md:grid grid-cols-2 lg:grid-cols-3 gap-4 my-4"
       >
         <article
-          v-for="voyage in voyages"
+          v-for="voyage in favoriteVoyages"
           :key="voyage.id"
           class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
           @click="navigateToVoyage(voyage.id)"
@@ -56,8 +66,9 @@
             />
             <div
               class="absolute right-2 top-2 cursor-pointer bg-white/90 rounded-full h-8 w-8 flex justify-center items-center"
+              @click.stop="toggleFavorite(voyage.id)"
             >
-              <HeartIcon size="22" />
+              <HeartIcon size="22" fillColor="#ff0000" />
             </div>
           </picture>
 
@@ -74,7 +85,7 @@
 
             <ReusableModal
               :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
-              :size="size"
+              size="sm"
               @close="closeModal"
             >
               <div>
@@ -116,6 +127,7 @@
       </div>
     </section>
 
+    <!-- Create New Voyage Icon -->
     <div
       @click="toggleMenu"
       class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
@@ -130,13 +142,13 @@
         v-if="isMenuOpen"
         class="fixed right-10 bottom-16 w-48 bg-white rounded-lg shadow-xl py-1 z-50"
       >
-        <!-- Favorites Option -->
+        <!-- Voyages Option -->
         <div
-          @click="navigateToFavorites"
+          @click="navigateToVoyages"
           class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center border-b"
         >
-          <HeartIcon class="mr-2" size="22" fillColor="#005b52" />
-          <span class="text-textblack100">Favorites</span>
+          <CompassIcon class="mr-2" size="22" fillColor="#005b52" />
+          <span class="text-textblack100">All Voyages</span>
         </div>
 
         <!-- Create Voyage Option -->
@@ -153,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
@@ -166,6 +178,7 @@ import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
+import CompassIcon from "@/assets/icons/CompassIcon.vue";
 import { useVoyageActions } from "../composables/useVoyageActions";
 import { useDelayedLoading } from "../composables/useDelayedLoading";
 import { Voyages } from "../constants/constant";
@@ -179,6 +192,14 @@ const scrolled = ref<boolean>(false);
 const isProfileModal = ref<boolean>(false);
 const voyages = ref<VoyageTypeInfo[]>(Voyages);
 const isMenuOpen = ref(false);
+const favorites = ref<number[]>(
+  JSON.parse(localStorage.getItem("favorites") || "[]")
+);
+
+// Filter favorite voyages
+const favoriteVoyages = computed(() => {
+  return voyages.value.filter((voyage) => favorites.value.includes(voyage.id));
+});
 
 const {
   editVoyageInList,
@@ -187,13 +208,23 @@ const {
   closeModal,
   isSmallModalOpen,
   currentVoyageId,
-  size,
 } = useVoyageActions(voyages);
 const { isPageLoading, executeWithDelay } = useDelayedLoading();
 
+// Toggle favorite status
+const toggleFavorite = (voyageId: number) => {
+  const index = favorites.value.indexOf(voyageId);
+  if (index === -1) {
+    favorites.value.push(voyageId);
+  } else {
+    favorites.value.splice(index, 1);
+  }
+  localStorage.setItem("favorites", JSON.stringify(favorites.value));
+};
+
 // useVoyageActions
 const openOptionsModal = (voyageId: number) => {
-  openModal(voyageId, "sm");
+  openModal(voyageId);
 };
 
 const handleEdit = () => {
@@ -209,6 +240,7 @@ const handleDelete = () => {
     closeModal();
   }
 };
+
 const loadVoyages = async () => {
   // Simulate API call
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -218,12 +250,23 @@ const loadVoyages = async () => {
 onMounted(async () => {
   voyages.value = await executeWithDelay(loadVoyages());
 });
-// Navigate to voyage details
+
+// Navigation methods
 const navigateToVoyage = (id: number) => {
   router.push({
     path: `/voyages/${id}`,
-    state: { voyages: JSON.stringify(voyages.value) }, // Pass the data via route state as a string
+    state: { voyages: JSON.stringify(voyages.value) },
   });
+};
+
+const navigateToVoyages = () => {
+  router.push("/voyages");
+  isMenuOpen.value = false;
+};
+
+const navigateToCreate = () => {
+  router.push("/voyages/create");
+  isMenuOpen.value = false;
 };
 
 // Profile modal
@@ -237,18 +280,6 @@ const closeProfileModal = () => {
 
 const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
-};
-
-// Naviagate to craete new voyage page
-
-const navigateToCreate = () => {
-  router.push("/voyages/create");
-  isMenuOpen.value = false;
-};
-
-const navigateToFavorites = () => {
-  router.push("/voyages/favorites");
-  isMenuOpen.value = false;
 };
 
 onMounted(() => {

@@ -25,7 +25,7 @@ export default {
     },
     strokeColor: {
       type: String,
-      default: "#fff",
+      default: "#4c4c4c",
     },
     size: {
       default: "18",
