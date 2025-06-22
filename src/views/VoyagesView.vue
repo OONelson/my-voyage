@@ -33,12 +33,12 @@
     <section @click.stop="isMenuOpen = false" class="lg:px-5">
       <div
         v-if="isPageLoading"
-        class="md:grid grid-cols-2 lg:grid-cols-3 gap-4"
+        class="md:grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3"
       >
         <VoyagesSkeleton v-for="n in voyages" :key="n" />
       </div>
       <div
-        v-else
+        v-else-if="voyages"
         class="px-3 flex flex-col justify-center md:items-start items-center md:grid grid-cols-2 lg:grid-cols-3 gap-4 my-4"
       >
         <article
@@ -75,22 +75,23 @@
             <ReusableModal
               :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
               :size="size"
-              @close="closeModal"
+              @click.stop="closeModal"
             >
               <div>
                 <div class="flex justify-end pb-2" @click="closeModal">
-                  <CloseIcon fillColor="border300" />
+                  <CloseIcon fillColor="border300" class="cursor-pointer" />
                 </div>
                 <div class="space-y-1">
                   <div
-                    class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                    class="w-full flex justify-between items-center px-1 py-1 hover:bg-gray-100 rounded cursor-pointer"
                     @click="handleEdit"
                   >
                     <span> Edit Voyage </span>
                     <EditIcon />
                   </div>
+
                   <div
-                    class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+                    class="w-full flex justify-between items-center px-1 py-1 text-red-500 hover:bg-gray-100 rounded cursor-pointer"
                     @click="handleDelete"
                   >
                     <span> Delete Voyage </span>
@@ -153,8 +154,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import VoyagesSkeleton from "@/components/ui/VoyagesSkeleton.vue";
@@ -166,96 +165,32 @@ import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
-import { useVoyageActions } from "../composables/useVoyageActions";
-import { useDelayedLoading } from "../composables/useDelayedLoading";
-import { Voyages } from "../constants/constant";
-import type { VoyageTypeInfo } from "../types/Voyage";
+// import { useDelayedLoading } from "../composables/useDelayedLoading";
+import { useVoyageManager } from "../composables/useVoyageManager";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 
-const router = useRouter();
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
-
-const scrolled = ref<boolean>(false);
-const isProfileModal = ref<boolean>(false);
-const voyages = ref<VoyageTypeInfo[]>(Voyages);
-const isMenuOpen = ref(false);
-
 const {
-  editVoyageInList,
-  confirmDeleteVoyage,
-  openModal,
-  closeModal,
+  voyages,
+  scrolled,
+  isMenuOpen,
+  isProfileModal,
   isSmallModalOpen,
   currentVoyageId,
   size,
-} = useVoyageActions(voyages);
-const { isPageLoading, executeWithDelay } = useDelayedLoading();
-
-// useVoyageActions
-const openOptionsModal = (voyageId: number) => {
-  openModal(voyageId, "sm");
-};
-
-const handleEdit = () => {
-  if (currentVoyageId.value) {
-    editVoyageInList(currentVoyageId.value);
-    closeModal();
-  }
-};
-
-const handleDelete = () => {
-  if (currentVoyageId.value) {
-    confirmDeleteVoyage(currentVoyageId.value);
-    closeModal();
-  }
-};
-const loadVoyages = async () => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return Voyages;
-};
-
-onMounted(async () => {
-  voyages.value = await executeWithDelay(loadVoyages());
-});
-// Navigate to voyage details
-const navigateToVoyage = (id: number) => {
-  router.push({
-    path: `/voyages/${id}`,
-    state: { voyages: JSON.stringify(voyages.value) }, // Pass the data via route state as a string
-  });
-};
-
-// Profile modal
-const openProfileModal = () => {
-  isProfileModal.value = true;
-};
-
-const closeProfileModal = () => {
-  isProfileModal.value = false;
-};
-
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value;
-};
-
-// Naviagate to craete new voyage page
-
-const navigateToCreate = () => {
-  router.push("/voyages/create");
-  isMenuOpen.value = false;
-};
-
-const navigateToFavorites = () => {
-  router.push("/voyages/favorites");
-  isMenuOpen.value = false;
-};
-
-onMounted(() => {
-  window.addEventListener("scroll", () => {
-    scrolled.value = window.scrollY > 10;
-  });
-});
+  toggleMenu,
+  navigateToCreate,
+  navigateToFavorites,
+  navigateToVoyage,
+  openProfileModal,
+  closeProfileModal,
+  openOptionsModal,
+  handleEdit,
+  handleDelete,
+  closeModal,
+  isPageLoading,
+} = useVoyageManager();
+// const { isPageLoading } = useDelayedLoading();
 </script>
 
 <style scoped>

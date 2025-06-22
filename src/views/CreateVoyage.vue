@@ -6,7 +6,11 @@
     <main v-else class="bg-background100 py-2 mx-auto px-3 my-5">
       <div class="flex justify-between items-center mb-5">
         <h4 class="text-textblack100">Create New Voyage</h4>
-        <CloseIcon @click="goBack" />
+        <CloseIcon
+          @click="goBack"
+          fillColor="textblack100"
+          class="cursor-pointer"
+        />
       </div>
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- Image Section -->

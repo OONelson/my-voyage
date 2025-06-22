@@ -12,10 +12,17 @@
         Retry
       </button>
     </div>
-    <main v-else class="max-w-[800px] bg-background100 py-2 mx-auto px-3 my-5">
+    <main
+      v-else
+      class="max-w-[800px] xl:w-[600px] bg-background100 py-2 mx-auto px-3 my-5"
+    >
       <div class="flex justify-between items-center mb-5">
         <h4 class="text-textblack100">Edit Voyage</h4>
-        <CloseIcon @click="goBack" />
+        <CloseIcon
+          @click="goBack"
+          fillColor="textblack100"
+          class="cursor-pointer"
+        />
       </div>
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- Image Section -->

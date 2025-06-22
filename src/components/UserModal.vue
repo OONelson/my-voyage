@@ -1,11 +1,11 @@
 <template>
-  <div class="w-full max-w-lg rounded-2xl">
+  <main class="w-full rounded-2xl">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
       <CloseIcon
         fillColor="border300"
-        class="flex justify-end"
+        class="flex justify-end cursor-pointer"
         @click="handleClose"
       />
     </div>
@@ -152,7 +152,7 @@
         </select>
       </div>
     </section>
-  </div>
+  </main>
 </template>
 
 <script setup lang="ts">

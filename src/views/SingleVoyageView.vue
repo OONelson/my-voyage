@@ -1,4 +1,34 @@
 <template>
+  <header
+    class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow px-2 py-2"
+    :class="{ 'shadow-md': scrolled }"
+  >
+    <div class="flex items-center">
+      <router-link to="/" class="flex items-center justify-center">
+        <Logo />
+      </router-link>
+      <h3 class="text-2xl text-textblack100">voyages</h3>
+    </div>
+    <div
+      class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
+      @click="openProfileModal"
+    >
+      <UTooltip text="Benjamin Canac">
+        <UAvatar
+          src="https://github.com/benjamincanac.png"
+          alt="Benjamin Canac"
+          full
+          @click="openProfileModal"
+        />
+      </UTooltip>
+    </div>
+  </header>
+
+  <!-- Profile modal -->
+  <ReusableModal :isOpen="isProfileModal" @close="closeProfileModal">
+    <UserModal @close="closeProfileModal" />
+  </ReusableModal>
+
   <div v-if="isPageLoading">
     <SingleVoyageSkeleton />
   </div>
@@ -33,7 +63,10 @@
           </picture>
           <div class="flex justify-between items-center pt-2">
             <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
-            <div @click.stop="openOptionsModal" class="cursor-pointer">
+            <div
+              @click.stop="() => openOptionsModal(voyageId)"
+              class="cursor-pointer"
+            >
               <VerticalThreeDots fillColor="textblack100" />
             </div>
           </div>
@@ -45,11 +78,11 @@
           >
             <div>
               <div class="flex justify-end pb-2" @click="closeModal">
-                <CloseIcon fillColor="border300" />
+                <CloseIcon fillColor="border300" class="cursor-pointer" />
               </div>
               <div class="space-y-1">
                 <div
-                  class="w-full flex justify-between items-center px-1 hover:bg-gray-100 rounded"
+                  class="w-full flex justify-between items-center px-1 py-1 hover:bg-gray-100 rounded cursor-pointer"
                   @click="handleEdit"
                 >
                   <span> Edit Voyage </span>
@@ -57,7 +90,7 @@
                 </div>
 
                 <div
-                  class="w-full flex justify-between items-center px-1 text-red-500 hover:bg-gray-100 rounded"
+                  class="w-full flex justify-between items-center px-1 py-1 text-red-500 hover:bg-gray-100 rounded cursor-pointer"
                   @click="handleDelete"
                 >
                   <span> Delete Voyage </span>
@@ -99,8 +132,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
 import MapView from "@/components/MapView.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import SingleVoyageSkeleton from "@/components/ui/SingleVoyageSkeleton.vue";
@@ -111,66 +142,51 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
-import { useVoyageActions } from "../composables/useVoyageActions.ts";
 import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
-import type { VoyageTypeInfo } from "../types/Voyage";
-import { Voyages } from "../constants/constant";
-
-const route = useRoute();
-const voyage = ref<VoyageTypeInfo | null>(null);
+import { useVoyageManager } from "../composables/useVoyageManager";
+import { useRoute } from "vue-router";
+import { watch } from "vue";
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
-const voyageId = parseInt(route.params.id as string);
 
 const {
-  editVoyage,
-  confirmDeleteVoyage,
-  openModal,
-  closeModal,
+  voyage,
+  scrolled,
+  isProfileModal,
   isSmallModalOpen,
-  fetchVoyage,
   size,
-} = useVoyageActions();
-const { isPageLoading, error, executeWithDelay } = useDelayedLoading();
+  voyageId,
+  fetchVoyage,
+  openProfileModal,
+  closeProfileModal,
+  openOptionsModal,
+  handleEdit,
+  handleDelete,
+  closeModal,
+} = useVoyageManager();
+const { isPageLoading, error } = useDelayedLoading();
 
-const handleEdit = () => {
-  if (voyage.value?.id) {
-    editVoyage(voyage.value.id);
-    closeModal();
-  }
-};
+const route = useRoute();
 
-const handleDelete = () => {
-  if (voyage.value?.id) {
-    confirmDeleteVoyage(voyage.value.id);
-    closeModal();
-  }
-};
-
-const openOptionsModal = () => {
-  if (voyage.value?.id) {
-    openModal(voyage.value.id, "sm");
-  }
-};
-
+// Load voyage data when component mounts or route changes
 const loadVoyageData = async () => {
-  // If voyages are passed as a route param (e.g., via query or params)
-  if (route.params.voyages) {
-    try {
-      const voyages = JSON.parse(route.params.voyages as string);
-      return voyages.find((v: VoyageTypeInfo) => v.id === voyageId) || null;
-    } catch (e) {
-      console.error("Error parsing voyage data", e);
-      // Fallback to fetching from API or constant
+  const voyageId = Number(route.params.id);
+  if (voyageId) {
+    await fetchVoyage(voyageId);
+  }
+};
+
+// Initial load
+loadVoyageData();
+
+// Watch for route changes
+watch(
+  () => route.params.id,
+  (newId) => {
+    if (newId) {
+      loadVoyageData();
     }
   }
-  return (
-    Voyages.find((v) => v.id === voyageId) || (await fetchVoyage(voyageId))
-  );
-};
-
-onMounted(async () => {
-  voyage.value = await executeWithDelay(loadVoyageData());
-});
+);
 </script>
 
 <style scoped></style>

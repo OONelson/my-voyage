@@ -13,7 +13,10 @@
         :disabled="disabled"
         :required="required"
         @input="onInput"
-        class="mt-1.5 mb-4 border rounded-lg shadow-sm min-w-[300px] xs:min-w-[360px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100 focus:bg-inputColor200"
+        :class="[
+          'mt-1.5 mb-4 border rounded-lg shadow-sm py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100  focus:bg-inputColor200',
+          inputClasses,
+        ]"
       />
 
       <button
@@ -49,6 +52,11 @@ const props = defineProps({
   disabled: Boolean,
   required: Boolean,
   showPasswordToggle: { type: Boolean, default: false },
+  inputClasses: {
+    type: String,
+    default:
+      "min-w-[300px] xs:min-w-[360px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] xl:min-w-[570px]",
+  },
 });
 
 const emits = defineEmits(["update:modelValue"]);
