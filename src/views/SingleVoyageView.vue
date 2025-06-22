@@ -29,7 +29,7 @@
     <UserModal @close="closeProfileModal" />
   </ReusableModal>
 
-  <div v-if="isPageLoading">
+  <div v-if="isLoading">
     <SingleVoyageSkeleton />
   </div>
   <div v-else-if="error">
@@ -142,7 +142,7 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
-import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
+// import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useRoute } from "vue-router";
 import { watch } from "vue";
@@ -155,6 +155,8 @@ const {
   isSmallModalOpen,
   size,
   voyageId,
+  isLoading,
+  error,
   fetchVoyage,
   openProfileModal,
   closeProfileModal,
@@ -163,11 +165,9 @@ const {
   handleDelete,
   closeModal,
 } = useVoyageManager();
-const { isPageLoading, error } = useDelayedLoading();
 
 const route = useRoute();
 
-// Load voyage data when component mounts or route changes
 const loadVoyageData = async () => {
   const voyageId = Number(route.params.id);
   if (voyageId) {
@@ -175,10 +175,8 @@ const loadVoyageData = async () => {
   }
 };
 
-// Initial load
 loadVoyageData();
 
-// Watch for route changes
 watch(
   () => route.params.id,
   (newId) => {

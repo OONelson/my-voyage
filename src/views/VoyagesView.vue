@@ -32,13 +32,13 @@
 
     <section @click.stop="isMenuOpen = false" class="lg:px-5">
       <div
-        v-if="isPageLoading"
+        v-if="isLoading"
         class="md:grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3"
       >
-        <VoyagesSkeleton v-for="n in voyages" :key="n" />
+        <VoyagesSkeleton v-for="n in voyages" :key="'skeleton-' + n" />
       </div>
       <div
-        v-else-if="voyages"
+        v-else
         class="px-3 flex flex-col justify-center md:items-start items-center md:grid grid-cols-2 lg:grid-cols-3 gap-4 my-4"
       >
         <article
@@ -177,6 +177,7 @@ const {
   isProfileModal,
   isSmallModalOpen,
   currentVoyageId,
+  isLoading,
   size,
   toggleMenu,
   navigateToCreate,
@@ -188,9 +189,7 @@ const {
   handleEdit,
   handleDelete,
   closeModal,
-  isPageLoading,
 } = useVoyageManager();
-// const { isPageLoading } = useDelayedLoading();
 </script>
 
 <style scoped>

@@ -2,7 +2,6 @@ import { onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { VoyageTypeInfo } from "../types/Voyage";
 import { Voyages } from "../constants/constant";
-import { useDelayedLoading } from "./useDelayedLoading";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
 
@@ -16,8 +15,7 @@ interface VoyageManager {
   isProfileModal: Ref<boolean>;
   isSmallModalOpen: Ref<boolean>;
   currentVoyageId: Ref<number | null>;
-  isPageLoading: Ref<boolean>;
-  //   isLoading: Ref<boolean>;
+  isLoading: Ref<boolean>;
   size: Ref<ModalSize>;
   error: Ref<string | null>;
 
@@ -47,17 +45,16 @@ interface VoyageManager {
 export const useVoyageManager = (): VoyageManager => {
   const route = useRoute();
   const router = useRouter();
-  const { executeWithDelay, isPageLoading } = useDelayedLoading();
 
   // State
   const scrolled = ref(false);
   const isProfileModal = ref(false);
   const isMenuOpen = ref(false);
-  const voyages = ref<VoyageTypeInfo[]>([]);
+  const voyages = ref<VoyageTypeInfo[]>(Voyages);
   const voyage = ref<VoyageTypeInfo | null>(null);
   const isSmallModalOpen = ref(false);
   const currentVoyageId = ref<number | null>(null);
-  //   const isLoading = ref(false);
+  const isLoading = ref(true);
   const error = ref<string | null>(null);
   const size = ref<ModalSize>("md");
   const voyageId = parseInt(route.params.id as string);
@@ -66,8 +63,6 @@ export const useVoyageManager = (): VoyageManager => {
   const handleScroll = () => {
     scrolled.value = window.scrollY > 10;
   };
-
-  //
 
   const navigateToCreate = () => {
     router.push("/voyages/create");
@@ -150,10 +145,11 @@ export const useVoyageManager = (): VoyageManager => {
   const fetchVoyage = async (
     voyageId: number
   ): Promise<VoyageTypeInfo | undefined> => {
-    isPageLoading.value = true;
+    isLoading.value = true;
+    error.value = null;
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const foundVoyage = Voyages.find((v) => v.id === voyageId);
       if (!foundVoyage) throw new Error("Voyage not found");
@@ -161,32 +157,63 @@ export const useVoyageManager = (): VoyageManager => {
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Failed to load voyage";
-      console.log("Error fetching voyage:", err);
+      console.error("Error fetching voyage:", err);
       return undefined;
     } finally {
-      isPageLoading.value = false;
+      isLoading.value = false;
     }
   };
 
-  const loadVoyages = async (): Promise<VoyageTypeInfo[]> => {
+  const loadVoyages: () => Promise<VoyageTypeInfo[]> = async () => {
+    error.value = null;
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      console.log(voyages.value);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+
       return Voyages; // Return the mock data
-    } catch (error) {
-      console.log("Failed to load voyages:", error);
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Failed to load voyage";
+      console.error("Failed to load voyages:", err);
       return [];
     }
   };
 
   const loadVoyageData = async (): Promise<VoyageTypeInfo | null> => {
+    error.value = null;
     try {
       // Just use the mock data directly
       return Voyages.find((v) => v.id === voyageId) || null;
-    } catch (error) {
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Failed to load voyage";
       console.error("Failed to load voyage data:", error);
       return null;
+    }
+  };
+
+  const executeWithDelay = async <T>(
+    action: Promise<T> | (() => Promise<T>)
+  ): Promise<T> => {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const minLoadingTime = new Promise((resolve) =>
+        setTimeout(resolve, 2000)
+      );
+      const actionPromise = typeof action === "function" ? action() : action;
+
+      const result = await Promise.all([minLoadingTime, actionPromise]).then(
+        ([, res]) => res
+      );
+      return result;
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "An unknown error occurred";
+      throw err;
+    } finally {
+      isLoading.value = false;
     }
   };
 
@@ -194,13 +221,11 @@ export const useVoyageManager = (): VoyageManager => {
   onMounted(async () => {
     window.addEventListener("scroll", handleScroll);
     try {
-      // Correct way to use executeWithDelay
       voyages.value = await executeWithDelay(loadVoyages());
-      console.log(voyages.value);
 
       // Only try to load single voyage if we have an ID
       if (voyageId) {
-        voyage.value = await loadVoyageData();
+        voyage.value = await executeWithDelay(loadVoyageData());
       }
     } catch (err) {
       console.error("Initialization error:", err);
@@ -222,7 +247,7 @@ export const useVoyageManager = (): VoyageManager => {
     isProfileModal,
     isSmallModalOpen,
     currentVoyageId,
-    isPageLoading,
+    isLoading,
     size,
     error,
     toggleMenu,
