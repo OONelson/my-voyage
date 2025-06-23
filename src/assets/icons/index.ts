@@ -9,6 +9,8 @@ export { default as GoogleIcon } from "./GoogleIcon.vue";
 export { default as EyeIcon } from "./EyeIcon.vue";
 export { default as EyeSlashIcon } from "./EyeSlashIcon.vue";
 export { default as CloseIcon } from "./CloseIcon.vue";
+export { default as LocationIcon } from "./LocationIcon.vue";
+export { default as WhatTimeIcon } from "./WhatTimeIcon.vue";
 export { default as AddIcon } from "./AddIcon.vue";
 export { default as HeartIcon } from "./HeartIcon.vue";
 export { default as Menu } from "./Menu.vue";

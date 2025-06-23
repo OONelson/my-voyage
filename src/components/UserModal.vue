@@ -2,7 +2,7 @@
   <main class="w-full rounded-2xl">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      <h2 class="text-2xl font-bold text-gray-800">Settings</h2>
+      <h2 class="text-2xl font-semibold text-gray-800">Settings</h2>
       <CloseIcon
         fillColor="border300"
         class="flex justify-end cursor-pointer"
@@ -35,7 +35,7 @@
     <!-- Profile Tab Content -->
     <form class="space-y-6" v-if="activeTab === 'profile'">
       <!-- Profile Photo -->
-      <div class="space-y-2 relative">
+      <div class="space-y-2 relative cursor-pointer">
         <input
           type="file"
           @change="handleImageUpload"

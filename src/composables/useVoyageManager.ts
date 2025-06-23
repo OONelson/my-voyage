@@ -168,7 +168,7 @@ export const useVoyageManager = (): VoyageManager => {
     error.value = null;
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       return Voyages; // Return the mock data
     } catch (err) {
@@ -225,7 +225,7 @@ export const useVoyageManager = (): VoyageManager => {
 
       // Only try to load single voyage if we have an ID
       if (voyageId) {
-        voyage.value = await executeWithDelay(loadVoyageData());
+        voyage.value = await loadVoyageData();
       }
     } catch (err) {
       console.error("Initialization error:", err);

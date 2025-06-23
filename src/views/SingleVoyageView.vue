@@ -3,11 +3,17 @@
     class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow px-2 py-2"
     :class="{ 'shadow-md': scrolled }"
   >
-    <div class="flex items-center">
+    <div class="flex items-center gap-2">
       <router-link to="/" class="flex items-center justify-center">
         <Logo />
       </router-link>
-      <h3 class="text-2xl text-textblack100">voyages</h3>
+      <USkeleton
+        v-if="isLoading"
+        class="h-4 w-[150px] base rounded-md bg-skeleton"
+      />
+      <h3 v-else class="text-xl text-textblack100">
+        Your trip to {{ voyage?.location }}
+      </h3>
     </div>
     <div
       class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
@@ -38,96 +44,133 @@
     <button @click="fetchVoyage(voyageId)">Retry</button>
   </div>
   <main
-    class="w-full md:min-w-[300px] my-5 mx-auto px-3 xl:px-10"
     v-else-if="voyage"
+    class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
   >
-    <section
-      class="lg:flex justify-between items-center gap-8 xl:gap-[5rem] lg:w-[950px] xl:w-full"
+    <!-- Back Button -->
+    <router-link
+      to="/voyages"
+      class="flex items-center gap-2 text-accent50 hover:text-accent70 transition-colors mb-6 w-max"
     >
-      <div>
-        <article
-          class="rounded-lg p-2 my-2 bg-white shadow-md lg:min-w-[500px] xl:min-w-[600px]"
-        >
-          <picture class="md:flex justify-center items-center relative">
+      <ArrowBack fillColor="currentColor" />
+      <span class="font-medium">Back to Voyages</span>
+    </router-link>
+
+    <!-- Main Content -->
+    <div class="flex flex-col lg:flex-row gap-8 xl:gap-12">
+      <!-- Left Column - Voyage Details -->
+      <div class="flex-1">
+        <!-- Voyage Card -->
+        <article class="bg-white rounded-xl shadow-sm overflow-hidden">
+          <!-- Image with Heart Icon -->
+          <div class="relative">
             <img
               v-if="voyage.imageUrl"
               :src="voyage.imageUrl"
               :alt="voyage.title"
-              class="rounded-md w-full"
+              class="w-full h-auto max-h-[400px] object-cover"
             />
-            <div
-              class="absolute right-2 top-2 cursor-pointer bg-white/90 rounded-full h-8 w-8 flex justify-center items-center"
-            >
-              <HeartIcon size="22" />
-            </div>
-          </picture>
-          <div class="flex justify-between items-center pt-2">
-            <h4 class="text-textblack100 font-medium">{{ voyage.title }}</h4>
-            <div
-              @click.stop="() => openOptionsModal(voyageId)"
-              class="cursor-pointer"
-            >
-              <VerticalThreeDots fillColor="textblack100" />
+            <div class="absolute top-4 right-4">
+              <button
+                class="bg-white/90 hover:bg-white rounded-full p-2 shadow-sm transition-all"
+                @click.stop="toggleFavorite"
+              >
+                <HeartIcon size="22" :filled="isFavorite" />
+              </button>
             </div>
           </div>
 
-          <ReusableModal
-            :isOpen="isSmallModalOpen"
-            :size="size"
-            @close="closeModal"
-          >
-            <div>
-              <div class="flex justify-end pb-2" @click="closeModal">
-                <CloseIcon fillColor="border300" class="cursor-pointer" />
-              </div>
-              <div class="space-y-1">
-                <div
-                  class="w-full flex justify-between items-center px-1 py-1 hover:bg-gray-100 rounded cursor-pointer"
-                  @click="handleEdit"
-                >
-                  <span> Edit Voyage </span>
-                  <EditIcon />
-                </div>
-
-                <div
-                  class="w-full flex justify-between items-center px-1 py-1 text-red-500 hover:bg-gray-100 rounded cursor-pointer"
-                  @click="handleDelete"
-                >
-                  <span> Delete Voyage </span>
-                  <TrashIcon />
-                </div>
+          <!-- Content -->
+          <div class="p-5 sm:p-6">
+            <!-- Title and Menu -->
+            <div class="flex justify-between items-start gap-2">
+              <h3
+                class="text-xl md:text-2xl font-medium text-gray-900 flex-wrap"
+              >
+                {{ voyage.title }}
+              </h3>
+              <div
+                @click.stop="openOptionsModal(voyageId)"
+                class="cursor-pointer hover:text-gray-700 transition-colors"
+              >
+                <VerticalThreeDots fillColor="textblack100" />
               </div>
             </div>
-          </ReusableModal>
 
-          <p class="text-textblack50">
-            {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
-          </p>
-          <p>
-            <span class="text-textblack100 font-medium"> Created: </span>
-            <span class="textblack50">
-              {{ relativeCreatedAt(voyage.createdAt) }}
-            </span>
-          </p>
-          <div class="mt-3 pt-3 border-t text-sm">
-            <Rating :rating="voyage.rating" show-comment />
+            <!-- Location and Date -->
+            <div class="mt-2 flex items-center gap-2 text-normal">
+              <LocationIcon size="26" />
+              <span class="line-clamp-1">{{ voyage.location }}</span>
+              <span class="hidden md:block">•</span>
+              <span class="hidden md:block">{{
+                relativeTripDate(voyage.date)
+              }}</span>
+            </div>
+
+            <!-- Created At -->
+            <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
+              <WhatTimeIcon size="26" />
+              <span>Created:</span>
+              <span class="">{{ relativeCreatedAt(voyage.createdAt) }}</span>
+            </div>
+
+            <!-- Rating -->
+            <div class="mt-6 pt-4 border-t border-gray-100">
+              <div class="flex items-center gap-3">
+                <Rating :rating="voyage.rating" size="md" show-comment />
+              </div>
+            </div>
           </div>
         </article>
-        <!-- <div> -->
-        <div class="bg-[#f8f8f8] rounded-lg p-2 mb-2">
-          <div class="flex justify-between items-center pb-2">
-            <h4 class="text-textblack100 font-normal text-xl">Notes</h4>
+
+        <!-- Notes Section -->
+        <div class="mt-6 bg-gray-50 rounded-xl p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-medium text-gray-900">Notes</h2>
           </div>
-          <p>{{ voyage.notes }}</p>
+          <div class="prose prose-sm max-w-none text-gray-600">
+            <p>{{ voyage.notes }}</p>
+          </div>
         </div>
       </div>
-      <MapView />
-      <!-- </div> -->
-    </section>
-    <router-link to="/voyages" class="flex items-center py-4 w-max">
-      <ArrowBack fillColor="#498a80" />
-      <span class="text-accent50"> Back to Voyages </span>
-    </router-link>
+
+      <!-- Right Column - Map -->
+      <div class="w-full lg:w-[40%] xl:w-[35%]">
+        <div
+          class="sticky top-6 h-[400px] sm:h-[500px] lg:h-[550px] rounded-xl overflow-hidden shadow-sm"
+        >
+          <MapView :location="voyage.location" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Options Modal -->
+    <ReusableModal :isOpen="isSmallModalOpen" @close="closeModal">
+      <div class="p-2">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-medium">Voyage Options</h3>
+          <button @click="closeModal">
+            <CloseIcon fillColor="textblack100" size="20" />
+          </button>
+        </div>
+        <div>
+          <button
+            @click="handleEdit"
+            class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <span>Edit Voyage</span>
+            <EditIcon class="text-gray-400" />
+          </button>
+          <button
+            @click="handleDelete"
+            class="w-full flex justify-between items-center px-2 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <span>Delete Voyage</span>
+            <TrashIcon class="text-red-400" />
+          </button>
+        </div>
+      </div>
+    </ReusableModal>
   </main>
 </template>
 
@@ -141,11 +184,13 @@ import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
+import LocationIcon from "@/assets/icons/LocationIcon.vue";
+import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
+import Logo from "@/assets/icons/Logo.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
-// import { useDelayedLoading } from "../composables/useDelayedLoading.ts";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useRoute } from "vue-router";
-import { watch } from "vue";
+import { ref, watch } from "vue";
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
 const {
@@ -153,7 +198,6 @@ const {
   scrolled,
   isProfileModal,
   isSmallModalOpen,
-  size,
   voyageId,
   isLoading,
   error,
@@ -165,6 +209,11 @@ const {
   handleDelete,
   closeModal,
 } = useVoyageManager();
+const isFavorite = ref(false);
+
+const toggleFavorite = () => {
+  isFavorite.value = !isFavorite.value;
+};
 
 const route = useRoute();
 

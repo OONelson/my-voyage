@@ -1,6 +1,6 @@
 <template>
   <section class="flex justify-center items-center">
-    <div v-if="isPageLoading">
+    <div v-if="isLoading">
       <EditVoyageSkeleton />
     </div>
     <main v-else class="bg-background100 py-2 mx-auto px-3 my-5">
@@ -141,37 +141,21 @@
 </template>
 
 <script setup lang="ts">
-import { onUnmounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import { useDelayedLoading } from "../composables/useDelayedLoading";
 import { useImageUpload } from "../composables/useImageUpload";
+import { useVoyageManager } from "../composables/useVoyageManager";
+import { genUtils } from "../utils/genUtils";
 
-const { isPageLoading } = useDelayedLoading();
-const {
-  openFileInput,
-  handleDrop,
-  handleImageUpload,
-  // isLoading,
-  imageUrl,
-  dragOver,
-} = useImageUpload();
+const { isLoading } = useVoyageManager();
+const { goBack, handleSubmit, isSubmitting, fileInput, formData } = genUtils();
 
-const router = useRouter();
-const isSubmitting = ref(false);
-const formData = ref({
-  title: "",
-  imageUrl: imageUrl,
-  notes: "",
-  location: "",
-  date: "",
-  rating: 0,
-});
+const { openFileInput, handleDrop, handleImageUpload, dragOver } =
+  useImageUpload();
 
 const modules = {
   toolbar: [
@@ -179,45 +163,6 @@ const modules = {
     [{ list: "ordered" }, { list: "bullet" }],
     ["clean"],
   ],
-};
-
-// loading
-let loadingTimeout: ReturnType<typeof setTimeout>;
-
-const setLoadingTimeout = () => {
-  loadingTimeout = setTimeout(() => {
-    isPageLoading.value = false;
-  }, 3000);
-};
-
-setLoadingTimeout();
-
-onUnmounted(() => {
-  clearTimeout(loadingTimeout);
-});
-
-const goBack = () => {
-  router.push("/voyages");
-};
-
-const handleSubmit = async () => {
-  isSubmitting.value = true;
-  try {
-    console.log("Creating voyage:", formData.value);
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    router.push({
-      path: "/voyages",
-      query: {
-        created: "true",
-      },
-    });
-  } catch (err) {
-    console.error("Error creating voyage:", err);
-  } finally {
-    isSubmitting.value = false;
-  }
 };
 </script>
 

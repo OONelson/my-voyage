@@ -33,7 +33,7 @@
     <section @click.stop="isMenuOpen = false" class="lg:px-5">
       <div
         v-if="isLoading"
-        class="md:grid grid-cols-2 lg:grid-cols-3 gap-4 mb-3"
+        class="md:grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-3 mx-auto"
       >
         <VoyagesSkeleton v-for="n in voyages" :key="'skeleton-' + n" />
       </div>
@@ -44,75 +44,116 @@
         <article
           v-for="voyage in voyages"
           :key="voyage.id"
-          class="rounded-lg p-2 my-2 bg-white shadow-md max-w-[500px]"
+          class="group relative rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 max-w-[500px] mx-auto"
           @click="navigateToVoyage(voyage.id)"
         >
-          <picture class="md:flex justify-center items-center relative">
+          <!-- Image with Favorite Button -->
+          <div class="relative aspect-[4/3]">
             <img
               v-if="voyage.imageUrl"
               :src="voyage.imageUrl"
               :alt="voyage.title"
-              class="rounded-md w-full"
+              class="w-full h-full object-cover transition-transform duration-300 md:group-hover:scale-105"
             />
             <div
-              class="absolute right-2 top-2 cursor-pointer bg-white/90 rounded-full h-8 w-8 flex justify-center items-center"
+              class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"
+            ></div>
+            <button
+              @click.stop="toggleFavorite(voyage.id)"
+              class="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full p-2 shadow-sm transition-all z-10"
+              aria-label="Favorite"
             >
-              <HeartIcon size="22" />
-            </div>
-          </picture>
+              <HeartIcon
+                size="20"
+                :class="{
+                  'text-red-500 fill-current': isFavorite(voyage.id),
+                  'text-gray-400': !isFavorite(voyage.id),
+                }"
+              />
+            </button>
+          </div>
 
-          <div class="flex justify-between items-center">
-            <h4 class="pt-2 text-textblack100 font-medium text-xl leading-7">
-              {{ voyage.title }}
-            </h4>
+          <!-- Content -->
+          <div class="p-2 sm:p-5">
+            <!-- Title and Menu -->
+            <div class="flex justify-between items-start gap-3 mb-2">
+              <h3
+                class="text-lg sm:text-xl font-medium text-gray-900 line-clamp-1"
+              >
+                {{ voyage.title }}
+              </h3>
+              <div
+                @click.stop="openOptionsModal(voyage.id)"
+                aria-label="More options"
+                class="cursor-pointer"
+              >
+                <VerticalThreeDots fillColor="textblack100" />
+              </div>
+            </div>
+
+            <!-- Location and Date -->
+            <div class="mt-2 flex items-center gap-2 text-normal">
+              <LocationIcon size="26" />
+              <span class="line-clamp-1">{{ voyage.location }}</span>
+              <span class="hidden md:block">•</span>
+              <span class="hidden md:block">{{
+                relativeTripDate(voyage.date)
+              }}</span>
+            </div>
+
+            <!-- Created At -->
+            <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
+              <WhatTimeIcon size="26" />
+              <span>Created:</span>
+              <span class="">{{ relativeCreatedAt(voyage.createdAt) }}</span>
+            </div>
+
+            <!-- Rating -->
             <div
-              @click.stop="() => openOptionsModal(voyage.id)"
-              class="cursor-pointer"
+              class="flex items-center justify-between pt-3 border-t border-gray-100"
             >
-              <VerticalThreeDots fillColor="textblack100" />
+              <Rating :rating="voyage.rating" size="md" class="flex-shrink-0" />
+              <button
+                @click.stop="navigateToVoyage(voyage.id)"
+                class="text-sm font-medium text-accent50 hover:text-accent70 transition-colors flex items-center gap-1 hover:underline"
+              >
+                View details
+                <ArrowRightIcon size="14" class="mt-0.5" />
+              </button>
             </div>
+          </div>
 
-            <ReusableModal
-              :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
-              :size="size"
-              @click.stop="closeModal"
-            >
-              <div>
-                <div class="flex justify-end pb-2" @click="closeModal">
-                  <CloseIcon fillColor="border300" class="cursor-pointer" />
-                </div>
-                <div class="space-y-1">
-                  <div
-                    class="w-full flex justify-between items-center px-1 py-1 hover:bg-gray-100 rounded cursor-pointer"
-                    @click="handleEdit"
-                  >
-                    <span> Edit Voyage </span>
-                    <EditIcon />
-                  </div>
-
-                  <div
-                    class="w-full flex justify-between items-center px-1 py-1 text-red-500 hover:bg-gray-100 rounded cursor-pointer"
-                    @click="handleDelete"
-                  >
-                    <span> Delete Voyage </span>
-                    <TrashIcon />
-                  </div>
+          <!-- Options Modal -->
+          <ReusableModal
+            :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
+            :size="size"
+            @click.stop="closeModal"
+          >
+            <div>
+              <div class="flex justify-between items-center">
+                <h3 class="text-lg font-medium">Voyage Options</h3>
+                <div @click="closeModal">
+                  <CloseIcon size="18" fillColor="textblack100" />
                 </div>
               </div>
-            </ReusableModal>
-          </div>
-          <p class="text-textblack50">
-            {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
-          </p>
-          <p>
-            <span class="text-textblack100 font-medium"> Created: </span>
-            <span class="textblack50">
-              {{ relativeCreatedAt(voyage.createdAt) }}
-            </span>
-          </p>
-          <div class="mt-3 pt-3 border-t text-sm">
-            <Rating :rating="voyage.rating" show-comment />
-          </div>
+              <div>
+                <button
+                  @click.stop="handleEdit()"
+                  class="w-full flex justify-between items-center px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                >
+                  <span>Edit Voyage</span>
+                  <EditIcon size="18" class="text-gray-400" />
+                </button>
+                <button
+                  @click.stop="handleDelete()"
+                  class="w-full flex justify-between items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
+                >
+                  <span>Delete Voyage</span>
+                  <TrashIcon size="18" class="text-red-400" />
+                </button>
+              </div>
+            </div>
+          </ReusableModal>
         </article>
       </div>
     </section>
@@ -165,9 +206,11 @@ import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
-// import { useDelayedLoading } from "../composables/useDelayedLoading";
+import LocationIcon from "@/assets/icons/LocationIcon.vue";
+import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { dateAndTime } from "../utils/date-and-timeUtils";
+import { ref } from "vue";
 
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const {
@@ -190,6 +233,17 @@ const {
   handleDelete,
   closeModal,
 } = useVoyageManager();
+
+const favorites = ref<number[]>([]);
+const isFavorite = (id: number) => favorites.value.includes(id);
+const toggleFavorite = (id: number) => {
+  const index = favorites.value.indexOf(id);
+  if (index > -1) {
+    favorites.value.splice(index, 1);
+  } else {
+    favorites.value.push(id);
+  }
+};
 </script>
 
 <style scoped>
