@@ -27,16 +27,25 @@
             class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
             :class="{
               'border-2 border-accent50 border-dashed': !formData.imageUrl,
-              'border opacity-60': formData.imageUrl,
+              'border opacity-60': formData.imageUrl && !isImgLoading,
             }"
             @click="openFileInput"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
+            @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave"
             @drop.prevent="handleDrop"
           >
+            <div
+              v-if="isImgLoading"
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-md z-10"
+            >
+              <div
+                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent50"
+              ></div>
+            </div>
+
             <!-- Drag overlay state -->
             <div
-              v-if="dragOver"
+              v-if="dragOver && !isImgLoading"
               class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md"
             >
               <span class="text-accent50 font-medium">Drop image here</span>
@@ -44,13 +53,13 @@
 
             <!-- Image preview -->
             <img
-              v-if="formData.imageUrl"
+              v-if="formData.imageUrl && !isImgLoading"
               :src="formData.imageUrl"
               class="rounded-md w-full h-full object-cover"
             />
 
             <!-- Empty state -->
-            <template v-else>
+            <template v-if="!formData.imageUrl && !isImgLoading && !dragOver">
               <span class="text-textblack50"
                 >Drag & drop or click to upload</span
               >
@@ -59,9 +68,14 @@
 
             <!-- Edit overlay (shown when image exists) -->
             <div
-              v-if="formData.imageUrl"
+              v-if="formData.imageUrl && !isImgLoading"
               class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
             >
+              <img
+                v-if="formData.imageUrl && !isImgLoading"
+                :src="formData.imageUrl"
+                class="rounded-md w-full h-full object-cover"
+              />
               <EditIcon fillColor="white" size="30" class="opacity-90" />
             </div>
           </div>
@@ -152,10 +166,18 @@ import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
 
 const { isLoading } = useVoyageManager();
-const { goBack, handleSubmit, isSubmitting, fileInput, formData } = genUtils();
+const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
 
-const { openFileInput, handleDrop, handleImageUpload, dragOver } =
-  useImageUpload();
+const {
+  fileInput,
+  dragOver,
+  isImgLoading,
+  openFileInput,
+  handleDrop,
+  handleDragOver,
+  handleDragLeave,
+  handleImageUpload,
+} = useImageUpload();
 
 const modules = {
   toolbar: [

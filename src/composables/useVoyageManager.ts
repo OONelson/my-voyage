@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref, type Ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { VoyageTypeInfo } from "../types/Voyage";
 import { Voyages } from "../constants/constant";
@@ -10,6 +10,7 @@ interface VoyageManager {
   voyages: Ref<VoyageTypeInfo[]>;
   voyage: Ref<VoyageTypeInfo | null>;
   voyageId: number;
+  favorites: Ref<number[]>;
   scrolled: Ref<boolean>;
   isMenuOpen: Ref<boolean>;
   isProfileModal: Ref<boolean>;
@@ -18,17 +19,19 @@ interface VoyageManager {
   isLoading: Ref<boolean>;
   size: Ref<ModalSize>;
   error: Ref<string | null>;
+  favoriteVoyages: Ref<VoyageTypeInfo[]>;
 
   // Navigation
   toggleMenu: () => void;
   navigateToCreate: () => void;
   navigateToFavorites: () => void;
   navigateToVoyage: (id: number) => void;
+  navigateToVoyages: () => void;
 
   // Modals
   openProfileModal: () => void;
   closeProfileModal: () => void;
-  openModal: (voyageId: number, modalSize: ModalSize) => void;
+  openModal: (voyageId: number, modalSize?: ModalSize) => void;
   closeModal: () => void;
   openOptionsModal: (voyageId: number) => void;
 
@@ -40,6 +43,7 @@ interface VoyageManager {
   handleEdit: () => void;
   handleDelete: () => void;
   fetchVoyage: (voyageId: number) => Promise<VoyageTypeInfo | undefined>;
+  toggleFavorite: (voyageId: number) => void;
 }
 
 export const useVoyageManager = (): VoyageManager => {
@@ -58,21 +62,35 @@ export const useVoyageManager = (): VoyageManager => {
   const error = ref<string | null>(null);
   const size = ref<ModalSize>("md");
   const voyageId = parseInt(route.params.id as string);
+  const favorites = ref<number[]>(
+    JSON.parse(localStorage.getItem("favorites") || "[]")
+  );
 
   // Event Handlers
   const handleScroll = () => {
     scrolled.value = window.scrollY > 10;
   };
 
+  // Navigations
   const navigateToCreate = () => {
     router.push("/voyages/create");
+    isMenuOpen.value = false;
   };
   const navigateToFavorites = () => {
     router.push("/voyages/favourites");
+    isMenuOpen.value = false;
   };
 
   const navigateToVoyage = (id: number) => {
     router.push(`/voyages/${id}`);
+    isMenuOpen.value = false;
+  };
+  const navigateToVoyages = () => {
+    router.push("/voyages");
+    isMenuOpen.value = false;
+  };
+  const navigateToEdit = (voyageId: number) => {
+    router.push(`/voyages/${voyageId}/edit`);
   };
 
   // Modal Methods
@@ -88,8 +106,8 @@ export const useVoyageManager = (): VoyageManager => {
     isProfileModal.value = false;
   };
 
-  const openModal = (voyageId: number, modalSize: ModalSize) => {
-    size.value = modalSize;
+  const openModal = (voyageId: number, modalSize?: ModalSize) => {
+    size.value = modalSize ?? "md";
     currentVoyageId.value = voyageId;
     isSmallModalOpen.value = true;
   };
@@ -104,10 +122,6 @@ export const useVoyageManager = (): VoyageManager => {
   };
 
   // Voyage Actions
-  const navigateToEdit = (voyageId: number) => {
-    router.push(`/voyages/${voyageId}/edit`);
-  };
-
   const editVoyageInList = (voyageId: number) => {
     navigateToEdit(voyageId);
   };
@@ -139,6 +153,24 @@ export const useVoyageManager = (): VoyageManager => {
       confirmDeleteVoyage(currentVoyageId.value);
       closeModal();
     }
+  };
+
+  // Filter favorite voyages
+  const favoriteVoyages = computed(() => {
+    return voyages.value.filter((voyage) =>
+      favorites.value.includes(voyage.id)
+    );
+  });
+
+  // Toggle favorite status
+  const toggleFavorite = (voyageId: number) => {
+    const index = favorites.value.indexOf(voyageId);
+    if (index === -1) {
+      favorites.value.push(voyageId);
+    } else {
+      favorites.value.splice(index, 1);
+    }
+    localStorage.setItem("favorites", JSON.stringify(favorites.value));
   };
 
   // Data Loading
@@ -247,13 +279,16 @@ export const useVoyageManager = (): VoyageManager => {
     isProfileModal,
     isSmallModalOpen,
     currentVoyageId,
+    favoriteVoyages,
     isLoading,
     size,
     error,
     toggleMenu,
+    toggleFavorite,
     navigateToCreate,
     navigateToFavorites,
     navigateToVoyage,
+    navigateToVoyages,
     openProfileModal,
     closeProfileModal,
     openModal,
@@ -266,5 +301,6 @@ export const useVoyageManager = (): VoyageManager => {
     handleEdit,
     handleDelete,
     fetchVoyage,
+    favorites,
   };
 };

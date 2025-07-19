@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import SkeletonStarIcon from "@/assets/icons/SkeletonStarIcon.vue";
 import FilledStarIcon from "@/assets/icons/FilledStarIcon.vue";
-import type { Rating } from "../types/Voyage";
+import type { Rating } from "../types/voyage";
 import { getRatingColor, getRatingComment } from "../utils/ratingUtils";
 
 defineOptions({

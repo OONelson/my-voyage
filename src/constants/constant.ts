@@ -1,5 +1,5 @@
 import { computed } from "vue";
-import type { VoyageTypeInfo } from "../types/Voyage";
+import type { VoyageTypeInfo } from "../types/voyage";
 
 interface NavItem {
   name: string;

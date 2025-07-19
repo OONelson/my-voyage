@@ -1,26 +1,46 @@
 import { ref, type Ref } from "vue";
+import { genUtils } from "../utils/genUtils";
 
 interface ImageActions {
-  openFileInput: () => void;
   handleDrop: (e: DragEvent) => void;
+  handleDragOver: (e: DragEvent) => void;
+  handleDragLeave: (e: DragEvent) => void;
+  openFileInput: () => void;
   handleImageUpload: (e: Event) => void;
-  isLoading: Ref<boolean>;
   dragOver: Ref<boolean>;
-  imageUrl: Ref<string | undefined>;
+  fileInput: Ref<HTMLInputElement | null>;
+  isImgLoading: Ref<boolean>;
 }
-
 export const useImageUpload = (): ImageActions => {
-  const isLoading = ref<boolean>(false);
+  const isImgLoading = ref<boolean>(false);
   const dragOver = ref<boolean>(false);
-  const imageUrl = ref<string | undefined>(undefined);
   const fileInput = ref<HTMLInputElement | null>(null);
 
+  const { formData } = genUtils();
+
   const openFileInput = () => {
-    fileInput.value?.click();
+    if (!isImgLoading.value) {
+      fileInput.value?.click();
+    }
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (!isImgLoading.value) {
+      dragOver.value = true;
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    dragOver.value = false;
   };
 
   const handleDrop = (e: DragEvent) => {
     dragOver.value = false;
+
+    if (isImgLoading.value) return;
+
     const files = e.dataTransfer?.files;
     if (files && files.length > 0 && files[0].type.startsWith("image/")) {
       processImage(files[0]);
@@ -28,32 +48,48 @@ export const useImageUpload = (): ImageActions => {
   };
 
   const processImage = (file: Blob) => {
+    isImgLoading.value = true;
+
     const reader = new FileReader();
+
     reader.onload = (e) => {
       if (typeof e.target?.result === "string") {
-        imageUrl.value = e.target.result;
+        setTimeout(() => {
+          if (e.target) {
+            console.log(e.target);
+            formData.value.imageUrl = (e.target as FileReader).result as string;
+            console.log(formData.value.imageUrl);
+          }
+          isImgLoading.value = false;
+        }, 3000);
+        // imageUrl.value = e.target.result;
       }
     };
+    reader.onerror = () => {
+      isImgLoading.value = false;
+      console.log("Error reading file");
+    };
+
     reader.readAsDataURL(file);
   };
 
   const handleImageUpload = (e: Event) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        imageUrl.value = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
+    const input = (e.target as HTMLInputElement).files?.[0];
+    if (input && !isImgLoading.value) {
+      processImage(input);
+
+      (e.target as HTMLInputElement).value = "";
     }
   };
 
   return {
-    openFileInput,
     handleDrop,
+    openFileInput,
     handleImageUpload,
-    isLoading,
-    imageUrl,
+    handleDragOver,
+    handleDragLeave,
     dragOver,
+    fileInput,
+    isImgLoading,
   };
 };

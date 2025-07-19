@@ -46,7 +46,7 @@ import ReusableButton from "@/components/ui/ReusableButton.vue";
 import { useMap } from "../composables/useMap.ts";
 import { Voyages } from "../constants/constant";
 import { locationToCoordinates } from "../utils/geoCode";
-import type { VoyageTypeInfo } from "../types/Voyage";
+import type { VoyageTypeInfo } from "../types/voyage.ts";
 
 type MapStyle = "streets" | "satellite" | "hybrid";
 const {

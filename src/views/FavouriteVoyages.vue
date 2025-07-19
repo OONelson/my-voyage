@@ -31,10 +31,7 @@
     </ReusableModal>
 
     <section @click.stop="isMenuOpen = false" class="lg:px-5">
-      <div
-        v-if="isPageLoading"
-        class="md:grid grid-cols-2 lg:grid-cols-3 gap-4"
-      >
+      <div v-if="isLoading" class="md:grid grid-cols-2 lg:grid-cols-3 gap-4">
         <VoyagesSkeleton v-for="n in 6" :key="n" />
       </div>
       <div
@@ -165,8 +162,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useRouter } from "vue-router";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import VoyagesSkeleton from "@/components/ui/VoyagesSkeleton.vue";
@@ -179,114 +174,30 @@ import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import CompassIcon from "@/assets/icons/CompassIcon.vue";
-import { useVoyageActions } from "../composables/useVoyageActions";
-import { useDelayedLoading } from "../composables/useDelayedLoading";
-import { Voyages } from "../constants/constant";
-import type { VoyageTypeInfo } from "../types/Voyage";
+import { useVoyageManager } from "../composables/useVoyageManager";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 
-const router = useRouter();
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
-
-const scrolled = ref<boolean>(false);
-const isProfileModal = ref<boolean>(false);
-const voyages = ref<VoyageTypeInfo[]>(Voyages);
-const isMenuOpen = ref(false);
-const favorites = ref<number[]>(
-  JSON.parse(localStorage.getItem("favorites") || "[]")
-);
-
-// Filter favorite voyages
-const favoriteVoyages = computed(() => {
-  return voyages.value.filter((voyage) => favorites.value.includes(voyage.id));
-});
-
 const {
-  editVoyageInList,
-  confirmDeleteVoyage,
-  openModal,
-  closeModal,
   isSmallModalOpen,
   currentVoyageId,
-} = useVoyageActions(voyages);
-const { isPageLoading, executeWithDelay } = useDelayedLoading();
-
-// Toggle favorite status
-const toggleFavorite = (voyageId: number) => {
-  const index = favorites.value.indexOf(voyageId);
-  if (index === -1) {
-    favorites.value.push(voyageId);
-  } else {
-    favorites.value.splice(index, 1);
-  }
-  localStorage.setItem("favorites", JSON.stringify(favorites.value));
-};
-
-// useVoyageActions
-const openOptionsModal = (voyageId: number) => {
-  openModal(voyageId);
-};
-
-const handleEdit = () => {
-  if (currentVoyageId.value) {
-    editVoyageInList(currentVoyageId.value);
-    closeModal();
-  }
-};
-
-const handleDelete = () => {
-  if (currentVoyageId.value) {
-    confirmDeleteVoyage(currentVoyageId.value);
-    closeModal();
-  }
-};
-
-const loadVoyages = async () => {
-  // Simulate API call
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  return Voyages;
-};
-
-onMounted(async () => {
-  voyages.value = await executeWithDelay(loadVoyages());
-});
-
-// Navigation methods
-const navigateToVoyage = (id: number) => {
-  router.push({
-    path: `/voyages/${id}`,
-    state: { voyages: JSON.stringify(voyages.value) },
-  });
-};
-
-const navigateToVoyages = () => {
-  router.push("/voyages");
-  isMenuOpen.value = false;
-};
-
-const navigateToCreate = () => {
-  router.push("/voyages/create");
-  isMenuOpen.value = false;
-};
-
-// Profile modal
-const openProfileModal = () => {
-  isProfileModal.value = true;
-};
-
-const closeProfileModal = () => {
-  isProfileModal.value = false;
-};
-
-const toggleMenu = () => {
-  isMenuOpen.value = !isMenuOpen.value;
-};
-
-onMounted(() => {
-  window.addEventListener("scroll", () => {
-    scrolled.value = window.scrollY > 10;
-  });
-});
+  isLoading,
+  scrolled,
+  isMenuOpen,
+  isProfileModal,
+  favoriteVoyages,
+  handleEdit,
+  handleDelete,
+  openOptionsModal,
+  toggleFavorite,
+  closeModal,
+  toggleMenu,
+  navigateToCreate,
+  navigateToVoyages,
+  navigateToVoyage,
+  openProfileModal,
+  closeProfileModal,
+} = useVoyageManager();
 </script>
 
 <style scoped>

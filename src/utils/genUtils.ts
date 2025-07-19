@@ -1,20 +1,18 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useVoyageManager } from "../composables/useVoyageManager";
-import { useImageUpload } from "../composables/useImageUpload";
+import type { FormDataType } from "../types/FormData";
 
 export const genUtils = () => {
   const { voyageId, error } = useVoyageManager();
-  const { imageUrl } = useImageUpload();
   const isSubmitting = ref(false);
-  const fileInput = ref<HTMLInputElement | null>(null);
-  // Form data with proper types
-  const formData = ref({
+
+  const formData = ref<FormDataType>({
     title: "",
-    imageUrl: imageUrl,
+    imageUrl: "",
     notes: "",
     location: "",
-    date: "",
+    date: new Date(),
     rating: 0,
   });
 
@@ -62,9 +60,8 @@ export const genUtils = () => {
     goBack,
     handleSubmit,
     isSubmitting,
-    fileInput,
-    formData,
     error,
     voyageId,
+    formData,
   };
 };

@@ -43,7 +43,7 @@
           />
           <div
             v-else
-            class="h-48 bg-gray-100 rounded-md flex items-center justify-center"
+            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2"
             @click="openFileInput"
           >
             <span class="text-textblack50">No image selected</span>
@@ -124,11 +124,9 @@ import { useImageUpload } from "../composables/useImageUpload";
 import { genUtils } from "../utils/genUtils";
 
 const { voyageId, isLoading, fetchVoyage } = useVoyageManager();
-const { goBack, handleSubmit, isSubmitting, fileInput, formData, error } =
-  genUtils();
+const { goBack, handleSubmit, isSubmitting, formData, error } = genUtils();
 
-const { openFileInput, handleDrop, handleImageUpload, dragOver } =
-  useImageUpload();
+const { openFileInput, handleImageUpload } = useImageUpload();
 
 const modules = {
   toolbar: [
@@ -140,17 +138,16 @@ const modules = {
 </script>
 
 <style scoped>
-/* Custom styling for the rating stars */
 :deep(.custom-rating .p-rating-icon) {
-  color: #fbbf24; /* Default gray color */
+  color: #fbbf24;
   transition: color 0.2s;
 }
 
 :deep(.custom-rating .p-rating-icon.p-rating-icon-active) {
-  color: #fbbf24; /* Yellow color for active stars */
+  color: #fbbf24;
 }
 
 :deep(.custom-rating .p-rating-icon:hover) {
-  color: #fbbf24; /* Yellow color on hover */
+  color: #fbbf24;
 }
 </style>

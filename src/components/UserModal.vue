@@ -47,8 +47,8 @@
         <div
           class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
           :class="{
-            'border-2 border-accent50 border-dashed': !userData.imageUrl,
-            'border opacity-60': userData.imageUrl,
+            'border-2 border-accent50 border-dashed': !userData.profileImage,
+            'border opacity-60': userData.profileImage,
           }"
           @click="openFileInput"
           @dragover.prevent="dragOver = true"
@@ -65,8 +65,8 @@
 
           <!-- Image preview -->
           <img
-            v-if="userData.imageUrl"
-            :src="userData.imageUrl"
+            v-if="userData.profileImage"
+            :src="userData.profileImage"
             class="rounded-md w-full h-full object-cover"
           />
 
@@ -78,7 +78,7 @@
 
           <!-- Edit overlay (shown when image exists) -->
           <div
-            v-if="userData.imageUrl"
+            v-if="userData.profileImage"
             class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
           >
             <EditIcon fillColor="white" size="30" class="opacity-90" />
@@ -167,7 +167,7 @@ const {
   handleDrop,
   handleImageUpload,
   // isLoading,
-  imageUrl,
+  // imageUrl,
   dragOver,
 } = useImageUpload();
 
@@ -177,7 +177,7 @@ const activeTab = ref("profile");
 const userData = ref<UserProfile>({
   name: "nelson",
   email: "nelson@gmail.com",
-  imageUrl: imageUrl.value,
+  profileImage: "https://github.com/benjamincanac.png",
 });
 
 const themeItems = [
