@@ -62,7 +62,6 @@ export const useImageUpload = (): ImageActions => {
           }
           isImgLoading.value = false;
         }, 3000);
-        // imageUrl.value = e.target.result;
       }
     };
     reader.onerror = () => {

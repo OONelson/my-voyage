@@ -35,8 +35,15 @@
             ref="fileInput"
           />
 
+          <div
+            v-if="isImgLoading"
+            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-md z-10"
+          >
+            <Spinner />
+          </div>
+
           <img
-            v-if="formData.imageUrl"
+            v-if="formData.imageUrl && !isImgLoading"
             :src="formData.imageUrl"
             @click="openFileInput"
             class="rounded-md w-full h-48 object-cover border opacity-60"
@@ -117,16 +124,24 @@ import Rating from "primevue/rating";
 import EditVoyageSkeleton from "@/components/ui/EditVoyageSkeleton.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
+import Spinner from "@/components/ui/Spinner.vue";
+
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useImageUpload } from "../composables/useImageUpload";
 import { genUtils } from "../utils/genUtils";
+import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 
 const { voyageId, isLoading, fetchVoyage } = useVoyageManager();
 const { goBack, handleSubmit, isSubmitting, formData, error } = genUtils();
 
-const { openFileInput, handleImageUpload } = useImageUpload();
+const { fileInput, isImgLoading, openFileInput, handleImageUpload } =
+  useImageUpload();
 
 const modules = {
   toolbar: [
@@ -135,6 +150,20 @@ const modules = {
     ["clean"],
   ],
 };
+
+onMounted(async () => {
+  const voyage = await fetchVoyage(Number(route.params.id));
+  if (voyage) {
+    formData.value = {
+      imageUrl: voyage.imageUrl || "",
+      title: voyage.title,
+      location: voyage.location,
+      date: voyage.date,
+      rating: voyage.rating,
+      notes: voyage.notes,
+    };
+  }
+});
 </script>
 
 <style scoped>

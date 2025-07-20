@@ -38,9 +38,7 @@
               v-if="isImgLoading"
               class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-md z-10"
             >
-              <div
-                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent50"
-              ></div>
+              <Spinner />
             </div>
 
             <!-- Drag overlay state -->
@@ -57,6 +55,15 @@
               :src="formData.imageUrl"
               class="rounded-md w-full h-full object-cover"
             />
+            <!-- <advanced-cropper
+              ref="cropper"
+              :src="imageSrc"
+              :stencil-props="{
+                aspectRatio: 16 / 9,
+              }"
+              @change="onCrop"
+              class="cropper"
+            /> -->
 
             <!-- Empty state -->
             <template v-if="!formData.imageUrl && !isImgLoading && !dragOver">
@@ -70,12 +77,14 @@
             <div
               v-if="formData.imageUrl && !isImgLoading"
               class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
+              @click.stop="openFileInput"
             >
-              <img
+              <!-- <img
                 v-if="formData.imageUrl && !isImgLoading"
                 :src="formData.imageUrl"
                 class="rounded-md w-full h-full object-cover"
-              />
+              /> -->
+
               <EditIcon fillColor="white" size="30" class="opacity-90" />
             </div>
           </div>
@@ -159,6 +168,7 @@ import Editor from "primevue/editor";
 import Rating from "primevue/rating";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
+import Spinner from "@/components/ui/Spinner.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import { useImageUpload } from "../composables/useImageUpload";
