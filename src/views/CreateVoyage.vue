@@ -7,7 +7,7 @@
       <div class="flex justify-between items-center mb-5">
         <h4 class="text-textblack100">Create New Voyage</h4>
         <CloseIcon
-          @click="goBack"
+          @click="navigateToVoyages"
           fillColor="textblack100"
           class="cursor-pointer"
         />
@@ -23,17 +23,35 @@
             ref="fileInput"
           />
 
+          <!-- Action Buttons (only show when image is loaded) -->
+          <div v-if="formData.imageUrl" class="flex gap-2 mb-2">
+            <button
+              @click="cropImage"
+              class="px-3 py-1 bg-accent50 text-white rounded"
+            >
+              Crop Image
+            </button>
+            <button @click="rotate(-90)" class="px-3 py-1 bg-gray-200 rounded">
+              ↺ Rotate Left
+            </button>
+            <button @click="rotate(90)" class="px-3 py-1 bg-gray-200 rounded">
+              ↻ Rotate Right
+            </button>
+          </div>
+
+          <!-- Main Image Container -->
           <div
             class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
             :class="{
               'border-2 border-accent50 border-dashed': !formData.imageUrl,
-              'border opacity-60': formData.imageUrl && !isImgLoading,
+              border: formData.imageUrl,
             }"
             @click="openFileInput"
             @dragover.prevent="handleDragOver"
             @dragleave="handleDragLeave"
             @drop.prevent="handleDrop"
           >
+            <!-- Loading State -->
             <div
               v-if="isImgLoading"
               class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-md z-10"
@@ -41,31 +59,37 @@
               <Spinner />
             </div>
 
-            <!-- Drag overlay state -->
+            <!-- Drag Overlay -->
             <div
               v-if="dragOver && !isImgLoading"
-              class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md"
+              class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md z-5"
             >
               <span class="text-accent50 font-medium">Drop image here</span>
             </div>
 
-            <!-- Image preview -->
-            <img
-              v-if="formData.imageUrl && !isImgLoading"
-              :src="formData.imageUrl"
-              class="rounded-md w-full h-full object-cover"
-            />
-            <!-- <advanced-cropper
+            <!-- Cropper (shown when image is loaded and not in preview mode) -->
+            <advanced-cropper
+              v-if="formData.imageUrl && !croppedImage && !isImgLoading"
               ref="cropper"
-              :src="imageSrc"
+              :src="formData.imageUrl"
+              :auto-zoom="true"
               :stencil-props="{
                 aspectRatio: 16 / 9,
+                handlers: {},
+                movable: false,
+                resizable: false,
               }"
-              @change="onCrop"
-              class="cropper"
-            /> -->
+              class="absolute inset-0 w-full h-full"
+            />
 
-            <!-- Empty state -->
+            <!-- Cropped Preview (shown after cropping) -->
+            <img
+              v-if="croppedImage"
+              :src="croppedImage"
+              class="rounded-md w-full h-full object-cover"
+            />
+
+            <!-- Empty State -->
             <template v-if="!formData.imageUrl && !isImgLoading && !dragOver">
               <span class="text-textblack50"
                 >Drag & drop or click to upload</span
@@ -73,18 +97,12 @@
               <EditIcon fillColor="textblack300" size="24" />
             </template>
 
-            <!-- Edit overlay (shown when image exists) -->
+            <!-- Edit Overlay (shown on hover when image exists) -->
             <div
-              v-if="formData.imageUrl && !isImgLoading"
-              class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
+              v-if="formData.imageUrl && !isImgLoading && !croppedImage"
+              class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
               @click.stop="openFileInput"
             >
-              <!-- <img
-                v-if="formData.imageUrl && !isImgLoading"
-                :src="formData.imageUrl"
-                class="rounded-md w-full h-full object-cover"
-              /> -->
-
               <EditIcon fillColor="white" size="30" class="opacity-90" />
             </div>
           </div>
@@ -174,16 +192,22 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
+import { AdvancedCropper } from "vue-advanced-cropper";
+import "vue-advanced-cropper/dist/style.css";
 
-const { isLoading } = useVoyageManager();
+const { isLoading, navigateToVoyages } = useVoyageManager();
 const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
 
 const {
   fileInput,
   dragOver,
   isImgLoading,
+  croppedImage,
   openFileInput,
   handleDrop,
+  // onCrop,
+  rotate,
+  cropImage,
   handleDragOver,
   handleDragLeave,
   handleImageUpload,

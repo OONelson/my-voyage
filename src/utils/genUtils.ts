@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useVoyageManager } from "../composables/useVoyageManager";
-import type { FormDataType } from "../types/FormData";
+import type { FormDataType } from "../types/formData";
 
 export const genUtils = () => {
   const { voyageId, error } = useVoyageManager();
