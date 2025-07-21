@@ -23,87 +23,109 @@
             ref="fileInput"
           />
 
-          <!-- Action Buttons (only show when image is loaded) -->
+          <!-- Action Buttons -->
           <div v-if="formData.imageUrl" class="flex gap-2 mb-2">
             <button
               @click="cropImage"
-              class="px-3 py-1 bg-accent50 text-white rounded"
+              class="px-4 py-2 bg-accent50 text-white rounded-md hover:bg-accent70 transition-colors"
             >
               Crop Image
             </button>
-            <button @click="rotate(-90)" class="px-3 py-1 bg-gray-200 rounded">
+            <button
+              @click="rotate(-90)"
+              class="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
               ↺ Rotate Left
             </button>
-            <button @click="rotate(90)" class="px-3 py-1 bg-gray-200 rounded">
+            <button
+              @click="rotate(90)"
+              class="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+            >
               ↻ Rotate Right
             </button>
           </div>
 
           <!-- Main Image Container -->
           <div
-            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
+            class="h-64 bg-gray-50 rounded-lg flex items-center justify-center relative overflow-hidden"
             :class="{
-              'border-2 border-accent50 border-dashed': !formData.imageUrl,
-              border: formData.imageUrl,
+              'border-2 border-dashed border-accent50': !formData.imageUrl,
+              'border border-gray-200': formData.imageUrl,
             }"
             @click="openFileInput"
-            @dragover.prevent="handleDragOver"
-            @dragleave="handleDragLeave"
+            @dragover.prevent="dragOver = true"
+            @dragleave="dragOver = false"
             @drop.prevent="handleDrop"
           >
             <!-- Loading State -->
             <div
               v-if="isImgLoading"
-              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded-md z-10"
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 z-20"
             >
-              <Spinner />
+              <Spinner class="w-8 h-8 text-accent50" />
             </div>
 
             <!-- Drag Overlay -->
             <div
               v-if="dragOver && !isImgLoading"
-              class="absolute inset-0 bg-accent50 bg-opacity-20 flex items-center justify-center border-2 border-accent50 border-dashed rounded-md z-5"
+              class="absolute inset-0 flex items-center justify-center bg-accent50 bg-opacity-10 border-2 border-dashed border-accent50 z-10"
             >
-              <span class="text-accent50 font-medium">Drop image here</span>
+              <div class="bg-white px-4 py-2 rounded-lg shadow-sm">
+                <span class="text-accent50 font-medium">Drop image here</span>
+              </div>
             </div>
 
-            <!-- Cropper (shown when image is loaded and not in preview mode) -->
-            <advanced-cropper
-              v-if="formData.imageUrl && !croppedImage && !isImgLoading"
-              ref="cropper"
+            <!-- Source Image (hidden when cropped) -->
+            <img
+              v-if="formData.imageUrl && !croppedImage"
+              ref="image"
               :src="formData.imageUrl"
-              :auto-zoom="true"
-              :stencil-props="{
-                aspectRatio: 16 / 9,
-                handlers: {},
-                movable: false,
-                resizable: false,
-              }"
-              class="absolute inset-0 w-full h-full"
+              :style="imageStyle"
+              @load="initCropper"
+              class="max-w-full max-h-full object-contain"
             />
 
-            <!-- Cropped Preview (shown after cropping) -->
+            <!-- Crop Box -->
+            <div
+              v-if="formData.imageUrl && !croppedImage && !isImgLoading"
+              ref="cropBox"
+              class="absolute border-2 border-white border-dashed shadow-lg"
+              :style="cropBoxStyle"
+              @mousedown="startDrag"
+            >
+              <div
+                v-for="handle in handles"
+                :key="handle"
+                class="absolute w-3 h-3 bg-white border border-accent50 rounded-full"
+                :class="handleClasses[handle]"
+                @mousedown.stop="startResize($event, handle)"
+              />
+            </div>
+
+            <!-- Cropped Preview -->
             <img
               v-if="croppedImage"
               :src="croppedImage"
-              class="rounded-md w-full h-full object-cover"
+              class="w-full h-full object-cover"
             />
 
             <!-- Empty State -->
             <template v-if="!formData.imageUrl && !isImgLoading && !dragOver">
-              <span class="text-textblack50"
-                >Drag & drop or click to upload</span
-              >
-              <EditIcon fillColor="textblack300" size="24" />
+              <div class="flex flex-col items-center text-gray-400">
+                <EditIcon class="w-6 h-6 mb-2" />
+                <span>Drag & drop or click to upload</span>
+              </div>
             </template>
 
-            <!-- Edit Overlay (shown on hover when image exists) -->
+            <!-- Edit Overlay -->
             <div
               v-if="formData.imageUrl && !isImgLoading && !croppedImage"
-              class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md cursor-pointer opacity-0 hover:opacity-100 transition-opacity"
+              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 cursor-pointer"
               @click.stop="openFileInput"
             >
-              <EditIcon fillColor="white" size="30" class="opacity-90" />
+              <EditIcon
+                class="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity"
+              />
             </div>
           </div>
         </div>
@@ -192,25 +214,31 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
-import { AdvancedCropper } from "vue-advanced-cropper";
-import "vue-advanced-cropper/dist/style.css";
+// import { AdvancedCropper } from "vue-advanced-cropper";
+// import "vue-advanced-cropper/dist/style.css";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
 const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
 
 const {
-  fileInput,
-  dragOver,
-  isImgLoading,
-  croppedImage,
-  openFileInput,
-  handleDrop,
-  // onCrop,
   rotate,
+  initCropper,
+  startDrag,
+  startResize,
   cropImage,
+  handleDrop,
+  openFileInput,
+  handleImageUpload,
   handleDragOver,
   handleDragLeave,
-  handleImageUpload,
+  handles, // Make sure handles is typed as HandleKey[]
+  imageStyle,
+  cropBoxStyle,
+  cropBox,
+  croppedImage,
+  dragOver,
+  fileInput,
+  isImgLoading,
 } = useImageUpload();
 
 const modules = {
@@ -219,6 +247,28 @@ const modules = {
     [{ list: "ordered" }, { list: "bullet" }],
     ["clean"],
   ],
+};
+
+// Add handleClasses mapping for crop handles
+type HandleKey =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right"
+  | "top"
+  | "bottom"
+  | "left"
+  | "right";
+
+const handleClasses: Record<HandleKey, string> = {
+  "top-left": "top-0 left-0 cursor-nwse-resize",
+  "top-right": "top-0 right-0 cursor-nesw-resize",
+  "bottom-left": "bottom-0 left-0 cursor-nesw-resize",
+  "bottom-right": "bottom-0 right-0 cursor-nwse-resize",
+  top: "top-0 left-1/2 -translate-x-1/2 cursor-ns-resize",
+  bottom: "bottom-0 left-1/2 -translate-x-1/2 cursor-ns-resize",
+  left: "left-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
+  right: "right-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
 };
 </script>
 
