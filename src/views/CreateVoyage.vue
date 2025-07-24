@@ -12,50 +12,62 @@
           class="cursor-pointer"
         />
       </div>
-      <form @submit.prevent="handleSubmit" class="space-y-4">
+      <form @submit.prevent="" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
           <input
             type="file"
+            ref="fileInput"
             @change="handleImageUpload"
             accept="image/*"
             class="hidden"
-            ref="fileInput"
           />
 
           <!-- Action Buttons -->
-          <div v-if="formData.imageUrl" class="flex gap-2 mb-2">
+          <div v-if="showActionButtons" class="flex gap-2 mb-2">
             <button
               @click="cropImage"
-              class="px-4 py-2 bg-accent50 text-white rounded-md hover:bg-accent70 transition-colors"
+              class="flex md:justify-between items-center gap-1 px-2 bg-accent50 text-white rounded-md hover:bg-accent70 transition-colors"
             >
-              Crop Image
+              <CropIcon size="24" fillColor="#fff" />
+              <span class="hidden md:block"> Crop </span>
             </button>
             <button
               @click="rotate(-90)"
-              class="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
-              ↺ Rotate Left
+              <RotateLeft size="24" />
+
+              <span class="hidden md:block"> Rotate Left </span>
             </button>
             <button
               @click="rotate(90)"
-              class="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+              class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
-              ↻ Rotate Right
+              <RotateRight size="24" />
+              <span class="hidden md:block"> Rotate Right </span>
             </button>
+            <div
+              v-if="hasImage"
+              @click.prevent="deleteSelectedImage"
+              class="px-4 py-2 bg-red-600 rounded-md hover:bg-red-500 transition-colors cursor-pointer"
+            >
+              <TrashIcon fillColor="#fff" size="24" />
+            </div>
           </div>
 
           <!-- Main Image Container -->
           <div
             class="h-64 bg-gray-50 rounded-lg flex items-center justify-center relative overflow-hidden"
             :class="{
-              'border-2 border-dashed border-accent50': !formData.imageUrl,
-              'border border-gray-200': formData.imageUrl,
+              'border-2 border-dashed border-accent50': !hasImage,
+              'border border-gray-200': hasImage,
             }"
-            @click="openFileInput"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
+            @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave"
             @drop.prevent="handleDrop"
+            v-if="true"
+            v-bind="!hasImage ? { onClick: openFileInput } : {}"
           >
             <!-- Loading State -->
             <div
@@ -75,26 +87,26 @@
               </div>
             </div>
 
-            <!-- Source Image (hidden when cropped) -->
+            <!-- Original Image Preview -->
             <img
-              v-if="formData.imageUrl && !croppedImage"
-              ref="image"
+              v-if="showOriginalImage"
               :src="formData.imageUrl"
+              ref="image"
               :style="imageStyle"
               @load="initCropper"
               class="max-w-full max-h-full object-contain"
             />
 
-            <!-- Crop Box -->
+            <!-- Crop Box (only visible when editing original) -->
             <div
-              v-if="formData.imageUrl && !croppedImage && !isImgLoading"
+              v-if="showCropBox"
               ref="cropBox"
-              class="absolute border-2 border-white border-dashed shadow-lg"
+              class="absolute border-2 border-[#3bc159] border-dashed shadow-lg"
               :style="cropBoxStyle"
               @mousedown="startDrag"
             >
               <div
-                v-for="handle in handles"
+                v-for="handle in typedHandles"
                 :key="handle"
                 class="absolute w-3 h-3 bg-white border border-accent50 rounded-full"
                 :class="handleClasses[handle]"
@@ -104,29 +116,18 @@
 
             <!-- Cropped Preview -->
             <img
-              v-if="croppedImage"
+              v-if="showCroppedImage"
               :src="croppedImage"
               class="w-full h-full object-cover"
             />
 
             <!-- Empty State -->
-            <template v-if="!formData.imageUrl && !isImgLoading && !dragOver">
+            <template v-if="showEmptyState">
               <div class="flex flex-col items-center text-gray-400">
                 <EditIcon class="w-6 h-6 mb-2" />
                 <span>Drag & drop or click to upload</span>
               </div>
             </template>
-
-            <!-- Edit Overlay -->
-            <div
-              v-if="formData.imageUrl && !isImgLoading && !croppedImage"
-              class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 transition-all duration-200 cursor-pointer"
-              @click.stop="openFileInput"
-            >
-              <EditIcon
-                class="w-8 h-8 text-white opacity-0 hover:opacity-100 transition-opacity"
-              />
-            </div>
           </div>
         </div>
 
@@ -137,21 +138,14 @@
             type="text"
             v-model="formData.title"
             placeholder="A weekend in Monaco"
-            required
           />
           <ReusableInput
             label="Location"
             type="text"
             v-model="formData.location"
             placeholder="Monaco"
-            required
           />
-          <ReusableInput
-            label="Date"
-            type="date"
-            v-model="formData.date"
-            required
-          />
+          <ReusableInput label="Date" type="date" v-model="formData.date" />
 
           <!-- Rating -->
           <div>
@@ -211,14 +205,22 @@ import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import TrashIcon from "@/assets/icons/TrashIcon.vue";
+import CropIcon from "@/assets/icons/CropIcon.vue";
+import RotateRight from "@/assets/icons/RotateRight.vue";
+import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
-// import { AdvancedCropper } from "vue-advanced-cropper";
-// import "vue-advanced-cropper/dist/style.css";
+import { computed } from "vue";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
-const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
+const {
+  goBack,
+  // handleSubmit,
+  isSubmitting,
+  formData,
+} = genUtils();
 
 const {
   rotate,
@@ -231,7 +233,8 @@ const {
   handleImageUpload,
   handleDragOver,
   handleDragLeave,
-  handles, // Make sure handles is typed as HandleKey[]
+  deleteSelectedImage,
+  handles,
   imageStyle,
   cropBoxStyle,
   cropBox,
@@ -239,7 +242,36 @@ const {
   dragOver,
   fileInput,
   isImgLoading,
-} = useImageUpload();
+} = useImageUpload(formData);
+
+// Ensure handles is typed as HandleKey[]
+const typedHandles = handles as HandleKey[];
+
+const hasImage = computed(
+  () => !!formData.value.imageUrl || !!croppedImage.value
+);
+const showActionButtons = computed(
+  () => formData.value.imageUrl && !isImgLoading.value
+);
+const showOriginalImage = computed(
+  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+);
+const showCropBox = computed(
+  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+);
+const showCroppedImage = computed(
+  () => !!croppedImage.value && !isImgLoading.value
+);
+const showEmptyState = computed(
+  () =>
+    !formData.value.imageUrl &&
+    !croppedImage.value &&
+    !isImgLoading.value &&
+    !dragOver.value
+);
+// const showEditOverlay = computed(
+//   () => formData.value.imageUrl && !isImgLoading.value && !croppedImage.value
+// );
 
 const modules = {
   toolbar: [

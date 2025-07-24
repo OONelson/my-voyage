@@ -1,6 +1,5 @@
 import { computed, nextTick, ref, type Ref } from "vue";
-// import { type Cropper } from "vue-advanced-cropper";
-import { genUtils } from "../utils/genUtils";
+import { type FormDataType } from "../types/formData";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;
@@ -26,12 +25,12 @@ interface ImageActions {
   initCropper: () => void;
   startDrag: (e: MouseEvent) => void;
   startResize: (e: MouseEvent, handle: string) => void;
+  deleteSelectedImage: () => void;
 }
-export const useImageUpload = (): ImageActions => {
+export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const isImgLoading = ref<boolean>(false);
   const dragOver = ref<boolean>(false);
   const fileInput = ref<HTMLInputElement | null>(null);
-  // const cropper = ref<Cropper>();
   const wrapper = ref<HTMLElement | null>(null);
   const image = ref<HTMLImageElement | null>(null);
   const cropBox = ref<HTMLElement | null>(null);
@@ -46,7 +45,83 @@ export const useImageUpload = (): ImageActions => {
   const rotation = ref(0);
   const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"];
 
-  // Computed styles
+  const openFileInput = () => {
+    if (!isImgLoading.value) {
+      fileInput.value?.click();
+    }
+  };
+
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    if (!isImgLoading.value) {
+      dragOver.value = true;
+    }
+  };
+
+  const handleDragLeave = (e: DragEvent) => {
+    e.preventDefault();
+    dragOver.value = false;
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    dragOver.value = false;
+
+    if (isImgLoading.value) return;
+
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0 && files[0].type.startsWith("image/")) {
+      processImage(files[0]);
+    }
+  };
+
+  const handleImageUpload = (e: Event) => {
+    const input = (e.target as HTMLInputElement).files?.[0];
+    if (input && !isImgLoading.value) {
+      processImage(input);
+
+      (e.target as HTMLInputElement).value = "";
+    }
+  };
+
+  const processImage = (file: File) => {
+    if (!file.type.startsWith("image/")) {
+      console.error("Selected file is not an image");
+      return;
+    }
+    isImgLoading.value = true;
+    croppedImage.value = "";
+    formData.value.imageUrl = "";
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        formData.value = {
+          ...formData.value,
+          imageUrl: e.target.result as string,
+        };
+        isImgLoading.value = false;
+
+        nextTick(() => {
+          if (image.value) {
+            initCropper();
+          }
+        });
+      }
+    };
+    reader.onerror = () => {
+      isImgLoading.value = false;
+      console.error("Error reading file");
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const deleteSelectedImage = () => {
+    formData.value.imageUrl = "";
+    croppedImage.value = "";
+  };
+
   const imageStyle = computed(() => ({
     transform: `rotate(${rotation.value}deg)`,
   }));
@@ -180,78 +255,13 @@ export const useImageUpload = (): ImageActions => {
 
     // Save result
     croppedImage.value = canvas.toDataURL("image/jpeg");
+    formData.value.imageUrl = croppedImage.value;
+    console.log(croppedImage);
   };
 
   // Rotate image
   const rotate = (degrees: number = 90) => {
     rotation.value = (rotation.value + degrees) % 360;
-  };
-
-  const { formData } = genUtils();
-
-  const openFileInput = () => {
-    if (!isImgLoading.value) {
-      fileInput.value?.click();
-    }
-  };
-
-  const handleDragOver = (e: DragEvent) => {
-    e.preventDefault();
-    if (!isImgLoading.value) {
-      dragOver.value = true;
-    }
-  };
-
-  const handleDragLeave = (e: DragEvent) => {
-    e.preventDefault();
-    dragOver.value = false;
-  };
-
-  const handleDrop = (e: DragEvent) => {
-    dragOver.value = false;
-
-    if (isImgLoading.value) return;
-
-    const files = e.dataTransfer?.files;
-    if (files && files.length > 0 && files[0].type.startsWith("image/")) {
-      processImage(files[0]);
-    }
-  };
-
-  const handleImageUpload = (e: Event) => {
-    const input = (e.target as HTMLInputElement).files?.[0];
-    if (input && !isImgLoading.value) {
-      processImage(input);
-
-      (e.target as HTMLInputElement).value = "";
-    }
-  };
-
-  const processImage = (file: File) => {
-    isImgLoading.value = true;
-    croppedImage.value = "";
-
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        formData.value.imageUrl = e.target.result as string;
-        isImgLoading.value = false;
-        croppedImage.value = "";
-
-        // nextTick(() => {
-        //   if (cropper.value) {
-        //     cropper.value.refresh();
-        //   }
-        // });
-      }
-    };
-    reader.onerror = () => {
-      isImgLoading.value = false;
-      console.error("Error reading file");
-    };
-
-    reader.readAsDataURL(file);
   };
 
   return {
@@ -265,6 +275,7 @@ export const useImageUpload = (): ImageActions => {
     handleImageUpload,
     handleDragOver,
     handleDragLeave,
+    deleteSelectedImage,
     handles,
     imageStyle,
     cropBoxStyle,

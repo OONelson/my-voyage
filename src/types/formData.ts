@@ -6,3 +6,12 @@ export type FormDataType = {
   date: Date;
   rating: number;
 };
+
+export const initialFormData: FormDataType = {
+  title: "",
+  imageUrl: "",
+  notes: "",
+  location: "",
+  date: new Date(),
+  rating: 0,
+};

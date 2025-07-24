@@ -5,6 +5,7 @@ export { default as SkeletonStarIcon } from "./SkeletonStarIcon.vue";
 export { default as FilledStarIcon } from "./FilledStarIcon.vue";
 export { default as TrashIcon } from "./TrashIcon.vue";
 export { default as EditIcon } from "./EditIcon.vue";
+export { default as CropIcon } from "./CropIcon.vue";
 export { default as GoogleIcon } from "./GoogleIcon.vue";
 export { default as EyeIcon } from "./EyeIcon.vue";
 export { default as EyeSlashIcon } from "./EyeSlashIcon.vue";
