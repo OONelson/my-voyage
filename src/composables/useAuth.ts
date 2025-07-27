@@ -114,6 +114,28 @@ export const useAuth = () => {
     }
   };
 
+  const fetchUser = async () => {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
+    if (authUser) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+      user.value = data;
+    }
+  };
+
+  const upgradeToPremium = async () => {
+    await supabase
+      .from("profiles")
+      .update({ is_premium: true })
+      .eq("id", user.value?.id);
+    await fetchUser();
+  };
+
   return {
     user,
     error,
@@ -125,6 +147,8 @@ export const useAuth = () => {
     login,
     loginWithGoogle,
     logout,
+    fetchUser,
+    upgradeToPremium,
     toggleAuth,
   };
 };

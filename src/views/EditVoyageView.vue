@@ -19,12 +19,12 @@
       <div class="flex justify-between items-center mb-5">
         <h4 class="text-textblack100">Edit Voyage</h4>
         <CloseIcon
-          @click="goBack"
+          @click="navigateToVoyage"
           fillColor="textblack100"
           class="cursor-pointer"
         />
       </div>
-      <form @submit.prevent="handleSubmit" class="space-y-4">
+      <form @submit.prevent="" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
           <input
@@ -66,8 +66,8 @@
             </div>
           </div>
 
-      <!-- Main Image Container -->
-      <div
+          <!-- Main Image Container -->
+          <div
             class="h-64 bg-gray-50 rounded-lg flex items-center justify-center relative overflow-hidden"
             :class="{
               'border-2 border-dashed border-accent50': !hasImage,
@@ -97,7 +97,6 @@
               </div>
             </div>
 
-            <!-- Original Image Preview -->
             <img
               v-if="showOriginalImage"
               :src="formData.imageUrl"
@@ -107,7 +106,6 @@
               class="max-w-full max-h-full object-contain"
             />
 
-            <!-- Crop Box (only visible when editing original) -->
             <div
               v-if="showCropBox"
               ref="cropBox"
@@ -139,6 +137,7 @@
               </div>
             </template>
           </div>
+        </div>
 
         <!-- Title -->
         <div>
@@ -190,7 +189,7 @@
           </router-link>
           <ReusableButton
             type="submit"
-            class="px-4 py-2 bg-accent50 text-white rounded hover:bg-accent70"
+            class="px-4 py-2 bg-accent100 hover:bg-accent50 active:bg-accent50 text-white rounded"
             :disabled="isSubmitting"
             :label="isSubmitting ? 'Saving...' : 'Save Changes'"
           />
@@ -210,7 +209,10 @@ import Spinner from "@/components/ui/Spinner.vue";
 
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-
+import TrashIcon from "@/assets/icons/TrashIcon.vue";
+import CropIcon from "@/assets/icons/CropIcon.vue";
+import RotateRight from "@/assets/icons/RotateRight.vue";
+import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useImageUpload } from "../composables/useImageUpload";
 import { genUtils } from "../utils/genUtils";
@@ -219,9 +221,15 @@ import { useRoute } from "vue-router";
 
 const route = useRoute();
 
-const { voyageId, isLoading, fetchVoyage } = useVoyageManager();
-const { goBack, handleSubmit ,
-  isSubmitting, formData, error } = genUtils();
+const { voyageId, isLoading, fetchVoyage, navigateToVoyage } =
+  useVoyageManager();
+const {
+  // goBack,
+  // handleSubmit,
+  isSubmitting,
+  formData,
+  error,
+} = genUtils();
 
 const {
   rotate,

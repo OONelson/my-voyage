@@ -159,14 +159,21 @@
             class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <span>Edit Voyage</span>
-            <EditIcon class="text-gray-400" />
+            <EditIcon size="24" />
+          </button>
+          <button
+            @click="handleDelete"
+            class="w-full flex justify-between items-center px-2 py-3 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <span>Share</span>
+            <ShareIcon />
           </button>
           <button
             @click="handleDelete"
             class="w-full flex justify-between items-center px-2 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
             <span>Delete Voyage</span>
-            <TrashIcon class="text-red-400" />
+            <TrashIcon size="24" fillColor="#dc2626" />
           </button>
         </div>
       </div>
@@ -186,6 +193,7 @@ import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
+import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
 import { dateAndTime } from "../utils/date-and-timeUtils";
 import { useVoyageManager } from "../composables/useVoyageManager";

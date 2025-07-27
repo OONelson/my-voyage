@@ -187,7 +187,7 @@
           </button>
           <ReusableButton
             type="submit"
-            class="px-4 py-2 bg-accent50 text-white rounded hover:bg-accent70"
+            class="px-4 py-2 bg-accent100 hover:bg-accent50 active:bg-accent50 text-white rounded"
             :disabled="isSubmitting"
             :label="isSubmitting ? 'Creating...' : 'Create Voyage'"
           />
