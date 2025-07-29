@@ -74,3 +74,18 @@ export const Voyages: VoyageTypeInfo[] = [
     createdAt: new Date("2023-07-25T16:20:00Z"),
   },
 ];
+
+export const platforms = [
+  {
+    socialMedia: "facebook",
+    icon: "facebook",
+  },
+  {
+    socialMedia: "X",
+    icon: "x",
+  },
+  {
+    socialMedia: "linkedIn",
+    icon: "linkedin",
+  },
+];

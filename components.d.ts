@@ -18,6 +18,7 @@ declare module 'vue' {
     ReusableModal: typeof import('./src/components/ui/ReusableModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShareModal: typeof import('./src/components/ShareModal.vue')['default']
     SideSlider: typeof import('./src/components/SideSlider.vue')['default']
     SinglevoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']
     SingleVoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']

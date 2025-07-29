@@ -45,7 +45,7 @@
   </div>
   <main
     v-else-if="voyage"
-    class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+    class="w-full max-w-7xl mx-auto px-4 sm:px-10 lg:px-8 py-6"
   >
     <!-- Back Button -->
     <router-link
@@ -57,7 +57,7 @@
     </router-link>
 
     <!-- Main Content -->
-    <div class="flex flex-col lg:flex-row gap-8 xl:gap-12">
+    <div id="journal-content" class="flex flex-col lg:flex-row gap-8 xl:gap-12">
       <!-- Left Column - Voyage Details -->
       <div class="flex-1">
         <!-- Voyage Card -->
@@ -162,12 +162,13 @@
             <EditIcon size="24" />
           </button>
           <button
-            @click="handleDelete"
-            class="w-full flex justify-between items-center px-2 py-3 hover:bg-red-50 rounded-lg transition-colors"
+            @click="showShareModal = true"
+            class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <span>Share</span>
             <ShareIcon />
           </button>
+          <ShareModal v-if="showShareModal" @close="showShareModal = false" />
           <button
             @click="handleDelete"
             class="w-full flex justify-between items-center px-2 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -183,6 +184,7 @@
 
 <script setup lang="ts">
 import MapView from "@/components/MapView.vue";
+import ShareModal from "@/components/ShareModal.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import SingleVoyageSkeleton from "@/components/ui/SingleVoyageSkeleton.vue";
 import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
@@ -219,11 +221,12 @@ const {
 } = useVoyageManager();
 const isFavorite = ref(false);
 
+const route = useRoute();
+
 const toggleFavorite = () => {
   isFavorite.value = !isFavorite.value;
 };
-
-const route = useRoute();
+const showShareModal = ref(false);
 
 const loadVoyageData = async () => {
   const voyageId = Number(route.params.id);
