@@ -57,7 +57,7 @@
           <DownloadIcon />
           <span> Download as PDF </span>
         </button>
-
+        <PremiumButton label="Export as PDF" />
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
@@ -99,6 +99,8 @@ import CopyIcon from "@/assets/icons/CopyIcon.vue";
 import CopiedIcon from "@/assets/icons/CopiedIcon.vue";
 import DownloadIcon from "@/assets/icons/DownloadIcon.vue";
 import PremiumIcon from "@/assets/icons/PremiumIcon.vue";
+import PremiumButton from "@/components/ui/PremiumButton.vue";
+
 import type { Platform } from "../types/social";
 import { platforms } from "../constants/constant";
 import { usePdfExport } from "../composables/usePdfExport";

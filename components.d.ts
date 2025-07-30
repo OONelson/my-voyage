@@ -14,6 +14,7 @@ declare module 'vue' {
     LogoutModal: typeof import('./src/components/LogoutModal.vue')['default']
     LogOutModal: typeof import('./src/components/LogoutModal.vue')['default']
     MapView: typeof import('./src/components/MapView.vue')['default']
+    PremiumButton: typeof import('./src/components/ui/PremiumButton.vue')['default']
     Rating: typeof import('./src/components/Rating.vue')['default']
     ReusableButton: typeof import('./src/components/ui/ReusableButton.vue')['default']
     ReusableInput: typeof import('./src/components/ui/ReusableInput.vue')['default']
