@@ -13,9 +13,9 @@
       <div class="flex lg:flex-row flex-col gap-2">
         <ReusableButton
           @click="addSampleMarkers"
-          class="bg-accent100 text-white py-2"
+          class="bg-accent100 text-white px-2 py-2"
           label="Add Markers"
-        />
+        ></ReusableButton>
 
         <ReusableButton
           @click="removeAllMarkers"

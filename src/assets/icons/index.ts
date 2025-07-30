@@ -14,6 +14,7 @@ export { default as CloseIcon } from "./CloseIcon.vue";
 export { default as CopyIcon } from "./CopyIcon.vue";
 export { default as CopiedIcon } from "./CopiedIcon.vue";
 export { default as DownloadIcon } from "./DownloadIcon.vue";
+export { default as LogOutIcon } from "./LogOutIcon.vue";
 export { default as LocationIcon } from "./LocationIcon.vue";
 export { default as WhatTimeIcon } from "./WhatTimeIcon.vue";
 export { default as AddIcon } from "./AddIcon.vue";

@@ -7,11 +7,11 @@ export type FormDataType = {
   rating: number;
 };
 
-export const initialFormData: FormDataType = {
-  title: "",
-  imageUrl: "",
-  notes: "",
-  location: "",
-  date: new Date(),
-  rating: 0,
-};
+// export const initialFormData: FormDataType = {
+//   title: "",
+//   imageUrl: "",
+//   notes: "",
+//   location: "",
+//   date: new Date(),
+//   rating: 0,
+// };

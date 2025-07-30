@@ -117,11 +117,15 @@
         <ReusableButton
           class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none transition-colors"
           type="button"
-          @click="logoutAllDevices"
+          @click="openLogoutModal"
           label="Log Out"
         />
       </div>
-
+      <LogoutModal
+        :isOpen="showLogoutModal"
+        @close="closeLogoutModal"
+        @confirm="handleLogout"
+      />
       <!-- Delete Account -->
       <div class="flex justify-between items-center pt-2">
         <p class="text-gray-700">Delete account</p>
@@ -158,6 +162,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import LogoutModal from "../components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import type { UserProfile } from "../types/userProfile";
@@ -173,6 +178,7 @@ const {
 
 const selectedTheme = ref("system");
 const activeTab = ref("profile");
+const showLogoutModal = ref<boolean>(false);
 
 const userData = ref<UserProfile>({
   name: "nelson",
@@ -204,7 +210,11 @@ const maskedEmail = computed(() => {
   return `${username.substring(0, 2)}****${username.slice(-1)}@${domain}`;
 });
 
-const logoutAllDevices = () => {
+const openLogoutModal = () => (showLogoutModal.value = true);
+
+const closeLogoutModal = () => (showLogoutModal.value = false);
+
+const handleLogout = () => {
   console.log("Logging out from all devices...");
   // Implement logout logic
 };
