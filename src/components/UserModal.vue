@@ -160,7 +160,7 @@ import { ref, computed } from "vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import { useImageUpload } from "../composables/useImageUpload";
-import type { UserProfile } from "../types/UserProfile";
+import type { UserProfile } from "../types/userProfile";
 
 const {
   openFileInput,
@@ -178,6 +178,8 @@ const userData = ref<UserProfile>({
   name: "nelson",
   email: "nelson@gmail.com",
   profileImage: "https://github.com/benjamincanac.png",
+  is_premium: false,
+  createdAt: new Date(),
 });
 
 const themeItems = [

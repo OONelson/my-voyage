@@ -1,5 +1,10 @@
 import { computed } from "vue";
 import type { VoyageTypeInfo } from "../types/voyage";
+import type { Platform } from "../types/social";
+import facebook from "@/assets/images/facebook.svg";
+import x from "@/assets/images/x.svg";
+import whatsapp from "@/assets/images/whatsapp.svg";
+import linkedin from "@/assets/images/linkedin.svg";
 
 interface NavItem {
   name: string;
@@ -75,17 +80,21 @@ export const Voyages: VoyageTypeInfo[] = [
   },
 ];
 
-export const platforms = [
+export const platforms: Platform[] = [
   {
     socialMedia: "facebook",
-    icon: "facebook",
+    icon: facebook,
   },
   {
-    socialMedia: "X",
-    icon: "x",
+    socialMedia: "x",
+    icon: x,
   },
   {
-    socialMedia: "linkedIn",
-    icon: "linkedin",
+    socialMedia: "linkedin",
+    icon: linkedin,
+  },
+  {
+    socialMedia: "whatsapp",
+    icon: whatsapp,
   },
 ];

@@ -162,13 +162,16 @@
             <EditIcon size="24" />
           </button>
           <button
-            @click="showShareModal = true"
+            @click="openShareModal"
             class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <span>Share</span>
             <ShareIcon />
           </button>
-          <ShareModal v-if="showShareModal" @close="showShareModal = false" />
+          <ShareModal
+            v-if="isShareModalOpen"
+            @close="isShareModalOpen = false"
+          />
           <button
             @click="handleDelete"
             class="w-full flex justify-between items-center px-2 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -201,6 +204,7 @@ import { dateAndTime } from "../utils/date-and-timeUtils";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useRoute } from "vue-router";
 import { ref, watch } from "vue";
+
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
 const {
@@ -219,14 +223,19 @@ const {
   handleDelete,
   closeModal,
 } = useVoyageManager();
-const isFavorite = ref(false);
 
 const route = useRoute();
+
+const isFavorite = ref(false);
+const isShareModalOpen = ref<boolean>(false);
 
 const toggleFavorite = () => {
   isFavorite.value = !isFavorite.value;
 };
-const showShareModal = ref(false);
+
+const openShareModal = () => {
+  isShareModalOpen.value = true;
+};
 
 const loadVoyageData = async () => {
   const voyageId = Number(route.params.id);

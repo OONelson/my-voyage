@@ -12,7 +12,7 @@
           class="cursor-pointer"
         />
       </div>
-      <form @submit.prevent="" class="space-y-4">
+      <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
           <input
@@ -215,12 +215,7 @@ import { genUtils } from "../utils/genUtils";
 import { computed } from "vue";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
-const {
-  goBack,
-  // handleSubmit,
-  isSubmitting,
-  formData,
-} = genUtils();
+const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
 
 const {
   rotate,

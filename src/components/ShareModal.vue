@@ -5,32 +5,21 @@
     <div class="bg-white rounded-lg w-full max-w-md overflow-hidden shadow-xl">
       <!-- Header with close button -->
       <div class="p-6 pb-4 border-b">
+        <header class="flex justify-between items-center mb-2">
+          <div class="w-min p-4 bg-gray-100 rounded-full">
+            <ShareIcon />
+          </div>
+          <button @click="$emit('close')" aria-label="Close">
+            <CloseIcon fillColor="#6b7280" size="20" />
+          </button>
+        </header>
         <div class="flex justify-between items-start">
           <div>
             <h2 class="text-xl font-bold text-gray-900">Share with Friends</h2>
             <p class="text-sm text-gray-500 mt-1">
-              Trading is more effective when you connect with friends!
+              Ask them what they think about your Trip
             </p>
           </div>
-          <button
-            @click="$emit('close')"
-            class="text-gray-400 hover:text-gray-500"
-            aria-label="Close"
-          >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -51,9 +40,10 @@
             />
             <button
               @click="copyLink"
-              class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="inline-flex items-center px-4 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {{ copyButtonText }}
+              <CopyIcon v-if="!isCopied" />
+              <CopiedIcon v-else />
             </button>
           </div>
         </div>
@@ -61,31 +51,21 @@
         <!-- PDF Download Button -->
         <button
           @click="handleDownloadPdf"
-          class="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 mb-6"
+          class="w-full flex justify-center items-center gap-4 px-4 py-3 border border-transparent rounded-md shadow-sm text-white bg-accent100 hover:bg-accent200 focus:outline-none focus:ring-2 focus:ring-green-500 mb-6"
         >
-          <svg
-            class="-ml-1 mr-2 h-5 w-5"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          Download as PDF
+          <DownloadIcon />
+          <span> Download as PDF </span>
         </button>
 
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
-          <div class="grid grid-cols-5 gap-2">
+          <div class="grid grid-cols-4 gap-2">
             <button
               v-for="platform in platforms"
               :key="platform.socialMedia"
-              @click="share(platform.socialMedia)"
-              class="flex flex-col items-center group"
+              @click="share(platform)"
+              class="flex justify-center items-center flex-col group"
               :aria-label="`Share on ${platform.socialMedia}`"
             >
               <div
@@ -112,7 +92,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import type { SocialPlatform } from "../types/social";
+import ShareIcon from "@/assets/icons/ShareIcon.vue";
+import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import CopyIcon from "@/assets/icons/CopyIcon.vue";
+import CopiedIcon from "@/assets/icons/CopiedIcon.vue";
+import DownloadIcon from "@/assets/icons/DownloadIcon.vue";
+import type { Platform } from "../types/social";
 import { platforms } from "../constants/constant";
 import { usePdfExport } from "../composables/usePdfExport";
 
@@ -131,7 +116,7 @@ const emit = defineEmits(["close"]);
 const { exportToPdf } = usePdfExport();
 const urlInput = ref<HTMLInputElement | null>(null);
 const pageUrl = ref(window.location.href);
-const copyButtonText = ref("Copy Link");
+const isCopied = ref(false);
 
 const selectUrlText = () => {
   if (urlInput.value) {
@@ -142,14 +127,13 @@ const selectUrlText = () => {
 const copyLink = async () => {
   try {
     await navigator.clipboard.writeText(pageUrl.value);
-    copyButtonText.value = "Copied!";
+    isCopied.value = true;
     setTimeout(() => {
-      copyButtonText.value = "Copy Link";
+      isCopied.value = false;
     }, 2000);
   } catch (err) {
     console.error("Failed to copy:", err);
     selectUrlText();
-    copyButtonText.value = "Press Ctrl+C";
   }
 };
 
@@ -158,12 +142,12 @@ const handleDownloadPdf = () => {
   emit("close");
 };
 
-const share = (platform: SocialPlatform) => {
+const share = (platform: Platform) => {
   const shareUrl = new URL(pageUrl.value);
   const shareText = "Check out my travel journal!";
   let url = "";
 
-  switch (platform) {
+  switch (platform.socialMedia) {
     case "facebook":
       url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
         shareUrl.toString()

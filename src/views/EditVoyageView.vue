@@ -24,7 +24,7 @@
           class="cursor-pointer"
         />
       </div>
-      <form @submit.prevent="" class="space-y-4">
+      <form @submit.prevent="handleSubmit" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
           <input
@@ -225,7 +225,7 @@ const { voyageId, isLoading, fetchVoyage, navigateToVoyage } =
   useVoyageManager();
 const {
   // goBack,
-  // handleSubmit,
+  handleSubmit,
   isSubmitting,
   formData,
   error,
