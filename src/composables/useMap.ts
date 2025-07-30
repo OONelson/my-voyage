@@ -5,16 +5,7 @@ import maplibregl, {
   type LngLatLike,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-
-type MapStyle =
-  | "streets"
-  | "outdoor"
-  | "hybrid"
-  | "satellite"
-  | "light"
-  | "dark"
-  | "winter"
-  | "basic";
+import type { MapStyle } from "../types/mapTypes";
 
 interface UseMapReturn {
   mapContainer: Ref<HTMLDivElement | undefined>;
@@ -47,13 +38,9 @@ export const useMap = (): UseMapReturn => {
 
   const styleUrls: Record<MapStyle, string> = {
     streets: "streets-v2",
-    outdoor: "outdoor-v2",
     hybrid: "hybrid",
     satellite: "satellite",
-    light: "light-v2",
     dark: "dark-v2",
-    winter: "winter-v2",
-    basic: "basic-v2",
   };
 
   const initMap = (
