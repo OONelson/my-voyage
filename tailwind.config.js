@@ -25,6 +25,8 @@ export default {
         buttonLightcolor: "#f4f4f4",
         inputColor100: "#f3f3f3",
         inputColor200: "#ececec",
+        accent10: "#a4c3bd",
+        accent30: "#81aca4",
         accent50: "#498a80",
         accent100: "#006e63",
         accent200: "#005b52",

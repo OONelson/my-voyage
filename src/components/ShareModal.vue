@@ -49,15 +49,7 @@
         </div>
 
         <!-- PDF Download Button -->
-        <button
-          @click="handleDownloadPdf"
-          class="relative w-full flex justify-center items-center gap-4 px-4 py-3 border border-transparent rounded-md shadow-sm text-white bg-accent100 hover:bg-accent200 focus:outline-none focus:ring-2 focus:ring-green-500 mb-6"
-        >
-          <PremiumIcon fillColor="#f0d90c" class="absolute -top-2 left-0" />
-          <DownloadIcon />
-          <span> Download as PDF </span>
-        </button>
-        <PremiumButton label="Export as PDF" />
+        <PremiumButton @click="handleDownloadPdf" label="Export as PDF" />
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
@@ -97,8 +89,6 @@ import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import CopyIcon from "@/assets/icons/CopyIcon.vue";
 import CopiedIcon from "@/assets/icons/CopiedIcon.vue";
-import DownloadIcon from "@/assets/icons/DownloadIcon.vue";
-import PremiumIcon from "@/assets/icons/PremiumIcon.vue";
 import PremiumButton from "@/components/ui/PremiumButton.vue";
 
 import type { Platform } from "../types/social";
