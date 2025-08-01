@@ -160,74 +160,35 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import LogoutModal from "../components/LogoutModal.vue";
+import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import { useImageUpload } from "../composables/useImageUpload";
-import type { UserProfile } from "../types/userProfile";
+import { UserModal } from "../utils/userModal";
+import {
+  userData,
+  maskedEmail,
+  themeItems,
+  tabs,
+} from "../constants/userConstant";
+
+const { openFileInput, handleDrop, handleImageUpload, dragOver } =
+  useImageUpload();
 
 const {
-  openFileInput,
-  handleDrop,
-  handleImageUpload,
-  // isLoading,
-  // imageUrl,
-  dragOver,
-} = useImageUpload();
-
-const selectedTheme = ref("system");
-const activeTab = ref("profile");
-const showLogoutModal = ref<boolean>(false);
-
-const userData = ref<UserProfile>({
-  name: "nelson",
-  email: "nelson@gmail.com",
-  profileImage: "https://github.com/benjamincanac.png",
-  is_premium: false,
-  createdAt: new Date(),
-});
-
-const themeItems = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-];
+  selectedTheme,
+  activeTab,
+  showLogoutModal,
+  openLogoutModal,
+  closeLogoutModal,
+  handleLogout,
+  confirmDeleteAccount,
+} = UserModal();
 
 const emit = defineEmits(["close"]);
 
 const handleClose = () => {
   emit("close");
-};
-const tabs = [
-  { id: "general", label: "General" },
-  { id: "profile", label: "Profile" },
-  { id: "about", label: "About" },
-];
-
-const maskedEmail = computed(() => {
-  const [username, domain] = userData.value.email.split("@");
-  return `${username.substring(0, 2)}****${username.slice(-1)}@${domain}`;
-});
-
-const openLogoutModal = () => (showLogoutModal.value = true);
-
-const closeLogoutModal = () => (showLogoutModal.value = false);
-
-const handleLogout = () => {
-  console.log("Logging out from all devices...");
-  // Implement logout logic
-};
-
-const confirmDeleteAccount = () => {
-  if (
-    confirm(
-      "Are you sure you want to delete your account? This cannot be undone."
-    )
-  ) {
-    console.log("Deleting account...");
-    // Implement delete logic
-  }
 };
 </script>
 

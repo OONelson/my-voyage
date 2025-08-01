@@ -212,7 +212,6 @@ import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
-import { computed } from "vue";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
 const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
@@ -229,6 +228,7 @@ const {
   handleDragOver,
   handleDragLeave,
   deleteSelectedImage,
+  modules,
   handles,
   imageStyle,
   cropBoxStyle,
@@ -237,45 +237,15 @@ const {
   dragOver,
   fileInput,
   isImgLoading,
+  hasImage,
+  showActionButtons,
+  showOriginalImage,
+  showCropBox,
+  showCroppedImage,
+  showEmptyState,
 } = useImageUpload(formData);
 
-// Ensure handles is typed as HandleKey[]
 const typedHandles = handles as HandleKey[];
-
-const hasImage = computed(
-  () => !!formData.value.imageUrl || !!croppedImage.value
-);
-const showActionButtons = computed(
-  () => formData.value.imageUrl && !isImgLoading.value
-);
-const showOriginalImage = computed(
-  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
-);
-const showCropBox = computed(
-  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
-);
-const showCroppedImage = computed(
-  () => !!croppedImage.value && !isImgLoading.value
-);
-const showEmptyState = computed(
-  () =>
-    !formData.value.imageUrl &&
-    !croppedImage.value &&
-    !isImgLoading.value &&
-    !dragOver.value
-);
-// const showEditOverlay = computed(
-//   () => formData.value.imageUrl && !isImgLoading.value && !croppedImage.value
-// );
-
-const modules = {
-  toolbar: [
-    ["bold", "italic", "underline"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["clean"],
-  ],
-};
-
 // Add handleClasses mapping for crop handles
 type HandleKey =
   | "top-left"

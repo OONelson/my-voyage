@@ -216,20 +216,14 @@ import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useImageUpload } from "../composables/useImageUpload";
 import { genUtils } from "../utils/genUtils";
-import { computed, onMounted } from "vue";
+import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 
 const { voyageId, isLoading, fetchVoyage, navigateToVoyage } =
   useVoyageManager();
-const {
-  // goBack,
-  handleSubmit,
-  isSubmitting,
-  formData,
-  error,
-} = genUtils();
+const { handleSubmit, isSubmitting, formData, error } = genUtils();
 
 const {
   rotate,
@@ -251,40 +245,14 @@ const {
   dragOver,
   fileInput,
   isImgLoading,
+  hasImage,
+  showActionButtons,
+  showOriginalImage,
+  showCropBox,
+  showCroppedImage,
+  showEmptyState,
+  modules,
 } = useImageUpload(formData);
-
-// Ensure handles is typed as HandleKey[]
-const typedHandles = handles as HandleKey[];
-
-const hasImage = computed(
-  () => !!formData.value.imageUrl || !!croppedImage.value
-);
-const showActionButtons = computed(
-  () => formData.value.imageUrl && !isImgLoading.value
-);
-const showOriginalImage = computed(
-  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
-);
-const showCropBox = computed(
-  () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
-);
-const showCroppedImage = computed(
-  () => !!croppedImage.value && !isImgLoading.value
-);
-const showEmptyState = computed(
-  () =>
-    !formData.value.imageUrl &&
-    !croppedImage.value &&
-    !isImgLoading.value &&
-    !dragOver.value
-);
-const modules = {
-  toolbar: [
-    ["bold", "italic", "underline"],
-    [{ list: "ordered" }, { list: "bullet" }],
-    ["clean"],
-  ],
-};
 
 type HandleKey =
   | "top-left"
@@ -295,6 +263,8 @@ type HandleKey =
   | "bottom"
   | "left"
   | "right";
+
+const typedHandles = handles as HandleKey[];
 
 const handleClasses: Record<HandleKey, string> = {
   "top-left": "top-0 left-0 cursor-nwse-resize",

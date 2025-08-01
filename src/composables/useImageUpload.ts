@@ -1,4 +1,4 @@
-import { computed, nextTick, ref, type Ref } from "vue";
+import { computed, nextTick, ref, type ComputedRef, type Ref } from "vue";
 import { type FormDataType } from "../types/formData";
 
 interface ImageActions {
@@ -26,6 +26,15 @@ interface ImageActions {
   startDrag: (e: MouseEvent) => void;
   startResize: (e: MouseEvent, handle: string) => void;
   deleteSelectedImage: () => void;
+  hasImage: ComputedRef<boolean>;
+  showActionButtons: ComputedRef<boolean | string>;
+  showOriginalImage: ComputedRef<boolean | string>;
+  showCropBox: ComputedRef<boolean | string>;
+  showCroppedImage: ComputedRef<boolean>;
+  showEmptyState: ComputedRef<boolean>;
+  modules: {
+    toolbar: (string[] | { list: string }[])[];
+  };
 }
 export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const isImgLoading = ref<boolean>(false);
@@ -264,6 +273,37 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     rotation.value = (rotation.value + degrees) % 360;
   };
 
+  const hasImage = computed(
+    () => !!formData.value.imageUrl || !!croppedImage.value
+  );
+  const showActionButtons = computed(
+    () => formData.value.imageUrl && !isImgLoading.value
+  );
+  const showOriginalImage = computed(
+    () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+  );
+  const showCropBox = computed(
+    () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+  );
+  const showCroppedImage = computed(
+    () => !!croppedImage.value && !isImgLoading.value
+  );
+  const showEmptyState = computed(
+    () =>
+      !formData.value.imageUrl &&
+      !croppedImage.value &&
+      !isImgLoading.value &&
+      !dragOver.value
+  );
+
+  const modules = {
+    toolbar: [
+      ["bold", "italic", "underline"],
+      [{ list: "ordered" }, { list: "bullet" }],
+      ["clean"],
+    ],
+  };
+
   return {
     rotate,
     initCropper,
@@ -284,5 +324,12 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     dragOver,
     fileInput,
     isImgLoading,
+    hasImage,
+    showActionButtons,
+    showOriginalImage,
+    showCropBox,
+    showCroppedImage,
+    showEmptyState,
+    modules,
   };
 };

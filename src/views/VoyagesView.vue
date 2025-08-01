@@ -38,6 +38,27 @@
         <VoyagesSkeleton v-for="n in voyages" :key="'skeleton-' + n" />
       </div>
       <div
+        v-else-if="!voyages || voyages.length === 0"
+        class="flex flex-col items-center justify-center py-16 px-4 text-center"
+      >
+        <div class="max-w-md mx-auto">
+          <img src="" alt="No voyages" class="w-64 h-64 mx-auto mb-6" />
+          <h3 class="text-xl font-medium text-gray-900 mb-2">No voyages yet</h3>
+          <p class="text-gray-500 mb-6">
+            Start your travel journey by creating your first voyage. Document
+            your adventures and share them with others.
+          </p>
+          <button
+            @click="navigateToCreate"
+            class="px-6 py-2 bg-accent100 hover:bg-accent200 text-white rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+          >
+            <AddIcon size="18" fillColor="#ffffff" />
+            Create First Voyage
+          </button>
+        </div>
+      </div>
+
+      <div
         v-else
         class="px-3 flex flex-col justify-center md:items-start items-center md:grid grid-cols-2 lg:grid-cols-3 gap-4 my-4"
       >
@@ -53,6 +74,7 @@
               v-if="voyage.imageUrl"
               :src="voyage.imageUrl"
               :alt="voyage.title"
+              loading="lazy"
               class="w-full h-full object-cover transition-transform duration-300 md:group-hover:scale-105"
             />
             <div

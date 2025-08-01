@@ -49,7 +49,11 @@
         </div>
 
         <!-- PDF Download Button -->
-        <PremiumButton @click="handleDownloadPdf" label="Export as PDF" />
+        <PremiumButton
+          :isPremium="user.isPremium"
+          @click="handleDownloadPdf"
+          label="Export as PDF"
+        />
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
@@ -94,6 +98,10 @@ import PremiumButton from "@/components/ui/PremiumButton.vue";
 import type { Platform } from "../types/social";
 import { platforms } from "../constants/constant";
 import { usePdfExport } from "../composables/usePdfExport";
+
+const user = ref({
+  isPremium: false, // Will show tooltip on hover
+});
 
 interface Props {
   contentElementId?: string;
