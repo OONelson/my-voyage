@@ -42,7 +42,11 @@
         class="flex flex-col items-center justify-center py-16 px-4 text-center"
       >
         <div class="max-w-md mx-auto">
-          <img src="" alt="No voyages" class="w-64 h-64 mx-auto mb-6" />
+          <img
+            src="@/assets/images/empty_state2.png"
+            alt="No voyages"
+            class="w-full h-full"
+          />
           <h3 class="text-xl font-medium text-gray-900 mb-2">No voyages yet</h3>
           <p class="text-gray-500 mb-6">
             Start your travel journey by creating your first voyage. Document
@@ -181,11 +185,12 @@
     </section>
 
     <div
+      v-if="voyages.length > 0"
       @click="toggleMenu"
       class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
       :class="isMenuOpen ? 'rotate-45' : 'rotate-0'"
     >
-      <AddIcon fillColor="#005b52" size="30" class="" />
+      <AddIcon fillColor="#005b52" size="30" />
     </div>
 
     <!-- popup menu -->
