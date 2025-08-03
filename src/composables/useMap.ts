@@ -103,39 +103,105 @@ export const useMap = () => {
   };
 
   // Update or create marker
-  const updateMarker = (coordinates: [number, number], title: string) => {
-    if (locationMarker.value) {
-      locationMarker.value.remove();
-    }
-    locationMarker.value = addMarker(coordinates, {
-      color: "#006E63",
-      popup: `<h3 class="text-sm font-medium">${title}</h3>`,
-    });
-  };
+  // const updateMarker = (coordinates: [number, number], title: string) => {
+  //   if (locationMarker.value) {
+  //     locationMarker.value.remove();
+  //   }
+  //   locationMarker.value = addMarker(coordinates, {
+  //     color: "#006E63",
+  //     popup: `<h3 class="text-sm font-medium">${title}</h3>`,
+  //   });
+  // };
 
   // Add a marker to the map
+  // Enhanced marker implementation
   const addMarker = (
     lngLat: LngLatLike,
     options?: {
       color?: string;
       popup?: string;
+      title?: string;
     }
   ): Marker => {
     if (!map.value) {
       throw new Error("Map not initialized. Call initMap first.");
     }
 
+    // Create custom marker element
+    const el = document.createElement("div");
+    el.className = "custom-marker-container";
+    el.innerHTML = `
+    <div class="custom-marker" style="background-color: ${
+      options?.color || "#006E63"
+    }">
+      <div class="marker-dot"></div>
+      ${
+        options?.title ? `<div class="marker-label">${options.title}</div>` : ""
+      }
+    </div>
+  `;
+
+    // Create marker with custom element
     const marker = new maplibregl.Marker({
-      color: options?.color || "#006E63",
+      element: el,
+      anchor: "bottom",
+      offset: [0, -10],
     })
       .setLngLat(lngLat)
       .addTo(map.value);
 
+    // Add stable popup
     if (options?.popup) {
-      marker.setPopup(new maplibregl.Popup().setHTML(options.popup));
+      const popup = new maplibregl.Popup({
+        offset: [0, -30],
+        closeOnClick: false,
+        className: "custom-marker-popup",
+        maxWidth: "300px",
+      }).setHTML(options.popup);
+
+      marker.setPopup(popup);
+
+      // Custom click handler to prevent marker movement
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!marker.getPopup().isOpen()) {
+          // Close other popups first
+          closeAllPopups();
+        }
+        marker.togglePopup();
+      });
     }
 
     return marker;
+  };
+
+  const updateMarker = (coordinates: [number, number], title: string) => {
+    if (locationMarker.value) {
+      locationMarker.value.remove();
+    }
+    locationMarker.value = addMarker(coordinates, {
+      color: "#006E63",
+      title: title[0], // Show first letter as label
+      popup: `
+      <div class="marker-popup-content">
+        <h3 class="font-medium text-base">${title}</h3>
+        <p class="text-sm text-gray-600 mt-1">
+          ${coordinates[1].toFixed(4)}, ${coordinates[0].toFixed(4)}
+        </p>
+      </div>
+    `,
+    });
+  };
+
+  const closeAllPopups = () => {
+    document
+      .querySelectorAll(".custom-marker-container")
+      .forEach((markerEl) => {
+        const marker = [...markers.value].find(
+          (m) => m.getElement() === markerEl
+        );
+        marker?.getPopup()?.remove();
+      });
   };
 
   // Fly to a location

@@ -102,8 +102,8 @@
               <LocationIcon size="26" />
               <span class="line-clamp-1">{{ voyage.location }}</span>
               <span class="hidden md:block">•</span>
-              <span class="hidden md:block">{{
-                relativeTripDate(voyage.date)
+              <span class="block">{{
+                relativeTripDate([voyage.startDate, voyage.endDate])
               }}</span>
             </div>
 

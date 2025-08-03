@@ -3,18 +3,9 @@ export type FormDataType = {
   imageUrl: string;
   notes: string;
   location: string;
-  latitude: number | null;
-  longitude: number | null;
-  startDate: string;
-  endDate: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  startDate: Date | string;
+  endDate: Date | string;
   rating: number;
 };
-
-// export const initialFormData: FormDataType = {
-//   title: "",
-//   imageUrl: "",
-//   notes: "",
-//   location: "",
-//   date: new Date(),
-//   rating: 0,
-// };

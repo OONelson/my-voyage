@@ -123,7 +123,7 @@
               <span class="line-clamp-1">{{ voyage.location }}</span>
               <span class="hidden md:block">•</span>
               <span class="hidden md:block">{{
-                relativeTripDate(voyage.date)
+                relativeTripDate([voyage.startDate, voyage.endDate])
               }}</span>
             </div>
 
@@ -175,7 +175,7 @@
                   class="w-full flex justify-between items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
                 >
                   <span>Delete Voyage</span>
-                  <TrashIcon size="18" class="text-red-400" />
+                  <TrashIcon size="24" class="text-red-400" />
                 </button>
               </div>
             </div>

@@ -14,8 +14,8 @@ export const genUtils = () => {
     location: "",
     latitude: null as number | null,
     longitude: null as number | null,
-    startDate: "",
-    endDate: "",
+    startDate: new Date(),
+    endDate: new Date(),
     rating: 0,
   });
 

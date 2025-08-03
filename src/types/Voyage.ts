@@ -7,7 +7,8 @@ export type VoyageTypeInfo = {
   notes: string;
   user_id: number;
   location: string;
-  date: Date;
+  startDate: Date;
+  endDate: Date;
   rating: Rating;
   comment?: string;
   createdAt: Date;

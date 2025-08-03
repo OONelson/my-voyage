@@ -139,12 +139,6 @@
             v-model="formData.title"
             placeholder="A weekend in Monaco"
           />
-          <!-- <ReusableInput
-            label="Location"
-            type="text"
-            v-model="formData.location"
-            placeholder="Monaco"
-          /> -->
 
           <div class="space-y-2">
             <label class="block text-textblack100 font-medium">Location</label>
@@ -178,7 +172,7 @@
                 @click="useCurrentLocation"
                 class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors flex items-center gap-2 whitespace-nowrap"
               >
-                <LocationIcon size="18" />
+                <LocationIcon size="24" />
                 <span class="hidden sm:inline">My Location</span>
               </button>
             </div>
@@ -200,7 +194,7 @@
                   class="text-gray-500 hover:text-red-500 transition-colors"
                   title="Clear location"
                 >
-                  <CloseIcon size="18" />
+                  <CloseIcon fillColor="#000" size="18" />
                 </button>
               </div>
             </div>
@@ -208,31 +202,20 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <div>
               <label class="block text-textblack100 font-medium mb-1"
-                >Start Date</label
+                >Date range</label
               >
               <Calendar
-                v-model="startDateModel"
-                @update:modelValue="updateStartDate"
-                :maxDate="endDateModel"
+                v-model="dateRange"
+                selectionMode="range"
+                @update:modelValue="handleDateRangeChange"
+                :minDate="minSelectableDate"
+                :maxDate="maxSelectableDate"
                 showIcon
-                inputId="startDate"
-                class="w-full"
+                inputId="dateRange"
+                class="w-full mr-2"
                 dateFormat="yy-mm-dd"
-              />
-            </div>
-
-            <div>
-              <label class="block text-textblack100 font-medium mb-1"
-                >End Date</label
-              >
-              <Calendar
-                v-model="endDateModel"
-                @update:modelValue="updateEndDate"
-                :minDate="startDateModel"
-                showIcon
-                inputId="endDate"
-                class="w-full white-calender"
-                dateFormat="yy-mm-dd"
+                :manualInput="false"
+                placeholder="Select trip dates"
               />
             </div>
           </div>
@@ -270,7 +253,7 @@
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-3 pt-4">
           <button
-            @click="goBack"
+            @click="navigateToVoyages"
             class="px-4 py-2 border rounded text-textblack100 hover:bg-gray-100"
           >
             Cancel
@@ -288,7 +271,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
 import Calendar from "primevue/calendar";
@@ -299,18 +282,18 @@ import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import CropIcon from "@/assets/icons/CropIcon.vue";
 import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
-import { genUtils } from "../utils/genUtils";
 import { useMap } from "../composables/useMap";
+import { genUtils } from "../utils/genUtils";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
-const { goBack, handleSubmit, isSubmitting, formData, formatDateForInput } =
-  genUtils();
+const { handleSubmit, isSubmitting, formData, formatDateForInput } = genUtils();
 
 const {
   selectedLocation,
@@ -351,24 +334,28 @@ const {
   showEmptyState,
 } = useImageUpload(formData);
 
-const startDateModel = ref(new Date());
-const endDateModel = ref(
-  new Date(new Date().setDate(new Date().getDate() + 1))
-);
+interface DateRange extends Array<Date> {
+  0: Date;
+  1: Date;
+}
+const dateRange = ref<DateRange | null>(null);
 
-const updateStartDate = (date: Date) => {
-  formData.value.startDate = formatDateForInput(date);
-  if (new Date(formData.value.endDate) < date) {
-    const newEndDate = new Date(date);
-    newEndDate.setDate(date.getDate() + 1);
-    endDateModel.value = newEndDate;
-    formData.value.endDate = formatDateForInput(newEndDate);
+const handleDateRangeChange = (range: DateRange | null) => {
+  if (range && range.length === 2) {
+    formData.value.startDate = formatDateForInput(range[0]);
+    formData.value.endDate = formatDateForInput(range[1]);
+  } else {
+    formData.value.startDate = "";
+    formData.value.endDate = "";
   }
 };
-
-const updateEndDate = (date: Date) => {
-  formData.value.endDate = formatDateForInput(date);
-};
+// Date constraints
+const minSelectableDate = computed(() => new Date());
+const maxSelectableDate = computed(() => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + 1);
+  return date;
+});
 // Watch for location changes and update form data
 watch(selectedLocation, (newLocation) => {
   if (newLocation) {
@@ -418,38 +405,5 @@ const handleClasses: Record<HandleKey, string> = {
 
 :deep(.custom-rating .p-rating-icon:hover) {
   color: #fbbf24;
-}
-
-:deep(.white-calendar .p-inputtext) {
-  background-color: white;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  padding: 0.5rem 0.75rem;
-}
-
-:deep(.white-calendar .p-datepicker) {
-  background-color: white;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-:deep(.white-calendar .p-datepicker-header) {
-  background-color: white;
-  border-bottom: 1px solid #dee2e6;
-}
-
-:deep(.white-calendar .p-datepicker table td > span) {
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-:deep(.white-calendar .p-datepicker table td.p-datepicker-today > span) {
-  background-color: #e9ecef;
-  color: #495057;
-}
-
-:deep(.white-calendar .p-datepicker table td.p-datepicker-current-day > span) {
-  background-color: #006e63;
-  color: white;
 }
 </style>

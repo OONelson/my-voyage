@@ -141,14 +141,92 @@
 
         <!-- Title -->
         <div>
-          <ReusableInput label="Title" type="text" v-model="formData.title" />
           <ReusableInput
-            label="Location"
+            label="Title"
             type="text"
-            v-model="formData.location"
+            v-model="formData.title"
+            placeholder="A weekend in Monaco"
           />
-          <ReusableInput label="Date" type="date" v-model="formData.date" />
 
+          <div class="space-y-2">
+            <label class="block text-textblack100 font-medium">Location</label>
+
+            <div class="flex gap-3">
+              <div class="flex-1 relative">
+                <input
+                  type="text"
+                  v-model="locationSearch"
+                  @input="searchLocation"
+                  placeholder="Search for a city or address"
+                  class="w-full p-2 border rounded focus:ring-2 focus:ring-accent50 focus:border-transparent"
+                />
+                <ul
+                  v-if="locationSuggestions.length > 0"
+                  class="absolute z-20 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto"
+                >
+                  <li
+                    v-for="suggestion in locationSuggestions"
+                    :key="suggestion.place_id"
+                    @click="selectSuggestion(suggestion)"
+                    class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                  >
+                    {{ suggestion.display_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                @click="useCurrentLocation"
+                class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <LocationIcon size="24" />
+                <span class="hidden sm:inline">My Location</span>
+              </button>
+            </div>
+            <MapView />
+            <div
+              v-if="selectedLocation"
+              class="p-3 bg-gray-50 rounded-lg border"
+            >
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-medium">{{ selectedLocation.display_name }}</p>
+                  <p class="text-sm text-gray-600 mt-1">
+                    Lat: {{ selectedLocation.lat.toFixed(4) }}, Lng:
+                    {{ selectedLocation.lon.toFixed(4) }}
+                  </p>
+                </div>
+                <button
+                  @click="clearLocation"
+                  class="text-gray-500 hover:text-red-500 transition-colors"
+                  title="Clear location"
+                >
+                  <CloseIcon fillColor="#000" size="18" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div>
+              <label class="block text-textblack100 font-medium mb-1"
+                >Date range</label
+              >
+              <Calendar
+                v-model="dateRange"
+                selectionMode="range"
+                @update:modelValue="handleDateRangeChange"
+                :minDate="minSelectableDate"
+                :maxDate="maxSelectableDate"
+                showIcon
+                inputId="dateRange"
+                class="w-full mr-2"
+                dateFormat="yy-mm-dd"
+                :manualInput="false"
+                placeholder="Select trip dates"
+              />
+            </div>
+          </div>
           <!-- Rating -->
           <div>
             <label class="block text-textblack100 font-medium mb-1"
@@ -215,15 +293,28 @@ import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { useImageUpload } from "../composables/useImageUpload";
+import { useMap } from "../composables/useMap";
+
 import { genUtils } from "../utils/genUtils";
-import { onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 
 const { voyageId, isLoading, fetchVoyage, navigateToVoyage } =
   useVoyageManager();
-const { handleSubmit, isSubmitting, formData, error } = genUtils();
+const { handleSubmit, isSubmitting, formData, error, formatDateForInput } =
+  genUtils();
+
+const {
+  selectedLocation,
+  locationSearch,
+  locationSuggestions,
+  searchLocation,
+  selectSuggestion,
+  useCurrentLocation,
+  clearLocation,
+} = useMap();
 
 const {
   rotate,
@@ -253,6 +344,41 @@ const {
   showEmptyState,
   modules,
 } = useImageUpload(formData);
+
+interface DateRange extends Array<Date> {
+  0: Date;
+  1: Date;
+}
+const dateRange = ref<DateRange | null>(null);
+
+const handleDateRangeChange = (range: DateRange | null) => {
+  if (range && range.length === 2) {
+    formData.value.startDate = formatDateForInput(range[0]);
+    formData.value.endDate = formatDateForInput(range[1]);
+  } else {
+    formData.value.startDate = "";
+    formData.value.endDate = "";
+  }
+};
+// Date constraints
+const minSelectableDate = computed(() => new Date());
+const maxSelectableDate = computed(() => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() + 1);
+  return date;
+});
+// Watch for location changes and update form data
+watch(selectedLocation, (newLocation) => {
+  if (newLocation) {
+    formData.value.location = newLocation.display_name;
+    formData.value.latitude = newLocation.lat;
+    formData.value.longitude = newLocation.lon;
+  } else {
+    formData.value.location = "";
+    formData.value.latitude = null;
+    formData.value.longitude = null;
+  }
+});
 
 type HandleKey =
   | "top-left"
@@ -284,7 +410,8 @@ onMounted(async () => {
       imageUrl: voyage.imageUrl || "",
       title: voyage.title,
       location: voyage.location,
-      date: voyage.date,
+      startDate: voyage.startDate,
+      endDate: voyage.endDate,
       rating: voyage.rating,
       notes: voyage.notes,
     };
