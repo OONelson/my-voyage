@@ -12,7 +12,10 @@ export const genUtils = () => {
     imageUrl: "",
     notes: "",
     location: "",
-    date: new Date(),
+    latitude: null as number | null,
+    longitude: null as number | null,
+    startDate: "",
+    endDate: "",
     rating: 0,
   });
 

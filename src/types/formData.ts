@@ -3,7 +3,10 @@ export type FormDataType = {
   imageUrl: string;
   notes: string;
   location: string;
-  date: Date;
+  latitude: number | null;
+  longitude: number | null;
+  startDate: string;
+  endDate: string;
   rating: number;
 };
 

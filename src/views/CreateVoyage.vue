@@ -139,13 +139,103 @@
             v-model="formData.title"
             placeholder="A weekend in Monaco"
           />
-          <ReusableInput
+          <!-- <ReusableInput
             label="Location"
             type="text"
             v-model="formData.location"
             placeholder="Monaco"
-          />
-          <ReusableInput label="Date" type="date" v-model="formData.date" />
+          /> -->
+
+          <div class="space-y-2">
+            <label class="block text-textblack100 font-medium">Location</label>
+
+            <div class="flex gap-3">
+              <div class="flex-1 relative">
+                <input
+                  type="text"
+                  v-model="locationSearch"
+                  @input="searchLocation"
+                  placeholder="Search for a city or address"
+                  class="w-full p-2 border rounded focus:ring-2 focus:ring-accent50 focus:border-transparent"
+                />
+                <ul
+                  v-if="locationSuggestions.length > 0"
+                  class="absolute z-20 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto"
+                >
+                  <li
+                    v-for="suggestion in locationSuggestions"
+                    :key="suggestion.place_id"
+                    @click="selectSuggestion(suggestion)"
+                    class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
+                  >
+                    {{ suggestion.display_name }}
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                @click="useCurrentLocation"
+                class="px-3 py-2 bg-gray-100 rounded hover:bg-gray-200 transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <LocationIcon size="18" />
+                <span class="hidden sm:inline">My Location</span>
+              </button>
+            </div>
+            <MapView />
+            <div
+              v-if="selectedLocation"
+              class="p-3 bg-gray-50 rounded-lg border"
+            >
+              <div class="flex justify-between items-start">
+                <div>
+                  <p class="font-medium">{{ selectedLocation.display_name }}</p>
+                  <p class="text-sm text-gray-600 mt-1">
+                    Lat: {{ selectedLocation.lat.toFixed(4) }}, Lng:
+                    {{ selectedLocation.lon.toFixed(4) }}
+                  </p>
+                </div>
+                <button
+                  @click="clearLocation"
+                  class="text-gray-500 hover:text-red-500 transition-colors"
+                  title="Clear location"
+                >
+                  <CloseIcon size="18" />
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div>
+              <label class="block text-textblack100 font-medium mb-1"
+                >Start Date</label
+              >
+              <Calendar
+                v-model="startDateModel"
+                @update:modelValue="updateStartDate"
+                :maxDate="endDateModel"
+                showIcon
+                inputId="startDate"
+                class="w-full"
+                dateFormat="yy-mm-dd"
+              />
+            </div>
+
+            <div>
+              <label class="block text-textblack100 font-medium mb-1"
+                >End Date</label
+              >
+              <Calendar
+                v-model="endDateModel"
+                @update:modelValue="updateEndDate"
+                :minDate="startDateModel"
+                showIcon
+                inputId="endDate"
+                class="w-full white-calender"
+                dateFormat="yy-mm-dd"
+              />
+            </div>
+          </div>
 
           <!-- Rating -->
           <div>
@@ -198,8 +288,12 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from "vue";
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
+import Calendar from "primevue/calendar";
+
+import MapView from "@/components/MapView.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
@@ -212,9 +306,21 @@ import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useImageUpload } from "../composables/useImageUpload";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { genUtils } from "../utils/genUtils";
+import { useMap } from "../composables/useMap";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
-const { goBack, handleSubmit, isSubmitting, formData } = genUtils();
+const { goBack, handleSubmit, isSubmitting, formData, formatDateForInput } =
+  genUtils();
+
+const {
+  selectedLocation,
+  locationSearch,
+  locationSuggestions,
+  searchLocation,
+  selectSuggestion,
+  useCurrentLocation,
+  clearLocation,
+} = useMap();
 
 const {
   rotate,
@@ -244,6 +350,37 @@ const {
   showCroppedImage,
   showEmptyState,
 } = useImageUpload(formData);
+
+const startDateModel = ref(new Date());
+const endDateModel = ref(
+  new Date(new Date().setDate(new Date().getDate() + 1))
+);
+
+const updateStartDate = (date: Date) => {
+  formData.value.startDate = formatDateForInput(date);
+  if (new Date(formData.value.endDate) < date) {
+    const newEndDate = new Date(date);
+    newEndDate.setDate(date.getDate() + 1);
+    endDateModel.value = newEndDate;
+    formData.value.endDate = formatDateForInput(newEndDate);
+  }
+};
+
+const updateEndDate = (date: Date) => {
+  formData.value.endDate = formatDateForInput(date);
+};
+// Watch for location changes and update form data
+watch(selectedLocation, (newLocation) => {
+  if (newLocation) {
+    formData.value.location = newLocation.display_name;
+    formData.value.latitude = newLocation.lat;
+    formData.value.longitude = newLocation.lon;
+  } else {
+    formData.value.location = "";
+    formData.value.latitude = null;
+    formData.value.longitude = null;
+  }
+});
 
 const typedHandles = handles as HandleKey[];
 // Add handleClasses mapping for crop handles
@@ -281,5 +418,38 @@ const handleClasses: Record<HandleKey, string> = {
 
 :deep(.custom-rating .p-rating-icon:hover) {
   color: #fbbf24;
+}
+
+:deep(.white-calendar .p-inputtext) {
+  background-color: white;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+}
+
+:deep(.white-calendar .p-datepicker) {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.white-calendar .p-datepicker-header) {
+  background-color: white;
+  border-bottom: 1px solid #dee2e6;
+}
+
+:deep(.white-calendar .p-datepicker table td > span) {
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+:deep(.white-calendar .p-datepicker table td.p-datepicker-today > span) {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+:deep(.white-calendar .p-datepicker table td.p-datepicker-current-day > span) {
+  background-color: #006e63;
+  color: white;
 }
 </style>
