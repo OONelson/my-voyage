@@ -108,23 +108,15 @@
               >
                 {{ voyage.title }}
               </h3>
-              <div
-                @click.stop="openOptionsModal(voyage.id)"
-                aria-label="More options"
-                class="cursor-pointer"
-              >
-                <VerticalThreeDots fillColor="textblack100" />
-              </div>
+              <button @click.stop="handleEdit()">
+                <EditIcon size="20" />
+              </button>
             </div>
 
             <!-- Location and Date -->
             <div class="mt-2 flex items-center gap-2 text-normal">
               <LocationIcon size="26" />
               <span class="line-clamp-1">{{ voyage.location }}</span>
-              <span class="hidden md:block">•</span>
-              <span class="hidden md:block">{{
-                relativeTripDate([voyage.startDate, voyage.endDate])
-              }}</span>
             </div>
 
             <!-- Created At -->
@@ -148,38 +140,6 @@
               </button>
             </div>
           </div>
-
-          <!-- Options Modal -->
-          <ReusableModal
-            :isOpen="isSmallModalOpen && currentVoyageId === voyage.id"
-            :size="size"
-            @click.stop="closeModal"
-          >
-            <div>
-              <div class="flex justify-between items-center">
-                <h3 class="text-lg font-medium">Voyage Options</h3>
-                <div @click="closeModal">
-                  <CloseIcon size="18" fillColor="textblack100" />
-                </div>
-              </div>
-              <div>
-                <button
-                  @click.stop="handleEdit()"
-                  class="w-full flex justify-between items-center px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                >
-                  <span>Edit Voyage</span>
-                  <EditIcon size="18" class="text-gray-400" />
-                </button>
-                <button
-                  @click.stop="handleDelete()"
-                  class="w-full flex justify-between items-center px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
-                >
-                  <span>Delete Voyage</span>
-                  <TrashIcon size="24" class="text-red-400" />
-                </button>
-              </div>
-            </div>
-          </ReusableModal>
         </article>
       </div>
     </section>
@@ -222,43 +182,34 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import Rating from "@/components/Rating.vue";
 import ReusableModal from "@/components/ui/ReusableModal.vue";
 import VoyagesSkeleton from "@/components/ui/VoyagesSkeleton.vue";
 import UserModal from "@/components/UserModal.vue";
-import VerticalThreeDots from "@/assets/icons/VerticalThreeDots.vue";
 import Logo from "@/assets/icons/Logo.vue";
-import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
-import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
 import { useVoyageManager } from "../composables/useVoyageManager";
 import { dateAndTime } from "../utils/date-and-timeUtils";
-import { ref } from "vue";
 
-const { relativeTripDate, relativeCreatedAt } = dateAndTime();
+const { relativeCreatedAt } = dateAndTime();
 const {
   voyages,
   scrolled,
   isMenuOpen,
   isProfileModal,
-  isSmallModalOpen,
-  currentVoyageId,
   isLoading,
-  size,
   toggleMenu,
   navigateToCreate,
   navigateToFavorites,
   navigateToVoyage,
   openProfileModal,
   closeProfileModal,
-  openOptionsModal,
   handleEdit,
-  handleDelete,
-  closeModal,
 } = useVoyageManager();
 
 const favorites = ref<number[]>([]);

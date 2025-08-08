@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ConfirmPopup: typeof import('./src/components/ui/ConfirmPopup.vue')['default']
     EditVoyageSkeleton: typeof import('./src/components/ui/EditVoyageSkeleton.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     Hero: typeof import('./src/components/Hero.vue')['default']

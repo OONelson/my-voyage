@@ -114,10 +114,8 @@ onBeforeUnmount(() => {
   opacity: 0;
 }
 
-/* Mobile-specific adjustments */
 @media (max-width: 640px) {
   .modal-container {
-    /* margin: 1rem; */
     width: calc(100% - 2rem);
   }
 }

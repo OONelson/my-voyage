@@ -11,9 +11,6 @@ export default {
       xl: "1380px",
     },
     extend: {
-      backgroundImage: {
-        "hero-image": "url('/src/assets/images/bg3.jpg')",
-      },
       colors: {
         background100: "#fcfcfc",
         background200: "#fbf9f5",

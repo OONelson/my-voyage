@@ -81,7 +81,7 @@
           </div>
 
           <!-- Content -->
-          <div class="p-5 sm:p-6">
+          <div class="py-3 px-2 sm:py-5 sm:px-4">
             <!-- Title and Menu -->
             <div class="flex justify-between items-start gap-2">
               <h3
@@ -102,7 +102,7 @@
               <LocationIcon size="26" />
               <span class="line-clamp-1">{{ voyage.location }}</span>
               <span class="hidden md:block">•</span>
-              <span class="block">{{
+              <span class="hidden md:block">{{
                 relativeTripDate([voyage.startDate, voyage.endDate])
               }}</span>
             </div>
@@ -146,24 +146,24 @@
 
     <!-- Options Modal -->
     <ReusableModal :isOpen="isSmallModalOpen" @close="closeModal">
-      <div class="p-2">
+      <div>
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-lg font-medium">Voyage Options</h3>
           <button @click="closeModal">
-            <CloseIcon fillColor="textblack100" size="20" />
+            <CloseIcon fillColor="background100" size="20" />
           </button>
         </div>
         <div>
           <button
             @click="handleEdit"
-            class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
+            class="w-full flex justify-between items-center py-1.5 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <span>Edit Voyage</span>
             <EditIcon size="24" />
           </button>
           <button
             @click="openShareModal"
-            class="w-full flex justify-between items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors"
+            class="w-full flex justify-between items-center py-1.5 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <span>Share</span>
             <ShareIcon />
@@ -174,7 +174,7 @@
           />
           <button
             @click="handleDelete"
-            class="w-full flex justify-between items-center px-2 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            class="w-full flex justify-between items-center py-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           >
             <span>Delete Voyage</span>
             <TrashIcon size="24" fillColor="#dc2626" />

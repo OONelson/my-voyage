@@ -111,15 +111,18 @@
 
       <!-- Log Out -->
       <div
-        class="flex justify-between items-center border-b border-gray-200 pb-6"
+        class="relative flex justify-between items-center border-b border-gray-200 pb-6"
       >
         <p class="text-gray-700">Log out</p>
-        <ReusableButton
-          class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none transition-colors"
-          type="button"
-          @click="openLogoutModal"
-          label="Log Out"
-        />
+        <div class="relative">
+          <ReusableButton
+            class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none transition-colors"
+            type="button"
+            @click="openLogoutModal"
+            label="Log Out"
+          />
+          <ConfirmPopup />
+        </div>
       </div>
       <LogoutModal
         :isOpen="showLogoutModal"

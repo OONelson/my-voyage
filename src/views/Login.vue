@@ -1,16 +1,14 @@
 <template>
   <form
     @submit.prevent="handleLogin"
-    className="flex flex-col justify-center items-start  px-2 w-full"
+    className="flex flex-col justify-center items-start  px-2 h-full w-full"
   >
-    <div class="py-3">
+    <div class="py-3 cursor-pointer">
       <ArrowBack fillColor="textblack300" />
     </div>
-    <section class="sm:flex justify-center items-center sm:w-full">
-      <div
-        class="sm:flex flex-col justify-center items-center sm:bg-white sm:p-4 sm:shadow-md"
-      >
-        <div class="mb-10">
+    <section class="sm:flex justify-center items-center h-full sm:w-full">
+      <div class="sm:bg-white sm:p-4 sm:shadow-md">
+        <div class="flex flex-col justify-start items-start mb-10">
           <Logo />
           <h3 class="text-textblack300 font-semibold">
             {{ isLogin ? "Welcome back" : "Sign Up" }}
@@ -48,14 +46,16 @@
           />
         </div>
 
-        <ReusableButton
-          :label="isLogin ? 'Login' : 'Sign Up'"
-          class="flex justify-center items-center bg-accent100 hover:bg-accent200 w-full sm:max-w-[150px] py-2 my-2"
-        >
-          <template #icon>
-            <ArrowForward />
-          </template>
-        </ReusableButton>
+        <div class="flex justify-center items-center">
+          <ReusableButton
+            :label="isLogin ? 'Login' : 'Sign Up'"
+            class="flex justify-center items-center gap-1 bg-accent100 hover:bg-accent200 w-full sm:max-w-[150px] py-2 my-2"
+          >
+            <template #icon>
+              <ArrowForward />
+            </template>
+          </ReusableButton>
+        </div>
 
         <div class="flex justify-center items-center my-4">
           <div
@@ -67,15 +67,18 @@
           />
         </div>
 
-        <button
-          @click.prevent="loginWithGoogle"
-          class="bg-white py-2 border border-border100 rounded-lg mt-2 w-full sm:max-w-[200px] flex justify-center items-center"
-        >
-          <GoogleIcon />
-          <span class="ml-2 text-textblack100 sm:text-accent100 font-medium">
-            Login with Google
-          </span>
-        </button>
+        <div class="flex justify-center items-center">
+          <button
+            @click.prevent="loginWithGoogle"
+            class="bg-white py-2 border border-border100 rounded-lg mt-2 px-3 w-full sm:max-w-[200px] flex gap-2"
+          >
+            <GoogleIcon />
+            <span class="text-textblack100 sm:text-accent100 font-medium">
+              Login with Google
+            </span>
+          </button>
+        </div>
+
         <p class="mt-4 text-center text-sm">
           {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
           <button @click="toggleAuth" class="text-accent100 font-medium">
