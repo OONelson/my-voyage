@@ -1,5 +1,5 @@
 import { computed, ref } from "vue";
-import type { UserProfile } from "../types/userProfile";
+import type { UserProfile } from "../types/user";
 
 export const userData = ref<UserProfile>({
   name: "nelson",

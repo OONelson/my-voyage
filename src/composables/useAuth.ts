@@ -1,154 +1,135 @@
-import { supabase } from "../config/supabase";
+import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { computed, ref } from "vue";
-import type {
-  User,
-  AuthError,
-  AuthResponse,
-  OAuthResponse,
-} from "@supabase/supabase-js";
-
-interface AuthCredentials {
-  email: string;
-  password: string;
-}
-
-interface SignUpCredentials extends AuthCredentials {
-  username: string;
-}
+import {
+  getCurrentUser,
+  getUserProfile,
+  signInWithEmail,
+  signUpWithEmail,
+  signInWithGoogle,
+  signOut,
+} from "../services/supabase/auth";
+import type { UserProfile } from "../types/user";
+import { AuthError } from "@supabase/supabase-js";
 
 export const useAuth = () => {
   const router = useRouter();
-  const user = ref<User | null>(null);
-  const isLogin = ref<boolean>(true);
-  const isLoading = ref<boolean>(false);
+  const user = ref<UserProfile | null>(null);
+  const loading = ref<boolean>(true);
+  const name = ref<string>("");
+  const email = ref<string>("");
+  const password = ref<string>("");
   const error = ref<AuthError | null>(null);
 
-  const toggleAuth = (): void => {
-    isLogin.value = !isLogin.value;
-    error.value = null;
-  };
-
-  const isAuthenticated = computed(() => !!user.value);
-
-  const setUser = (u: User | null): void => {
-    user.value = u;
-  };
-
-  const handleAuthResponse = (response: AuthResponse | OAuthResponse): void => {
-    if ("user" in response.data) {
-      user.value = response.data.user;
-      router.push("/");
-    }
-  };
-
-  const signUp = async ({
-    username,
-    email,
-    password,
-  }: SignUpCredentials): Promise<void> => {
+  const checkAuth = async () => {
+    loading.value = true;
     try {
-      isLoading.value = true;
-      error.value = null;
-      const response = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { username },
-        },
-      });
-      handleAuthResponse(response);
-    } catch (err) {
-      error.value = err as AuthError;
-      throw err;
+      const authUser = await getCurrentUser();
+      if (authUser) {
+        user.value = await getUserProfile(authUser.id);
+        return true;
+      }
+      return false;
     } finally {
-      isLoading.value = false;
+      loading.value = false;
     }
   };
 
-  const login = async ({ email, password }: AuthCredentials): Promise<void> => {
-    try {
-      isLoading.value = true;
-      error.value = null;
-      const response = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      handleAuthResponse(response);
-    } catch (err) {
-      error.value = err as AuthError;
-      throw err;
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  const loginWithGoogle = async (): Promise<void> => {
-    try {
-      isLoading.value = true;
-      error.value = null;
-      const response = await supabase.auth.signInWithOAuth({
-        provider: "google",
-      });
-      if (response.error) throw response.error;
-    } catch (err) {
-      error.value = err as AuthError;
-      throw err;
-    } finally {
-      isLoading.value = false;
-    }
-  };
-
-  const logout = async (): Promise<void> => {
-    try {
-      isLoading.value = true;
-      error.value = null;
-      await supabase.auth.signOut();
-      user.value = null;
+  const redirectBasedOnAuth = async () => {
+    const isAuthenticated = await checkAuth();
+    if (isAuthenticated) {
+      router.push("/voyages");
+    } else {
       router.push("/login");
+    }
+  };
+
+  onMounted(async () => {
+    await checkAuth();
+  });
+
+  // signUp
+  const handleSignup = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const { user, error: authError } = await signUpWithEmail(
+        email.value,
+        password.value,
+        name.value
+      );
+
+      if (authError) throw authError;
+      if (user) {
+        await redirectBasedOnAuth();
+      }
+    } catch (err) {
+      error.value = err as AuthError;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  // Login
+  const handleLogin = async () => {
+    try {
+      loading.value = true;
+      error.value = null;
+
+      const { user, error: authError } = await signInWithEmail(
+        email.value,
+        password.value
+      );
+
+      if (authError) throw authError;
+      if (user) {
+        await redirectBasedOnAuth();
+      }
+    } catch (err) {
+      error.value = err as AuthError;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  // login with google
+  const loginWithGoogle = async () => {
+    try {
+      loading.value = true;
+      await signInWithGoogle();
+      loading.value = false;
     } catch (err) {
       error.value = err as AuthError;
       throw err;
-    } finally {
-      isLoading.value = false;
     }
   };
 
-  const fetchUser = async () => {
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-    if (authUser) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", authUser.id)
-        .single();
-      user.value = data;
-    }
-  };
+  //logout
+  const handleLogout = async () => {
+    try {
+      loading.value = true;
+      await signOut();
 
-  const upgradeToPremium = async () => {
-    await supabase
-      .from("profiles")
-      .update({ is_premium: true })
-      .eq("id", user.value?.id);
-    await fetchUser();
+      user.value = null;
+      await router.push("/login");
+      loading.value = false;
+    } catch (err) {
+      error.value = err as AuthError;
+      throw err;
+    }
   };
 
   return {
     user,
-    error,
-    isLoading,
-    isLogin,
-    isAuthenticated,
-    setUser,
-    signUp,
-    login,
+    loading,
+    name,
+    email,
+    password,
+    checkAuth,
+    handleSignup,
+    handleLogin,
     loginWithGoogle,
-    logout,
-    fetchUser,
-    upgradeToPremium,
-    toggleAuth,
+    handleLogout,
+    redirectBasedOnAuth,
   };
 };

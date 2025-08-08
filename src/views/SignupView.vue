@@ -1,6 +1,6 @@
 <template>
   <form
-    @submit.prevent="handleLogin"
+    @submit.prevent="handleSignup"
     className="flex flex-col justify-center items-start  px-2 h-full w-full"
   >
     <div class="py-3 cursor-pointer">
@@ -10,16 +10,11 @@
       <div class="sm:bg-white sm:p-4 sm:shadow-md">
         <div class="flex flex-col justify-start items-start mb-10">
           <Logo />
-          <h3 class="text-textblack300 font-semibold">
-            {{ isLogin ? "Welcome back" : "Sign Up" }}
-          </h3>
-          <span class="text-md">{{
-            isLogin ? "Sign up your Account" : "Create an Account"
-          }}</span>
+          <h3 class="text-textblack300 font-semibold">Sign Up</h3>
+          <span class="text-md"> Create an Account</span>
         </div>
         <ReusableInput
-          v-if="!isLogin"
-          v-model="username"
+          v-model="name"
           type="text"
           label="Username"
           placeholder="Enter Username"
@@ -48,13 +43,11 @@
 
         <div class="flex justify-center items-center">
           <ReusableButton
-            :label="isLogin ? 'Login' : 'Sign Up'"
+            type="submit"
+            :disabled="loading"
+            :label="loading ? 'Signing Up' : 'Sign Up'"
             class="flex justify-center items-center gap-1 bg-accent100 hover:bg-accent200 w-full sm:max-w-[150px] py-2 my-2"
-          >
-            <template #icon>
-              <ArrowForward />
-            </template>
-          </ReusableButton>
+          />
         </div>
 
         <div class="flex justify-center items-center my-4">
@@ -79,21 +72,19 @@
           </button>
         </div>
 
-        <p class="mt-4 text-center text-sm">
-          {{ isLogin ? "Don't have an account?" : "Already have an account?" }}
-          <button @click="toggleAuth" class="text-accent100 font-medium">
-            {{ isLogin ? "Sign up" : "Login" }}
-          </button>
-        </p>
+        <span class="mt-4 text-center text-sm">
+          Already have an account?
+          <router-link to="/login" class="text-accent100 font-medium">
+            login
+          </router-link>
+        </span>
       </div>
     </section>
   </form>
 </template>
 
 <script setup lang="ts">
-defineOptions({ name: "UserLoginView" });
 import { ref } from "vue";
-import ArrowForward from "@/assets/icons/ArrowForward.vue";
 import ArrowBack from "@/assets/icons/ArrowBack.vue";
 import GoogleIcon from "@/assets/icons/GoogleIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
@@ -101,24 +92,17 @@ import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import { useAuth } from "../composables/useAuth";
 
-const username = ref<string>("");
-const email = ref<string>("");
-const password = ref<string>("");
 const showPassword = ref(false);
 
-const { login, loginWithGoogle, isLogin, toggleAuth } = useAuth();
-
-const handleLogin = async (): Promise<void> => {
-  try {
-    await login({ email: email.value, password: password.value });
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      alert(e.message);
-    } else {
-      alert("An unknown error occurred.");
-    }
-  }
-};
+const {
+  loading,
+  name,
+  email,
+  password,
+  // checkAuth,
+  handleSignup,
+  loginWithGoogle,
+} = useAuth();
 
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
