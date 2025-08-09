@@ -1,5 +1,5 @@
 import { computed, nextTick, ref, type ComputedRef, type Ref } from "vue";
-import { type FormDataType } from "../types/formData";
+import { type FormDataType } from "@/types/formData";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;

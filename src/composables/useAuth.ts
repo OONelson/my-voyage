@@ -61,7 +61,7 @@ export const useAuth = () => {
 
       if (authError) throw authError;
       if (user) {
-        await redirectBasedOnAuth();
+        router.push("/auth/confirm");
       }
     } catch (err) {
       error.value = err as AuthError;

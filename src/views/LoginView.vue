@@ -13,12 +13,7 @@
           <h3 class="text-textblack300 font-semibold">Welcome back</h3>
           <span class="text-md"> Sign up your Account </span>
         </div>
-        <ReusableInput
-          v-model="name"
-          type="text"
-          label="Username"
-          placeholder="Enter Username"
-        />
+
         <ReusableInput
           v-model="email"
           type="email"
@@ -99,8 +94,7 @@ import { useAuth } from "@/composables/useAuth";
 
 const showPassword = ref(false);
 
-const { loading, name, email, password, handleLogin, loginWithGoogle } =
-  useAuth();
+const { loading, email, password, handleLogin, loginWithGoogle } = useAuth();
 
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;

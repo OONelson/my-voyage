@@ -23,6 +23,12 @@ const routes: AppRouteRecordRaw[] = [
     meta: { guestOnly: true },
   },
   {
+    path: "/auth/confirm",
+    name: "confirm-email",
+    component: () => import("@/views/ConfirmEmail.vue"),
+    meta: { guestOnly: true },
+  },
+  {
     path: "/auth/callback",
     name: "auth-callback",
     component: () => import("@/views/AuthCallbackView.vue"),

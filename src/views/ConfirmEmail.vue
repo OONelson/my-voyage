@@ -52,10 +52,13 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/config/supabase";
+import { useAuth } from "@/composables/useAuth";
 // import { CheckCircleIcon } from "@heroicons/vue/outline";
 
 const route = useRoute();
 const router = useRouter();
+
+const { redirectBasedOnAuth } = useAuth();
 
 const email = ref((route.query.email as string) || "");
 const isLoading = ref(false);
@@ -96,6 +99,7 @@ const checkConfirmationStatus = async () => {
   if (user?.email_confirmed_at) {
     confirmed.value = true;
     clearInterval(checkInterval);
+    redirectBasedOnAuth();
   }
 };
 
