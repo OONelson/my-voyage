@@ -1,5 +1,5 @@
-import type { AppRouteRecordRaw } from "../types/router";
-import { setupRouter } from "../router/guards";
+import type { AppRouteRecordRaw } from "@/types/router";
+import { setupRouter } from "@/router/guards";
 
 import HomeView from "@/views/HomeView.vue";
 

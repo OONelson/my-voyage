@@ -49,11 +49,11 @@
         </div>
 
         <!-- PDF Download Button -->
-        <PremiumButton
+        <!-- <PremiumButton
           :isPremium="user.isPremium"
           @click="handleDownloadPdf"
           label="Export as PDF"
-        />
+        /> -->
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
@@ -93,29 +93,29 @@ import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import CopyIcon from "@/assets/icons/CopyIcon.vue";
 import CopiedIcon from "@/assets/icons/CopiedIcon.vue";
-import PremiumButton from "@/components/ui/PremiumButton.vue";
+// import PremiumButton from "@/components/ui/PremiumButton.vue";
 
-import type { Platform } from "../types/social";
-import { platforms } from "../constants/constant";
-import { usePdfExport } from "../composables/usePdfExport";
+import type { Platform } from "@/types/social";
+import { platforms } from "@/constants/constant";
+// import { usePdfExport } from "@/composables/usePdfExport";
 
-const user = ref({
-  isPremium: false, // Will show tooltip on hover
-});
+// const user = ref({
+//   isPremium: false, // Will show tooltip on hover
+// });
 
-interface Props {
-  contentElementId?: string;
-  defaultFilename?: string;
-}
+// interface Props {
+//   contentElementId?: string;
+//   defaultFilename?: string;
+// }
 
-const props = withDefaults(defineProps<Props>(), {
-  contentElementId: "share-content",
-  defaultFilename: "my-journal",
-});
+// const props = withDefaults(defineProps<Props>(), {
+//   contentElementId: "share-content",
+//   defaultFilename: "my-journal",
+// });
 
-const emit = defineEmits(["close"]);
+// const emit = defineEmits(["close"]);
 
-const { exportToPdf } = usePdfExport();
+// const { exportToPdf } = usePdfExport();
 const urlInput = ref<HTMLInputElement | null>(null);
 const pageUrl = ref(window.location.href);
 const isCopied = ref(false);
@@ -139,10 +139,10 @@ const copyLink = async () => {
   }
 };
 
-const handleDownloadPdf = () => {
-  exportToPdf(props.contentElementId, props.defaultFilename);
-  emit("close");
-};
+// const handleDownloadPdf = () => {
+//   exportToPdf(props.contentElementId, props.defaultFilename);
+//   emit("close");
+// };
 
 const share = (platform: Platform) => {
   const shareUrl = new URL(pageUrl.value);

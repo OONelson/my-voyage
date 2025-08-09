@@ -9,8 +9,8 @@
 import { onMounted } from "vue";
 import { useRouter } from "vue-router";
 import Spinner from "@/components/ui/Spinner.vue";
-import { handleAuthCallback } from "../services/supabase/auth";
-import { useAuth } from "../composables/useAuth";
+import { handleAuthCallback } from "@/services/supabase/auth";
+import { useAuth } from "@/composables/useAuth";
 
 const router = useRouter();
 const { redirectBasedOnAuth } = useAuth();

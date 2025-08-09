@@ -200,8 +200,8 @@ import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
 import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
-import { dateAndTime } from "../utils/date-and-timeUtils";
-import { useVoyageManager } from "../composables/useVoyageManager";
+import { dateAndTime } from "@/utils/date-and-timeUtils";
+import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useRoute } from "vue-router";
 import { ref, watch } from "vue";
 

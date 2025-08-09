@@ -1,7 +1,8 @@
 import { computed, ref } from "vue";
-import type { UserProfile } from "../types/user";
+import type { UserProfile } from "@/types/user";
 
 export const userData = ref<UserProfile>({
+  id: "1",
   name: "nelson",
   email: "nelson@gmail.com",
   profileImage: "https://github.com/benjamincanac.png",

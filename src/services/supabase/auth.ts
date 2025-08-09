@@ -1,5 +1,5 @@
-import { supabase } from "../../config/supabase";
-import type { UserProfile, AuthUser } from "../../types/user";
+import { supabase } from "@/config/supabase";
+import type { UserProfile, AuthUser } from "@/types/user";
 
 export const signUpWithEmail = async (
   email: string,

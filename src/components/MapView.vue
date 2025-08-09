@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { useMap } from "../composables/useMap";
+import { useMap } from "@/composables/useMap";
 
 const { mapContainer, isMapInitialized, initMap } = useMap();
 

@@ -1,5 +1,5 @@
-import { supabase } from "../config/supabase";
-import type { UserProfile } from "../types/user";
+import { supabase } from "@/config/supabase";
+import type { UserProfile } from "@/types/user";
 
 export const upgradeToPremium = async (
   userId: string

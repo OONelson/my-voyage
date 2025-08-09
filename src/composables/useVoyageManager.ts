@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import type { VoyageTypeInfo } from "../types/voyage";
-import { Voyages } from "../constants/constant";
+import type { VoyageTypeInfo } from "@/types/voyage";
+import { Voyages } from "@/constants/constant";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
 

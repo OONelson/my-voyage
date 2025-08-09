@@ -7,8 +7,8 @@ import {
   signUpWithEmail,
   signInWithGoogle,
   signOut,
-} from "../services/supabase/auth";
-import type { UserProfile } from "../types/user";
+} from "@/services/supabase/auth";
+import type { UserProfile } from "@/types/user";
 import { AuthError } from "@supabase/supabase-js";
 
 export const useAuth = () => {

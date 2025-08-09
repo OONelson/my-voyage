@@ -220,8 +220,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuth } from "../composables/useAuth";
-import { createCheckoutSession } from "../services/supabase/subscriptions";
+import { useAuth } from "@/composables/useAuth";
+// import { createCheckoutSession } from "../services/supabase/subscriptions";
 
 const router = useRouter();
 const { user } = useAuth();

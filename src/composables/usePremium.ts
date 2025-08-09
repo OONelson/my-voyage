@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { checkPremiumStatus, upgradeToPremium } from "../services/premium";
+import { checkPremiumStatus, upgradeToPremium } from "@/services/premium";
 
 export function usePremium(userId: string) {
   const isPremium = ref(false);

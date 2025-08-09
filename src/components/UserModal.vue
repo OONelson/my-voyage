@@ -166,8 +166,8 @@
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
-import { useImageUpload } from "../composables/useImageUpload";
-import { UserModal } from "../utils/userModal";
+import { useImageUpload } from "@/composables/useImageUpload";
+import { UserModal } from "@/utils/userModal";
 import {
   userData,
   maskedEmail,

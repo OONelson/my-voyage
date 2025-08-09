@@ -72,9 +72,14 @@
           </button>
         </div>
 
-        <span class="mt-4 text-center text-sm">
+        <span
+          class="flex justify-center items-center gap-1 mt-4 text-center text-sm"
+        >
           Don't have an account?
-          <router-link to="/signup" class="text-accent100 font-medium">
+          <router-link
+            to="/signup"
+            class="text-accent100 font-medium underline"
+          >
             Sign Up
           </router-link>
         </span>
@@ -90,7 +95,7 @@ import GoogleIcon from "@/assets/icons/GoogleIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
-import { useAuth } from "../composables/useAuth";
+import { useAuth } from "@/composables/useAuth";
 
 const showPassword = ref(false);
 

@@ -193,8 +193,8 @@ import EditIcon from "@/assets/icons/EditIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
 import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
-import { useVoyageManager } from "../composables/useVoyageManager";
-import { dateAndTime } from "../utils/date-and-timeUtils";
+import { useVoyageManager } from "@/composables/useVoyageManager";
+import { dateAndTime } from "@/utils/date-and-timeUtils";
 
 const { relativeCreatedAt } = dateAndTime();
 const {

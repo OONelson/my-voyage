@@ -108,15 +108,21 @@
               </div>
             </ReusableModal>
           </div>
-          <p class="text-textblack50">
-            {{ voyage.location }} • {{ relativeTripDate(voyage.date) }}
-          </p>
-          <p>
-            <span class="text-textblack100 font-medium"> Created: </span>
-            <span class="textblack50">
-              {{ relativeCreatedAt(voyage.createdAt) }}
-            </span>
-          </p>
+          <div class="mt-2 flex items-center gap-2 text-normal">
+            <LocationIcon size="26" />
+            <span class="line-clamp-1">{{ voyage.location }}</span>
+            <span class="hidden md:block">•</span>
+            <span class="hidden md:block">{{
+              relativeTripDate([voyage.startDate, voyage.endDate])
+            }}</span>
+          </div>
+
+          <!-- Created At -->
+          <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
+            <WhatTimeIcon size="26" />
+            <span>Created:</span>
+            <span class="">{{ relativeCreatedAt(voyage.createdAt) }}</span>
+          </div>
           <div class="mt-3 pt-3 border-t text-sm">
             <Rating :rating="voyage.rating" show-comment />
           </div>
@@ -173,9 +179,10 @@ import AddIcon from "@/assets/icons/AddIcon.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import HeartIcon from "@/assets/icons/HeartIcon.vue";
+import WhatTimeIcon from "@/assets/icons/WhatTimeIcon.vue";
 import CompassIcon from "@/assets/icons/CompassIcon.vue";
-import { useVoyageManager } from "../composables/useVoyageManager";
-import { dateAndTime } from "../utils/date-and-timeUtils";
+import { useVoyageManager } from "@/composables/useVoyageManager";
+import { dateAndTime } from "@/utils/date-and-timeUtils";
 
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 const {

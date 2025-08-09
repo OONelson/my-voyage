@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuth } from "../composables/useAuth";
-import type { AppRouteRecordRaw } from "../types/router";
+import { useAuth } from "@/composables/useAuth";
+import type { AppRouteRecordRaw } from "@/types/router";
 
 export function setupRouter(routes: AppRouteRecordRaw[]) {
   const router = createRouter({

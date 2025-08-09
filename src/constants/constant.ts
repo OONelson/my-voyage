@@ -1,6 +1,6 @@
 import { computed } from "vue";
-import type { VoyageTypeInfo } from "../types/voyage";
-import type { Platform } from "../types/social";
+import type { VoyageTypeInfo } from "@/types/voyage";
+import type { Platform } from "@/types/social";
 import facebook from "@/assets/images/facebook.svg";
 import x from "@/assets/images/x.svg";
 import whatsapp from "@/assets/images/whatsapp.svg";

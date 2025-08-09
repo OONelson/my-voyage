@@ -271,30 +271,32 @@
 </template>
 
 <script setup lang="ts">
+// imports from vue
 import { computed, ref, watch } from "vue";
+// imports from PrimeVue
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
 import Calendar from "primevue/calendar";
-
-import MapView from "@/components/MapView.vue";
+// imports from ui components
+import EditVoyageSkeleton from "@/components/ui/EditVoyageSkeleton.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
+// imports from icons
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import LocationIcon from "@/assets/icons/LocationIcon.vue";
 import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import CropIcon from "@/assets/icons/CropIcon.vue";
 import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
-import { useImageUpload } from "../composables/useImageUpload";
-import { useVoyageManager } from "../composables/useVoyageManager";
-import { useMap } from "../composables/useMap";
-import { genUtils } from "../utils/genUtils";
+// imports from composables and functions
+import { useVoyageManager } from "@/composables/useVoyageManager";
+import { useImageUpload } from "@/composables/useImageUpload";
+import { useMap } from "@/composables/useMap";
+import { genUtils } from "@/utils/genUtils";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
 const { handleSubmit, isSubmitting, formData, formatDateForInput } = genUtils();
-
 const {
   selectedLocation,
   locationSearch,

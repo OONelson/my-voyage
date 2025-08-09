@@ -3,8 +3,8 @@ import "./assets/style.scss";
 import App from "./App.vue";
 import { router } from "./router";
 import PrimeVue from "primevue/config";
-import { useAuth } from "./composables/useAuth";
-import { supabase } from "./config/supabase";
+// import { useAuth } from "./composables/useAuth";
+// import { supabase } from "./config/supabase";
 
 const app = createApp(App);
 

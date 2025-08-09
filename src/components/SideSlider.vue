@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import { NavPaths } from "../constants/constant.ts";
+import { NavPaths } from "@/constants/constant";
 import { useRoute } from "vue-router";
 
 interface NavItem {
@@ -45,7 +45,7 @@ interface NavItem {
   icon?: string;
 }
 
-const props = defineProps<{
+defineProps<{
   isOpen: boolean;
   navItems?: NavItem[];
 }>();
