@@ -32,7 +32,7 @@
             type="button"
             id="togglePassword"
             @click="togglePasswordVisibility"
-            class="absolute inset-y-0 right-10 flex items-center px-3 text-black hover:text-gray-700"
+            class="absolute inset-y-0 right-10 flex items-center px-3 text-gray-700 hover:text-gray-700"
           />
         </div>
 
@@ -51,14 +51,14 @@
           />
           <span class="mx-4 text-sm text-gray-500 uppercase">or</span>
           <div
-            class="flex-grow w-[130px] xs:w-[150px] sm:w-[100px] border-t border-border200"
+            class="flex-grow w-[120px] xs:w-[150px] sm:w-[100px] border-t border-border200"
           />
         </div>
 
-        <div class="flex justify-center items-center">
+        <div class="">
           <button
             @click.prevent="loginWithGoogle"
-            class="bg-white py-2 border border-border100 rounded-lg mt-2 px-3 w-full sm:max-w-[200px] flex gap-2"
+            class="flex justify-center items-center w-full bg-white py-2 border border-border100 rounded-lg mt-2 px-3 sm:max-w-[200px] gap-2"
           >
             <GoogleIcon />
             <span class="text-textblack100 sm:text-accent100 font-medium">

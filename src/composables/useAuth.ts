@@ -9,7 +9,6 @@ import {
   signOut,
 } from "@/services/supabase/auth";
 import type { UserProfile } from "@/types/user";
-import { AuthError } from "@supabase/supabase-js";
 
 export const useAuth = () => {
   const router = useRouter();
@@ -18,7 +17,7 @@ export const useAuth = () => {
   const name = ref<string>("");
   const email = ref<string>("");
   const password = ref<string>("");
-  const error = ref<AuthError | null>(null);
+  const error = ref<string | null>(null);
 
   const checkAuth = async () => {
     loading.value = true;
@@ -48,6 +47,7 @@ export const useAuth = () => {
   });
 
   // signUp
+
   const handleSignup = async () => {
     try {
       loading.value = true;
@@ -60,11 +60,16 @@ export const useAuth = () => {
       );
 
       if (authError) throw authError;
-      if (user) {
-        router.push("/auth/confirm");
+
+      if (user?.identities?.length === 0) {
+        throw new Error("Email already registered");
       }
+      router.push({
+        path: "/auth/confirm",
+        query: { email: email.value },
+      });
     } catch (err) {
-      error.value = err as AuthError;
+      error.value = err instanceof Error ? err.message : "Signup failed";
     } finally {
       loading.value = false;
     }
@@ -86,7 +91,7 @@ export const useAuth = () => {
         await redirectBasedOnAuth();
       }
     } catch (err) {
-      error.value = err as AuthError;
+      error.value = err instanceof Error ? err.message : "Login failed";
     } finally {
       loading.value = false;
     }
@@ -99,7 +104,8 @@ export const useAuth = () => {
       await signInWithGoogle();
       loading.value = false;
     } catch (err) {
-      error.value = err as AuthError;
+      error.value =
+        err instanceof Error ? err.message : "Signing in with Google failed";
       throw err;
     }
   };
@@ -114,7 +120,7 @@ export const useAuth = () => {
       await router.push("/login");
       loading.value = false;
     } catch (err) {
-      error.value = err as AuthError;
+      error.value = err instanceof Error ? err.message : "Logout failed";
       throw err;
     }
   };

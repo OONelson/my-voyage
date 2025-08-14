@@ -1,6 +1,13 @@
 <template>
   <div class="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-    <div v-if="!confirmed">
+    <div v-if="!confirmed" class="text-center">
+      <picture class="flex justify-center items-center">
+        <img
+          src="@/assets/images/Notification.svg"
+          alt="notification-icon"
+          class="w-[60%] mb-10"
+        />
+      </picture>
       <h1 class="text-2xl font-bold text-gray-800 mb-4">Confirm Your Email</h1>
       <p class="text-gray-600 mb-6">
         We've sent a confirmation link to
@@ -22,7 +29,7 @@
       <button
         @click="resendConfirmation"
         :disabled="isLoading || resendCooldown > 0"
-        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-accent200 hover:bg-accent100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent30 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span v-if="isLoading">Sending...</span>
         <span v-else-if="resendCooldown > 0"
@@ -33,16 +40,22 @@
     </div>
 
     <div v-else class="text-center">
-      <CheckCircleIcon class="mx-auto h-12 w-12 text-green-500" />
+      <picture class="flex justify-center items-center">
+        <img
+          src="@/assets/images/Done.svg"
+          alt="confirmed-icon"
+          class="w-[60%]"
+        />
+      </picture>
       <h2 class="mt-3 text-lg font-medium text-gray-900">Email Confirmed!</h2>
-      <p class="mt-2 text-sm text-gray-500">
+      <p class="mt-2 text-normal text-gray-500">
         Your email address has been successfully verified.
       </p>
       <router-link
-        to="/dashboard"
-        class="mt-5 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        to="/voyages"
+        class="mt-5 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-accent200 hover:bg-accent100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent30"
       >
-        Go to Dashboard
+        Go to Voyages
       </router-link>
     </div>
   </div>

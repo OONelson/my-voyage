@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   loading?: boolean;
   onClick?: () => void;
   variant?: "ghost" | "link" | "solid" | "outline" | "soft" | "subtle";
