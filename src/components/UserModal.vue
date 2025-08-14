@@ -109,6 +109,15 @@
         <span class="font-semibold text-gray-800">{{ maskedEmail }}</span>
       </div>
 
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-3"
+      >
+        <label class="text-gray-700 font-medium">Account Status </label>
+        <span class="font-semibold text-gray-800">{{
+          userData.is_premium ? "Premium" : "Basic"
+        }}</span>
+      </div>
+
       <!-- Log Out -->
       <div
         class="relative flex justify-between items-center border-b border-gray-200 pb-6"
@@ -167,13 +176,10 @@ import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import { useImageUpload } from "@/composables/useImageUpload";
+import { useUserProfile } from "@/composables/useUserProfile";
 import { UserModal } from "@/utils/userModal";
-import {
-  userData,
-  maskedEmail,
-  themeItems,
-  tabs,
-} from "../constants/userConstant";
+import { themeItems, tabs } from "@/constants/userConstant";
+import { onMounted } from "vue";
 
 const { openFileInput, handleDrop, handleImageUpload, dragOver } =
   useImageUpload();
@@ -188,11 +194,17 @@ const {
   confirmDeleteAccount,
 } = UserModal();
 
+const { maskedEmail, userData, fetchUserProfile } = useUserProfile();
+
 const emit = defineEmits(["close"]);
 
 const handleClose = () => {
   emit("close");
 };
+
+onMounted(async (userId: string) => {
+  fetchUserProfile(userId);
+});
 </script>
 
 <style scoped>
