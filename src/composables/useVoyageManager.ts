@@ -9,7 +9,7 @@ interface VoyageManager {
   // State
   voyages: Ref<VoyageTypeInfo[]>;
   voyage: Ref<VoyageTypeInfo | null>;
-  voyageId: number;
+  voyageId: Ref<number | null>;
   favorites: Ref<number[]>;
   scrolled: Ref<boolean>;
   isMenuOpen: Ref<boolean>;
@@ -61,10 +61,21 @@ export const useVoyageManager = (): VoyageManager => {
   const isLoading = ref(true);
   const error = ref<string | null>(null);
   const size = ref<ModalSize>("md");
-  const voyageId = parseInt(route.params?.id?.toString());
   const favorites = ref<number[]>(
     JSON.parse(localStorage.getItem("favorites") || "[]")
   );
+  const voyageId = computed(() => {
+    try {
+      const idParam = route.params?.id;
+      if (!idParam) return null;
+
+      const id = parseInt(idParam.toString());
+      return isNaN(id) ? null : id;
+    } catch (error) {
+      console.error("Error parsing voyage ID:", error);
+      return null;
+    }
+  });
 
   // Event Handlers
   const handleScroll = () => {
@@ -131,7 +142,7 @@ export const useVoyageManager = (): VoyageManager => {
   };
 
   const deleteVoyage = (voyageId: number) => {
-    voyages.value = voyages.value.filter((v) => Number(v.id) !== voyageId);
+    voyages.value = voyages.value.filter((v) => v.id !== voyageId);
     router.push("/voyages");
   };
 
@@ -215,7 +226,7 @@ export const useVoyageManager = (): VoyageManager => {
     error.value = null;
     try {
       // Just use the mock data directly
-      return Voyages.find((v) => v.id === voyageId) || null;
+      return Voyages.find((v) => v.id === voyageId.value) || null;
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Failed to load voyage";
@@ -256,7 +267,7 @@ export const useVoyageManager = (): VoyageManager => {
       voyages.value = await executeWithDelay(loadVoyages());
 
       // Only try to load single voyage if we have an ID
-      if (voyageId) {
+      if (voyageId.value) {
         voyage.value = await loadVoyageData();
       }
     } catch (err) {

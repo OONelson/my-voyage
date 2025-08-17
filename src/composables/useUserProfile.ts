@@ -2,14 +2,16 @@ import { ref, computed, watchEffect } from "vue";
 import { supabase } from "@/config/supabase";
 import type { UserProfile } from "@/types/user";
 import { getUserProfile } from "@/services/supabase/auth";
+import { genUtils } from "@/utils/genUtils";
 import { useAuth } from "./useAuth";
 
+const { getDefaultAvatarUrl } = genUtils();
 export const useUserProfile = () => {
   const userData = ref<UserProfile | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
 
   const maskedEmail = computed(() => {
     if (!userData.value?.email) return "";
@@ -57,9 +59,11 @@ export const useUserProfile = () => {
 
       userData.value = {
         id: profileData.id,
-        name: profileData.name || user.value?.name || "Guest",
-        email: profileData.email || "",
-        profileImage: profileData.profileImage || "",
+        name: profileData.name || authUser.value?.name || "Guest",
+        email: profileData.email || authUser.value?.email || "",
+        profileImage:
+          profileData.profileImage ||
+          getDefaultAvatarUrl(profileData.email || authUser.value?.email),
         is_premium: profileData.is_premium || false,
         created_at: profileData.created_at
           ? new Date(profileData.created_at)
@@ -78,11 +82,10 @@ export const useUserProfile = () => {
 
   watchEffect(async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await fetchUserProfile(user.id);
+      if (authUser.value?.id) {
+        await fetchUserProfile(authUser.value.id);
+      } else {
+        userData.value = null;
       }
     } catch (err) {
       console.error("Auth watch error:", err);

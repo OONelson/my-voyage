@@ -9,7 +9,6 @@ import {
   signOut,
 } from "@/services/supabase/auth";
 import type { UserProfile } from "@/types/user";
-import { supabase } from "@/config/supabase";
 
 export const useAuth = () => {
   const router = useRouter();
@@ -26,7 +25,8 @@ export const useAuth = () => {
     try {
       const authUser = await getCurrentUser();
       if (authUser) {
-        user.value = await getUserProfile(authUser.id);
+        const profile = await getUserProfile(authUser.id);
+        user.value = profile;
         return true;
       }
       return false;
@@ -49,14 +49,11 @@ export const useAuth = () => {
   };
 
   onMounted(async () => {
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN" && session?.user) {
-        await checkAuth();
-      } else if (event === "SIGNED_OUT") {
-        user.value = null;
-        router.push("/login");
-      }
-    });
+    try {
+      await checkAuth();
+    } catch (error) {
+      console.error("onMounted error ", error);
+    }
   });
 
   // signUp
@@ -78,7 +75,9 @@ export const useAuth = () => {
       }
       router.push({
         path: "/auth/confirm",
-        query: { email: email.value },
+        query: {
+          email: email.value,
+        },
       });
     } catch (err) {
       error.value = err instanceof Error ? err.message : "Signup failed";
