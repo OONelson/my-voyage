@@ -33,7 +33,11 @@
     </nav>
 
     <!-- Profile Tab Content -->
-    <form class="space-y-6" v-if="activeTab === 'profile'">
+
+    <div v-if="loading" class="flex justify-center items-center">
+      <Spinner />
+    </div>
+    <form class="space-y-6" v-else-if="activeTab === 'profile' && userData">
       <!-- Profile Photo -->
       <div class="space-y-2 relative cursor-pointer">
         <input
@@ -66,7 +70,7 @@
           <!-- Image preview -->
           <img
             v-if="userData.profileImage"
-            :src="userData.profileImage"
+            :src="userData.profileImage || '@/assets/images/empty_state2.png'"
             class="rounded-md w-full h-full object-cover"
           />
 
@@ -86,13 +90,17 @@
         </div>
       </div>
 
+      <div>{{ userData.name }}</div>
+
       <!-- Name Field -->
       <div
         class="flex justify-between items-center border-b border-gray-200 pb-3"
       >
         <label class="text-gray-700 font-medium">Name</label>
         <div class="flex items-center space-x-2">
-          <span class="font-semibold text-gray-800">{{ userData.name }}</span>
+          <span class="font-semibold text-gray-800">{{
+            userData.name || "guest "
+          }}</span>
           <img
             alt="Google logo"
             class="inline-block h-5 w-5"
@@ -103,6 +111,7 @@
 
       <!-- Email Field -->
       <div
+        v-if="userData.email"
         class="flex justify-between items-center border-b border-gray-200 pb-3"
       >
         <label class="text-gray-700 font-medium">Email </label>
@@ -116,6 +125,14 @@
         <span class="font-semibold text-gray-800">{{
           userData.is_premium ? "Premium" : "Basic"
         }}</span>
+      </div>
+
+      <div
+        v-if="userData.created_at"
+        class="flex justify-between items-center border-b border-gray-200 pb-3"
+      >
+        <label class="text-gray-700 font-medium">Created at </label>
+        <span class="font-semibold text-gray-800">{{ joinedAgo }}</span>
       </div>
 
       <!-- Log Out -->
@@ -150,6 +167,10 @@
       </div>
     </form>
 
+    <div v-else>
+      <span>{{ error }}</span>
+    </div>
+
     <section class="space-y-6" v-if="activeTab === 'general'">
       <div class="flex justify-between items-center">
         <span> Theme </span>
@@ -175,12 +196,14 @@
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
+import Spinner from "@/components/ui/Spinner.vue";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useUserProfile } from "@/composables/useUserProfile";
 import { UserModal } from "@/utils/userModal";
+import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { themeItems, tabs } from "@/constants/userConstant";
-import { onMounted } from "vue";
 
+const { joinedAgo } = dateAndTime();
 const { openFileInput, handleDrop, handleImageUpload, dragOver } =
   useImageUpload();
 
@@ -194,17 +217,13 @@ const {
   confirmDeleteAccount,
 } = UserModal();
 
-const { maskedEmail, userData, fetchUserProfile } = useUserProfile();
+const { maskedEmail, userData, loading, error } = useUserProfile();
 
 const emit = defineEmits(["close"]);
 
 const handleClose = () => {
   emit("close");
 };
-
-onMounted(async (userId: string) => {
-  fetchUserProfile(userId);
-});
 </script>
 
 <style scoped>

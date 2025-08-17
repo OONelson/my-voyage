@@ -6,7 +6,7 @@ export type UserProfile = {
   email: string;
   profileImage?: string;
   is_premium: boolean;
-  createdAt: Date;
+  created_at: Date;
 };
 export type AuthUser =
   | (User & {

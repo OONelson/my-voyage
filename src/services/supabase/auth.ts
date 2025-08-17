@@ -1,5 +1,8 @@
 import { supabase } from "@/config/supabase";
 import type { UserProfile, AuthUser } from "@/types/user";
+import { genUtils } from "@/utils/genUtils";
+
+const { getGravatarUrl } = genUtils();
 
 export const signUpWithEmail = async (
   email: string,
@@ -14,6 +17,8 @@ export const signUpWithEmail = async (
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
+
+  if (error) return { user: null, error };
 
   return {
     user: data.user as AuthUser,
@@ -53,26 +58,52 @@ export const signOut = async (): Promise<void> => {
 };
 
 export const getCurrentUser = async (): Promise<AuthUser> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (!authError && user) return user;
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError || !session) {
+      throw new Error("Not authenticated");
+    }
+
+    const {
+      data: { user: retryUser },
+    } = await supabase.auth.getUser();
+
+    if (!retryUser) throw new Error("User not found after session refresh");
+    return retryUser;
+  } catch (err) {
+    console.error("Authentication error:", err);
+    throw err;
+  }
 };
 
 export const getUserProfile = async (
   userId: string
 ): Promise<UserProfile | null> => {
   const { data, error } = await supabase
-    .from("profiles")
+    .from("users")
     .select("*")
     .eq("id", userId)
     .single();
 
   if (error) return null;
+
   return data;
 };
 
-export const handleAuthCallback = async (): Promise<AuthUser> => {
+export const handleAuthCallback = async (
+  profileImage?: File
+): Promise<AuthUser> => {
   const {
     data: { user },
     error,
@@ -82,12 +113,29 @@ export const handleAuthCallback = async (): Promise<AuthUser> => {
     throw error || new Error("No user found");
   }
 
+  let imageUrl = "";
+  if (profileImage && user) {
+    const filePath = `profile_images/${user.id}/${profileImage.name}`;
+
+    // Upload image
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, profileImage);
+
+    if (!uploadError) {
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+      imageUrl = urlData.publicUrl;
+    }
+  }
   // Create or update profile
-  await supabase.from("profiles").upsert({
+  await supabase.from("users").upsert({
     id: user.id,
     email: user.email,
-    name: user.user_metadata?.name || "",
-    profileImage: user.user_metadata?.avatar_url,
+    name: user.user_metadata.name || "",
+    profileImage: imageUrl || getGravatarUrl(user.email ?? "N"),
     is_premium: false,
     createdAt: new Date(),
   });

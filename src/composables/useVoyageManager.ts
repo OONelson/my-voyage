@@ -61,7 +61,7 @@ export const useVoyageManager = (): VoyageManager => {
   const isLoading = ref(true);
   const error = ref<string | null>(null);
   const size = ref<ModalSize>("md");
-  const voyageId = parseInt(route.params.id as string);
+  const voyageId = parseInt(route.params?.id?.toString());
   const favorites = ref<number[]>(
     JSON.parse(localStorage.getItem("favorites") || "[]")
   );
@@ -131,7 +131,7 @@ export const useVoyageManager = (): VoyageManager => {
   };
 
   const deleteVoyage = (voyageId: number) => {
-    voyages.value = voyages.value.filter((v) => v.id !== voyageId);
+    voyages.value = voyages.value.filter((v) => Number(v.id) !== voyageId);
     router.push("/voyages");
   };
 

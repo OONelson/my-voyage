@@ -19,7 +19,7 @@ onMounted(async () => {
   try {
     await handleAuthCallback();
     await redirectBasedOnAuth();
-  } catch (error) {
+  } catch (err) {
     router.push("/login");
   }
 });

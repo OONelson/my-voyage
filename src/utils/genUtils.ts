@@ -2,6 +2,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import type { FormDataType } from "@/types/formData";
+import md5 from "md5";
 
 export const genUtils = () => {
   const { voyageId, error } = useVoyageManager();
@@ -58,10 +59,16 @@ export const genUtils = () => {
     }
   };
 
+  const getGravatarUrl = (email: string) => {
+    const hash = md5(email.trim().toLowerCase());
+    return `https://www.gravatar.com/avatar/${hash}?d=identicon`;
+  };
+
   return {
     formatDateForInput,
     goBack,
     handleSubmit,
+    getGravatarUrl,
     isSubmitting,
     error,
     voyageId,

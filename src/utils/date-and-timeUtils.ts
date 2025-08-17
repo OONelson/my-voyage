@@ -1,4 +1,7 @@
 import { formatDistanceToNow, formatDistance, isFuture } from "date-fns";
+import { useUserProfile } from "@/composables/useUserProfile";
+
+const { userData } = useUserProfile();
 
 export const dateAndTime = () => {
   const relativeTripDate = (dates: [Date | string, Date | string]): string => {
@@ -27,12 +30,16 @@ export const dateAndTime = () => {
     }
   };
 
-  // For creation date (always in past)
   const relativeCreatedAt = (date: Date) => {
     return `${formatDistanceToNow(date)} ago`;
   };
 
+  const createdAt = userData.value?.created_at;
+  const joinedAgo = createdAt
+    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
+    : "Unknown";
   return {
+    joinedAgo,
     relativeTripDate,
     relativeCreatedAt,
   };

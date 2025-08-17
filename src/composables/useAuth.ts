@@ -9,11 +9,12 @@ import {
   signOut,
 } from "@/services/supabase/auth";
 import type { UserProfile } from "@/types/user";
+import { supabase } from "@/config/supabase";
 
 export const useAuth = () => {
   const router = useRouter();
   const user = ref<UserProfile | null>(null);
-  const loading = ref<boolean>(true);
+  const loading = ref<boolean>(false);
   const name = ref<string>("");
   const email = ref<string>("");
   const password = ref<string>("");
@@ -21,12 +22,17 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     loading.value = true;
+    error.value = null;
     try {
       const authUser = await getCurrentUser();
       if (authUser) {
         user.value = await getUserProfile(authUser.id);
         return true;
       }
+      return false;
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Authentication failed";
       return false;
     } finally {
       loading.value = false;
@@ -43,11 +49,17 @@ export const useAuth = () => {
   };
 
   onMounted(async () => {
-    await checkAuth();
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        await checkAuth();
+      } else if (event === "SIGNED_OUT") {
+        user.value = null;
+        router.push("/login");
+      }
+    });
   });
 
   // signUp
-
   const handleSignup = async () => {
     try {
       loading.value = true;
