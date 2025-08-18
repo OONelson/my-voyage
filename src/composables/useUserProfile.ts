@@ -46,7 +46,11 @@ export const useUserProfile = () => {
 
         userData.value = {
           id: newProfile.id,
-          name: newProfile.name || "Guest",
+          name:
+            newProfile.name ||
+            user.user_metadata?.full_name ||
+            user.email?.split("@")[0] ||
+            "Guest",
           email: newProfile.email || "",
           profileImage: newProfile.profileImage || "",
           is_premium: newProfile.is_premium || false,

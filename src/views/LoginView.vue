@@ -11,7 +11,7 @@
         <div class="flex flex-col justify-start items-start mb-10">
           <Logo />
           <h3 class="text-textblack300 font-semibold">Welcome back</h3>
-          <span class="text-md"> Sign up your Account </span>
+          <span class="text-md"> Sign into your Account </span>
         </div>
 
         <ReusableInput
@@ -55,7 +55,7 @@
           />
         </div>
 
-        <div class="">
+        <div class="flex justify-center items-center">
           <button
             @click.prevent="loginWithGoogle"
             class="flex justify-center items-center w-full bg-white py-2 border border-border100 rounded-lg mt-2 px-3 sm:max-w-[200px] gap-2"

@@ -147,7 +147,7 @@
     <div
       v-if="voyages.length > 0"
       @click="toggleMenu"
-      class="flex justify-center items-center fixed right-4 bottom-5 z-50 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
+      class="flex justify-center items-center fixed right-4 bottom-5 z-30 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
       :class="isMenuOpen ? 'rotate-45' : 'rotate-0'"
     >
       <AddIcon fillColor="#005b52" size="30" />

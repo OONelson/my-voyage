@@ -62,7 +62,7 @@ export const useAuth = () => {
       loading.value = true;
       error.value = null;
 
-      const { user, error: authError } = await signUpWithEmail(
+      const { user: authUser, error: authError } = await signUpWithEmail(
         email.value,
         password.value,
         name.value
@@ -70,9 +70,12 @@ export const useAuth = () => {
 
       if (authError) throw authError;
 
-      if (user?.identities?.length === 0) {
+      if (authUser?.identities?.length === 0) {
         throw new Error("Email already registered");
       }
+      const profile = await getUserProfile(authUser?.id);
+      user.value = profile;
+
       router.push({
         path: "/auth/confirm",
         query: {
@@ -92,13 +95,15 @@ export const useAuth = () => {
       loading.value = true;
       error.value = null;
 
-      const { user, error: authError } = await signInWithEmail(
+      const { user: authUser, error: authError } = await signInWithEmail(
         email.value,
         password.value
       );
 
       if (authError) throw authError;
-      if (user) {
+      if (authUser) {
+        const profile = await getUserProfile(authUser.id);
+        user.value = profile;
         await redirectBasedOnAuth();
       }
     } catch (err) {

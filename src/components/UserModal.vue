@@ -1,5 +1,5 @@
 <template>
-  <main class="w-full rounded-2xl">
+  <main class="w-full rounded-2xl z-50">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-semibold text-gray-800">Settings</h2>
@@ -70,7 +70,7 @@
           <!-- Image preview -->
           <img
             v-if="userData.profileImage"
-            :src="userData.profileImage || '@/assets/images/empty_state2.png'"
+            :src="userData.profileImage"
             class="rounded-md w-full h-full object-cover"
           />
 
@@ -101,11 +101,6 @@
           <span class="font-semibold text-gray-800">{{
             userData.name || "guest "
           }}</span>
-          <img
-            alt="Google logo"
-            class="inline-block h-5 w-5"
-            src="https://storage.googleapis.com/a1aa/image/fe59ea75-ae7a-49bc-e829-92e804a25f27.jpg"
-          />
         </div>
       </div>
 

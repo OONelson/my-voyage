@@ -16,12 +16,24 @@ export const signUpWithEmail = async (
     email,
     password,
     options: {
-      data: { name, avatar_url: gravatarUrl },
+      data: { name, profileImage: gravatarUrl }, // use profileImage for consistency
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
 
   if (error) return { user: null, error };
+
+  // Upsert user profile in users table
+  if (data.user) {
+    await supabase.from("users").upsert({
+      id: data.user.id,
+      email,
+      name,
+      profileImage: gravatarUrl,
+      is_premium: false,
+      created_at: new Date().toISOString(),
+    });
+  }
 
   return {
     user: data.user as AuthUser,
@@ -68,7 +80,7 @@ export const getCurrentUser = async (): Promise<AuthUser> => {
 };
 
 export const getUserProfile = async (
-  userId: string
+  userId: string | undefined
 ): Promise<UserProfile | null> => {
   const { data, error } = await supabase
     .from("users")
@@ -97,10 +109,10 @@ export const handleAuthCallback = async (email: string): Promise<AuthUser> => {
   await supabase.from("users").upsert({
     id: user.id,
     email: user.email,
-    name: user.user_metadata.name || "",
+    name: user?.user_metadata?.full_name || user?.email || "guest",
     profileImage: user.user_metadata?.avatar_url || gravatarUrl,
     is_premium: false,
-    createdAt: new Date(),
+    created_at: new Date(),
   });
 
   return user;

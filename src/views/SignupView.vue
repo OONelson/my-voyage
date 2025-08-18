@@ -60,7 +60,7 @@
           />
         </div>
 
-        <div>
+        <div class="flex justify-center items-center">
           <button
             @click.prevent="loginWithGoogle"
             class="flex justify-center items-center bg-white py-2 border border-border100 rounded-lg mt-2 px-3 w-full sm:max-w-[200px] gap-2"
