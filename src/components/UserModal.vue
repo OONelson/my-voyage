@@ -37,7 +37,7 @@
     <div v-if="loading" class="flex justify-center items-center">
       <Spinner />
     </div>
-    <form class="space-y-6" v-else-if="activeTab === 'profile' && userData">
+    <form class="space-y-6" v-else-if="activeTab === 'profile'">
       <!-- Profile Photo -->
       <div class="space-y-2 relative cursor-pointer">
         <input
@@ -50,10 +50,6 @@
 
         <div
           class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
-          :class="{
-            'border-2 border-accent50 border-dashed': !userData.profileImage,
-            'border opacity-60': userData.profileImage,
-          }"
           @click="openFileInput"
           @dragover.prevent="dragOver = true"
           @dragleave="dragOver = false"
@@ -69,8 +65,8 @@
 
           <!-- Image preview -->
           <img
-            v-if="userData.profileImage"
-            :src="userData.profileImage"
+            v-if="userData?.profile_image"
+            :src="userData.profile_image || '@/assets/images/empty_state2.png'"
             class="rounded-md w-full h-full object-cover"
           />
 
@@ -82,7 +78,7 @@
 
           <!-- Edit overlay (shown when image exists) -->
           <div
-            v-if="userData.profileImage"
+            v-if="userData?.profile_image"
             class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
           >
             <EditIcon fillColor="white" size="30" class="opacity-90" />

@@ -12,28 +12,30 @@ export const signUpWithEmail = async (
   const emailHash = await generateEmailHash(email);
   const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
 
+  console.log("1");
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { name, profileImage: gravatarUrl }, // use profileImage for consistency
+      data: { name, profile_image: gravatarUrl },
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
+  console.log("2", data);
 
   if (error) return { user: null, error };
 
-  // Upsert user profile in users table
   if (data.user) {
     await supabase.from("users").upsert({
       id: data.user.id,
       email,
       name,
-      profileImage: gravatarUrl,
+      profile_image: gravatarUrl,
       is_premium: false,
       created_at: new Date().toISOString(),
     });
   }
+  console.log("3", data);
 
   return {
     user: data.user as AuthUser,

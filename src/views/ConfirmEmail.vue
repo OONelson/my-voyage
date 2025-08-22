@@ -66,19 +66,17 @@ import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { supabase } from "@/config/supabase";
 import { useAuth } from "@/composables/useAuth";
-// import { CheckCircleIcon } from "@heroicons/vue/outline";
 
 const route = useRoute();
 const router = useRouter();
-
 const { redirectBasedOnAuth } = useAuth();
 
 const email = ref((route.query.email as string) || "");
-const isLoading = ref(false);
-const successMessage = ref("");
-const errorMessage = ref("");
-const confirmed = ref(false);
-const resendCooldown = ref(0);
+const isLoading = ref<boolean>(false);
+const successMessage = ref<string>("");
+const errorMessage = ref<string>("");
+const confirmed = ref<boolean>(false);
+const resendCooldown = ref<number>(0);
 
 // Check if email is already confirmed
 onMounted(async () => {
@@ -122,20 +120,51 @@ const resendConfirmation = async () => {
   errorMessage.value = "";
 
   try {
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: email.value,
-    });
+    // First get the current user to check if they exist
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      throw new Error("User not found. Please sign up again.");
+    }
+
+    // Generate a confirmation URL (you might need to adjust this based on your auth flow)
+    const confirmationUrl = `${window.location.origin}/auth/confirm?token=${user.id}&type=signup`;
+
+    // Call our Supabase Edge Function to send email via Resend
+    const { error } = await supabase.functions.invoke(
+      "send-confirmation-email",
+      {
+        body: {
+          email: email.value,
+          confirmationUrl: confirmationUrl,
+          name: user.user_metadata?.name || user.email?.split("@")[0],
+        },
+      }
+    );
 
     if (error) throw error;
 
-    successMessage.value = "Confirmation email resent successfully!";
+    successMessage.value = "Confirmation email sent successfully!";
     startCooldownTimer();
   } catch (error) {
     errorMessage.value =
       error instanceof Error
         ? error.message
-        : "Failed to resend confirmation email";
+        : "Failed to send confirmation email";
+
+    // Fallback to Supabase's built-in resend if Resend fails
+    if (!errorMessage.value.includes("User not found")) {
+      const { error: supabaseError } = await supabase.auth.resend({
+        type: "signup",
+        email: email.value,
+      });
+      if (!supabaseError) {
+        successMessage.value = "Confirmation email sent via fallback method!";
+        startCooldownTimer();
+      }
+    }
   } finally {
     isLoading.value = false;
   }

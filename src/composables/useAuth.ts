@@ -1,4 +1,4 @@
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import {
   getCurrentUser,
@@ -48,14 +48,6 @@ export const useAuth = () => {
     }
   };
 
-  onMounted(async () => {
-    try {
-      await checkAuth();
-    } catch (error) {
-      console.error("onMounted error ", error);
-    }
-  });
-
   // signUp
   const handleSignup = async () => {
     try {
@@ -68,12 +60,22 @@ export const useAuth = () => {
         name.value
       );
 
-      if (authError) throw authError;
-
-      if (authUser?.identities?.length === 0) {
-        throw new Error("Email already registered");
+      console.log("4", user);
+      if (authError) {
+        if (authError.message?.toLowerCase().includes("already registered")) {
+          error.value = "Email already registered";
+        } else {
+          error.value = authError.message || "Signup failed";
+        }
+        return;
       }
-      const profile = await getUserProfile(authUser?.id);
+
+      if (!authUser || !authUser.id) {
+        error.value = "Signup failed: No user returned";
+        return;
+      }
+
+      const profile = await getUserProfile(authUser.id);
       user.value = profile;
 
       router.push({

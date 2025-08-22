@@ -52,10 +52,13 @@ export const useUserProfile = () => {
             user.email?.split("@")[0] ||
             "Guest",
           email: newProfile.email || "",
-          profileImage: newProfile.profileImage || "",
+          profile_image: newProfile.profile_image || "",
           is_premium: newProfile.is_premium || false,
           created_at: newProfile.created_at
             ? new Date(newProfile.created_at)
+            : new Date(),
+          updated_at: newProfile.updated_at
+            ? new Date(newProfile.updated_at)
             : new Date(),
         };
         return;
@@ -65,12 +68,15 @@ export const useUserProfile = () => {
         id: profileData.id,
         name: profileData.name || authUser.value?.name || "Guest",
         email: profileData.email || authUser.value?.email || "",
-        profileImage:
-          profileData.profileImage ||
+        profile_image:
+          profileData.profile_image ||
           getDefaultAvatarUrl(profileData.email || authUser.value?.email),
         is_premium: profileData.is_premium || false,
         created_at: profileData.created_at
           ? new Date(profileData.created_at)
+          : new Date(),
+        updated_at: profileData.updated_at
+          ? new Date(profileData.updated_at)
           : new Date(),
       };
 
