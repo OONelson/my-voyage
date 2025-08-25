@@ -2,8 +2,10 @@
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
+    :width="size"
+    :height="size"
+    :stroke="fillColor"
     viewBox="0 0 24 24"
-    stroke="currentColor"
   >
     <path
       stroke-linecap="round"
@@ -13,3 +15,17 @@
     />
   </svg>
 </template>
+<script lang="ts">
+export default {
+  name: "LogoutIcon",
+  props: {
+    fillColor: {
+      type: String,
+      default: "#f4f4f4",
+    },
+    size: {
+      default: "24",
+    },
+  },
+};
+</script>

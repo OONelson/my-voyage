@@ -155,15 +155,18 @@
       <div class="flex justify-between items-center pt-2">
         <label class="text-gray-700">Delete account</label>
 
-        <div class="relative">
-          <ReusableButton
-            class="bg-red-50 text-red-600 border border-red-100 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:outline-none transition-colors"
-            type="button"
-            @click="confirmDeleteAccount"
-            label="Delete Account"
-          />
-        </div>
+        <ReusableButton
+          class="bg-red-50 text-red-600 border border-red-100 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:outline-none transition-colors"
+          type="button"
+          @click="openDeleteAccountModal"
+          label="Delete Account"
+        />
       </div>
+      <DeleteAccountModal
+        :isOpen="showDeleteAccountModal"
+        @close="closeDeleteAccountModal"
+        @confirm="confirmDeleteAccount(userData.id)"
+      />
     </form>
 
     <div v-else>
@@ -203,6 +206,7 @@ import { UserModal } from "@/utils/userModal";
 import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { themeItems, tabs } from "@/constants/userConstant";
 import { computed } from "vue";
+import DeleteAccountModal from "./DeleteAccountModal.vue";
 
 const { joinedAgo } = dateAndTime();
 const { openFileInput, handleDrop, handleImageUpload, dragOver } =
@@ -212,8 +216,11 @@ const {
   selectedTheme,
   activeTab,
   showLogoutModal,
+  showDeleteAccountModal,
   openLogoutModal,
   closeLogoutModal,
+  openDeleteAccountModal,
+  closeDeleteAccountModal,
   confirmLogout,
   confirmDeleteAccount,
 } = UserModal();
@@ -227,7 +234,7 @@ const handleClose = () => {
 };
 
 const profileImg = computed(() => {
-  return userData.value.profile_image || empty_state2;
+  return userData.value.profile_image;
 });
 </script>
 

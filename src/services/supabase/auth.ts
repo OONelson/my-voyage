@@ -78,7 +78,7 @@ export const deleteUserAccount = async (
   try {
     // 1. First delete user data from your tables
     const { error: dataError } = await supabase
-      .from("user_data")
+      .from("users")
       .delete()
       .eq("id", userId);
 
