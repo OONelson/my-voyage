@@ -13,11 +13,11 @@ import { handleAuthCallback } from "@/services/supabase/auth";
 import { useAuth } from "@/composables/useAuth";
 
 const router = useRouter();
-const { redirectBasedOnAuth } = useAuth();
+const { redirectBasedOnAuth, user } = useAuth();
 
 onMounted(async () => {
   try {
-    await handleAuthCallback();
+    await handleAuthCallback(user.value.email);
     await redirectBasedOnAuth();
   } catch (err) {
     router.push("/login");

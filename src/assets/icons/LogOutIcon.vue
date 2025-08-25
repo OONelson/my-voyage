@@ -16,7 +16,7 @@
 </template>
 <script lang="ts">
 export default {
-  name: "LogOutIcon",
+  name: "LogoutIcon",
   props: {
     fillColor: {
       type: String,

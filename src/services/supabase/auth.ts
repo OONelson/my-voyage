@@ -12,30 +12,28 @@ export const signUpWithEmail = async (
   const emailHash = await generateEmailHash(email);
   const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
 
-  console.log("1");
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      data: { name, profile_image: gravatarUrl },
+      data: { name, profileImage: gravatarUrl }, // use profileImage for consistency
       emailRedirectTo: `${window.location.origin}/auth/callback`,
     },
   });
-  console.log("2", data);
 
   if (error) return { user: null, error };
 
+  // Upsert user profile in users table
   if (data.user) {
     await supabase.from("users").upsert({
       id: data.user.id,
       email,
       name,
-      profile_image: gravatarUrl,
+      profileImage: gravatarUrl,
       is_premium: false,
       created_at: new Date().toISOString(),
     });
   }
-  console.log("3", data);
 
   return {
     user: data.user as AuthUser,
@@ -72,6 +70,38 @@ export const signInWithGoogle = async (): Promise<void> => {
 export const signOut = async (): Promise<void> => {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+};
+
+export const deleteUserAccount = async (
+  userId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // 1. First delete user data from your tables
+    const { error: dataError } = await supabase
+      .from("user_data")
+      .delete()
+      .eq("id", userId);
+
+    if (dataError) {
+      throw new Error(`Failed to delete user data: ${dataError.message}`);
+    }
+
+    // 2. Delete the auth user (this removes the account completely)
+    const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (authError) {
+      throw new Error(`Failed to delete auth user: ${authError.message}`);
+    }
+    signOut();
+
+    return { success: true };
+  } catch (error) {
+    console.error("Account deletion error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
 };
 
 export const getCurrentUser = async (): Promise<AuthUser> => {

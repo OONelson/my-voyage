@@ -37,7 +37,7 @@
     <div v-if="loading" class="flex justify-center items-center">
       <Spinner />
     </div>
-    <form class="space-y-6" v-else-if="activeTab === 'profile'">
+    <form class="space-y-6" v-else-if="activeTab === 'profile' && userData">
       <!-- Profile Photo -->
       <div class="space-y-2 relative cursor-pointer">
         <input
@@ -65,8 +65,8 @@
 
           <!-- Image preview -->
           <img
-            v-if="userData?.profile_image"
-            :src="userData.profile_image || '@/assets/images/empty_state2.png'"
+            v-if="userData.profile_image"
+            :src="profileImg"
             class="rounded-md w-full h-full object-cover"
           />
 
@@ -78,15 +78,13 @@
 
           <!-- Edit overlay (shown when image exists) -->
           <div
-            v-if="userData?.profile_image"
+            v-if="userData.profile_image"
             class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
           >
             <EditIcon fillColor="white" size="30" class="opacity-90" />
           </div>
         </div>
       </div>
-
-      <div>{{ userData.name }}</div>
 
       <!-- Name Field -->
       <div
@@ -122,15 +120,23 @@
         v-if="userData.created_at"
         class="flex justify-between items-center border-b border-gray-200 pb-3"
       >
-        <label class="text-gray-700 font-medium">Created at </label>
-        <span class="font-semibold text-gray-800">{{ joinedAgo }}</span>
+        <label class="text-gray-700 font-medium">Member Since </label>
+        <span v-if="joinedAgo" class="font-semibold text-gray-800">{{
+          joinedAgo
+        }}</span>
+        <span
+          v-else
+          class="font-semibold text-gray-800"
+          title="Join date not available"
+          >—</span
+        >
       </div>
 
       <!-- Log Out -->
       <div
         class="relative flex justify-between items-center border-b border-gray-200 pb-6"
       >
-        <p class="text-gray-700">Log out</p>
+        <label class="text-gray-700">Log out</label>
         <div class="relative">
           <ReusableButton
             class="text-gray-700 border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-50 focus:outline-none transition-colors"
@@ -138,23 +144,25 @@
             @click="openLogoutModal"
             label="Log Out"
           />
-          <ConfirmPopup />
         </div>
       </div>
       <LogoutModal
         :isOpen="showLogoutModal"
         @close="closeLogoutModal"
-        @confirm="handleLogout"
+        @confirm="confirmLogout"
       />
       <!-- Delete Account -->
       <div class="flex justify-between items-center pt-2">
-        <p class="text-gray-700">Delete account</p>
-        <ReusableButton
-          class="bg-red-50 text-red-600 border border-red-100 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:outline-none transition-colors"
-          type="button"
-          @click="confirmDeleteAccount"
-          label="Delete Account"
-        />
+        <label class="text-gray-700">Delete account</label>
+
+        <div class="relative">
+          <ReusableButton
+            class="bg-red-50 text-red-600 border border-red-100 rounded-lg px-4 py-2 text-sm font-medium hover:bg-red-100 focus:outline-none transition-colors"
+            type="button"
+            @click="confirmDeleteAccount"
+            label="Delete Account"
+          />
+        </div>
       </div>
     </form>
 
@@ -185,6 +193,7 @@
 
 <script setup lang="ts">
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
+import empty_state2 from "@/assets/images/empty_state2.png";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import Spinner from "@/components/ui/Spinner.vue";
@@ -193,6 +202,7 @@ import { useUserProfile } from "@/composables/useUserProfile";
 import { UserModal } from "@/utils/userModal";
 import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { themeItems, tabs } from "@/constants/userConstant";
+import { computed } from "vue";
 
 const { joinedAgo } = dateAndTime();
 const { openFileInput, handleDrop, handleImageUpload, dragOver } =
@@ -204,7 +214,7 @@ const {
   showLogoutModal,
   openLogoutModal,
   closeLogoutModal,
-  handleLogout,
+  confirmLogout,
   confirmDeleteAccount,
 } = UserModal();
 
@@ -215,6 +225,10 @@ const emit = defineEmits(["close"]);
 const handleClose = () => {
   emit("close");
 };
+
+const profileImg = computed(() => {
+  return userData.value.profile_image || empty_state2;
+});
 </script>
 
 <style scoped>

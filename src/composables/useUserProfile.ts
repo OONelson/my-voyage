@@ -61,6 +61,8 @@ export const useUserProfile = () => {
             ? new Date(newProfile.updated_at)
             : new Date(),
         };
+        console.log(userData.value);
+
         return;
       }
 
@@ -92,9 +94,15 @@ export const useUserProfile = () => {
 
   watchEffect(async () => {
     try {
-      if (authUser.value?.id) {
+      console.log("Auth user changed:", authUser.value?.id);
+
+      if (authUser.value && authUser.value.id) {
+        console.log("Fetching profile for user:", authUser.value.id);
+
         await fetchUserProfile(authUser.value.id);
       } else {
+        console.log("No auth user, setting userData to null");
+
         userData.value = null;
       }
     } catch (err) {

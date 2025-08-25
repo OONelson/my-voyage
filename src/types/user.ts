@@ -4,10 +4,10 @@ export type UserProfile = {
   id: string;
   name: string;
   email: string;
-  profile_image?: string | null;
+  profile_image?: string;
   is_premium: boolean;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 };
 export type AuthUser =
   | (User & {

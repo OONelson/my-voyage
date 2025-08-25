@@ -5,12 +5,10 @@ const { userData } = useUserProfile();
 
 export const dateAndTime = () => {
   const relativeTripDate = (dates: [Date | string, Date | string]): string => {
-    // Convert string dates to Date objects if needed
     const [startDate, endDate] = dates.map((date) =>
       typeof date === "string" ? new Date(date) : date
     );
 
-    // Calculate the duration between start and end dates
     const tripDuration = formatDistance(startDate, endDate);
 
     const now = new Date();
@@ -34,10 +32,24 @@ export const dateAndTime = () => {
     return `${formatDistanceToNow(date)} ago`;
   };
 
-  const createdAt = userData.value?.created_at;
-  const joinedAgo = createdAt
-    ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
-    : "Unknown";
+  const getJoinedAgo = (
+    createdAt: string | null | undefined
+  ): string | null => {
+    if (!createdAt) return null;
+
+    try {
+      const date = new Date(createdAt);
+      if (isNaN(date.getTime())) return null; // Invalid date
+
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.warn("Error parsing date:", error);
+      return null;
+    }
+  };
+
+  const joinedAgo = getJoinedAgo(userData.value?.created_at);
+
   return {
     joinedAgo,
     relativeTripDate,

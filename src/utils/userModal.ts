@@ -1,4 +1,8 @@
 import { ref } from "vue";
+import { useAuth } from "@/composables/useAuth";
+import { deleteUserAccount } from "@/services/supabase/auth";
+
+const { handleLogout } = useAuth();
 
 export const UserModal = () => {
   const selectedTheme = ref("system");
@@ -9,26 +13,19 @@ export const UserModal = () => {
 
   const closeLogoutModal = () => (showLogoutModal.value = false);
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     console.log("Logging out from all devices...");
-    // Implement logout logic
+    handleLogout();
   };
 
-  const confirmDeleteAccount = () => {
-    if (
-      confirm(
-        "Are you sure you want to delete your account? This cannot be undone."
-      )
-    ) {
-      console.log("Deleting account...");
-      // Implement delete logic
-    }
+  const confirmDeleteAccount = (userId: string) => {
+    deleteUserAccount(userId);
   };
   return {
     activeTab,
     selectedTheme,
     showLogoutModal,
-    handleLogout,
+    confirmLogout,
     openLogoutModal,
     closeLogoutModal,
     confirmDeleteAccount,
