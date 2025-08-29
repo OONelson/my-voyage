@@ -62,6 +62,8 @@ export const useAuth = () => {
       loading.value = true;
       error.value = null;
 
+      console.log("1");
+
       const { user: authUser, error: authError } = await signUpWithEmail(
         email.value,
         password.value,
@@ -69,12 +71,12 @@ export const useAuth = () => {
       );
 
       if (authError) throw authError;
-
+      console.log("2");
       if (authUser?.identities?.length === 0) {
         throw new Error("Email already registered");
       }
-      const profile = await getUserProfile(authUser?.id);
-      user.value = profile;
+      // const profile = await getUserProfile(authUser?.id);
+      // user.value = profile;
 
       router.push({
         path: "/auth/confirm",

@@ -1,44 +1,37 @@
 import { supabase } from "@/config/supabase";
 import type { UserProfile, AuthUser } from "@/types/user";
-import { genUtils } from "@/utils/genUtils";
-
-const { generateEmailHash } = genUtils();
 
 export const signUpWithEmail = async (
   email: string,
   password: string,
   name: string
-): Promise<{ user: AuthUser; error: Error | null }> => {
-  const emailHash = await generateEmailHash(email);
-  const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+): Promise<{ user: AuthUser | null; error: Error | null }> => {
+  try {
+    console.log("3");
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { name, profileImage: gravatarUrl }, // use profileImage for consistency
-      emailRedirectTo: `${window.location.origin}/auth/callback`,
-    },
-  });
-
-  if (error) return { user: null, error };
-
-  // Upsert user profile in users table
-  if (data.user) {
-    await supabase.from("users").upsert({
-      id: data.user.id,
+    const { data, error } = await supabase.auth.signUp({
       email,
-      name,
-      profileImage: gravatarUrl,
-      is_premium: false,
-      created_at: new Date().toISOString(),
+      password,
+      options: {
+        data: { name },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
-  }
 
-  return {
-    user: data.user as AuthUser,
-    error,
-  };
+    console.log("4");
+
+    if (error) return { user: null, error };
+
+    console.log("5");
+
+    return {
+      user: data.user,
+      error,
+    };
+  } catch (err) {
+    console.log("sign up error", err);
+    throw err;
+  }
 };
 
 export const signInWithEmail = async (
@@ -78,7 +71,7 @@ export const deleteUserAccount = async (
   try {
     // 1. First delete user data from your tables
     const { error: dataError } = await supabase
-      .from("users")
+      .from("profiles")
       .delete()
       .eq("id", userId);
 
@@ -115,7 +108,7 @@ export const getUserProfile = async (
   userId: string | undefined
 ): Promise<UserProfile | null> => {
   const { data, error } = await supabase
-    .from("users")
+    .from("profiles")
     .select("*")
     .eq("id", userId)
     .single();
@@ -125,7 +118,7 @@ export const getUserProfile = async (
   return data;
 };
 
-export const handleAuthCallback = async (email: string): Promise<AuthUser> => {
+export const handleAuthCallback = async (): Promise<AuthUser> => {
   const {
     data: { user },
     error,
@@ -135,14 +128,16 @@ export const handleAuthCallback = async (email: string): Promise<AuthUser> => {
     throw error || new Error("No user found");
   }
 
-  const emailHash = await generateEmailHash(email);
-  const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
+  // const emailHash = await generateEmailHash(email);
+  // const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
 
-  await supabase.from("users").upsert({
+  const avatarUrl = user.user_metadata?.avatar_url as string | null;
+
+  await supabase.from("profiles").upsert({
     id: user.id,
     email: user.email,
     name: user?.user_metadata?.full_name || user?.email || "guest",
-    profileImage: user.user_metadata?.avatar_url || gravatarUrl,
+    profileImage: avatarUrl,
     is_premium: false,
     created_at: new Date(),
   });

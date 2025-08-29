@@ -2,15 +2,15 @@ import { ref, computed, watchEffect } from "vue";
 import { supabase } from "@/config/supabase";
 import type { UserProfile } from "@/types/user";
 import { getUserProfile } from "@/services/supabase/auth";
-import { genUtils } from "@/utils/genUtils";
 import { useAuth } from "./useAuth";
+import { useRouter } from "vue-router";
 
-const { getDefaultAvatarUrl } = genUtils();
 export const useUserProfile = () => {
   const userData = ref<UserProfile | null>(null);
   const loading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
+  const router = useRouter();
   const { user: authUser } = useAuth();
 
   const maskedEmail = computed(() => {
@@ -32,7 +32,7 @@ export const useUserProfile = () => {
         } = await supabase.auth.getUser();
         if (!user) throw new Error("Not authenticated");
 
-        const { error: createError } = await supabase.from("users").upsert({
+        const { error: createError } = await supabase.from("profiles").upsert({
           id: userId,
           email: user.email,
           created_at: new Date().toISOString(),
@@ -55,11 +55,11 @@ export const useUserProfile = () => {
           profile_image: newProfile.profile_image || "",
           is_premium: newProfile.is_premium || false,
           created_at: newProfile.created_at
-            ? new Date(newProfile.created_at)
-            : new Date(),
+            ? new Date(newProfile.created_at).toISOString()
+            : new Date().toISOString(),
           updated_at: newProfile.updated_at
-            ? new Date(newProfile.updated_at)
-            : new Date(),
+            ? new Date(newProfile.updated_at).toISOString()
+            : new Date().toISOString(),
         };
         console.log(userData.value);
 
@@ -71,15 +71,14 @@ export const useUserProfile = () => {
         name: profileData.name || authUser.value?.name || "Guest",
         email: profileData.email || authUser.value?.email || "",
         profile_image:
-          profileData.profile_image ||
-          getDefaultAvatarUrl(profileData.email || authUser.value?.email),
+          profileData.profile_image || authUser.value?.profile_image,
         is_premium: profileData.is_premium || false,
         created_at: profileData.created_at
-          ? new Date(profileData.created_at)
-          : new Date(),
+          ? new Date(profileData.created_at).toISOString()
+          : new Date().toISOString(),
         updated_at: profileData.updated_at
-          ? new Date(profileData.updated_at)
-          : new Date(),
+          ? new Date(profileData.updated_at).toISOString()
+          : new Date().toISOString(),
       };
 
       console.log(userData.value);
@@ -92,18 +91,43 @@ export const useUserProfile = () => {
     }
   };
 
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session?.user) {
+      authUser.value = {
+        id: session.user.id,
+        name:
+          session.user.user_metadata?.full_name ||
+          session.user.email?.split("@")[0] ||
+          "Guest",
+        email: session.user.email || "",
+        profile_image: session.user.user_metadata?.avatar_url || "",
+        is_premium: false,
+        created_at: session.user.created_at
+          ? new Date(session.user.created_at).toISOString()
+          : new Date().toISOString(),
+        updated_at: session.user.updated_at
+          ? new Date(session.user.updated_at).toISOString()
+          : new Date().toISOString(),
+      };
+    } else {
+      authUser.value = null;
+    }
+  });
+
   watchEffect(async () => {
     try {
       console.log("Auth user changed:", authUser.value?.id);
 
       if (authUser.value && authUser.value.id) {
-        console.log("Fetching profile for user:", authUser.value.id);
+        console.log("Fetching profile for user:", authUser.value);
 
         await fetchUserProfile(authUser.value.id);
       } else {
         console.log("No auth user, setting userData to null");
-
         userData.value = null;
+        if (router.currentRoute.value.path !== "/login") {
+          router.push("/login"); // 👈 works reliably
+        }
       }
     } catch (err) {
       console.error("Auth watch error:", err);

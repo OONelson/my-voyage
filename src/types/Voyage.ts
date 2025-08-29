@@ -2,14 +2,15 @@ export type Rating = 1 | 2 | 3 | 4 | 5;
 
 export type VoyageTypeInfo = {
   id: number;
-  imageUrl: string;
+  image_url: string;
   title: string;
   notes: string;
   user_id: number;
   location: string;
-  startDate: Date;
-  endDate: Date;
+  start_date: Date;
+  end_date: Date;
   rating: Rating;
   comment?: string;
-  createdAt: Date;
+  created_at: Date;
+  updated_at: Date;
 };

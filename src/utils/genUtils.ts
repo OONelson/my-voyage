@@ -2,7 +2,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import type { FormDataType } from "@/types/formData";
-import md5 from "md5";
+// import md5 from "md5";
 
 export const genUtils = () => {
   const { voyageId, error } = useVoyageManager();
@@ -64,26 +64,26 @@ export const genUtils = () => {
   //   return `https://www.gravatar.com/avatar/${hash}?d=identicon`;
   // };
 
-  const generateEmailHash = async (email: string): Promise<string> => {
-    // Using the Web Crypto API for hashing
-    const msgBuffer = new TextEncoder().encode(email.trim().toLowerCase());
-    const hashBuffer = await crypto.subtle.digest("MD5", msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  };
+  // const generateEmailHash = async (email: string): Promise<string> => {
+  //   // Using the Web Crypto API for hashing
+  //   const msgBuffer = new TextEncoder().encode(email.trim().toLowerCase());
+  //   const hashBuffer = await crypto.subtle.digest("MD5", msgBuffer);
+  //   const hashArray = Array.from(new Uint8Array(hashBuffer));
+  //   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  // };
 
-  const getDefaultAvatarUrl = (email?: string): string => {
-    if (!email) return "/default-avatar.png";
-    const hash = md5(email.trim().toLowerCase());
-    return `https://www.gravatar.com/avatar/${hash}?d=retro`;
-  };
+  // const getDefaultAvatarUrl = (email?: string): string => {
+  //   if (!email) return "/default-avatar.png";
+  //   const hash = md5(email.trim().toLowerCase());
+  //   return `https://www.gravatar.com/avatar/${hash}?d=retro`;
+  // };
 
   return {
     formatDateForInput,
     goBack,
     handleSubmit,
-    generateEmailHash,
-    getDefaultAvatarUrl,
+    // generateEmailHash,
+    // getDefaultAvatarUrl,
     isSubmitting,
     error,
     voyageId,
