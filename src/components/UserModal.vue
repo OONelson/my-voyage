@@ -39,7 +39,7 @@
     </div>
     <form class="space-y-6" v-else-if="activeTab === 'profile' && userData">
       <!-- Profile Photo -->
-      <div class="space-y-2 relative cursor-pointer">
+      <div class="space-y-2 relative">
         <input
           type="file"
           @change="handleImageUpload"
@@ -59,7 +59,8 @@
             {{ abbreviation }}
           </div>
           <div
-            class="absolute bottom-0 right-[30%] xs:right-[33%] sm:right-[35%]"
+            class="absolute bottom-0 right-[30%] xs:right-[33%] sm:right-[35%] cursor-pointer"
+            @click="openFileInput"
           >
             <input
               type="file"
@@ -117,9 +118,10 @@
       >
         <label class="text-gray-700 font-medium">Name</label>
         <div class="flex items-center space-x-2">
-          <span class="font-semibold text-gray-800">{{
-            userData.name || "guest "
-          }}</span>
+          <span
+            class="font-semibold text-gray-800 underline underline-offset-2"
+            >{{ userData.name || "guest " }}</span
+          >
         </div>
       </div>
 
@@ -129,16 +131,21 @@
         class="flex justify-between items-center border-b border-gray-200 pb-3"
       >
         <label class="text-gray-700 font-medium">Email </label>
-        <span class="font-semibold text-gray-800">{{ maskedEmail }}</span>
+        <span
+          class="font-semibold text-gray-800 underline underline-offset-2"
+          >{{ maskedEmail }}</span
+        >
       </div>
 
       <div
         class="flex justify-between items-center border-b border-gray-200 pb-3"
       >
         <label class="text-gray-700 font-medium">Account Status </label>
-        <span class="font-semibold text-gray-800">{{
-          userData.is_premium ? "Premium" : "Basic"
-        }}</span>
+        <span
+          @click="navigateToPricing"
+          class="font-semibold text-gray-800 underline underline-offset-2"
+          >{{ userData.is_premium ? "Premium" : "Basic" }}</span
+        >
       </div>
 
       <div
@@ -220,6 +227,7 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
@@ -252,6 +260,12 @@ const {
 } = UserModal();
 
 const { maskedEmail, userData, loading, error } = useUserProfile();
+
+const router = useRouter();
+
+const navigateToPricing = () => {
+  router.push("/pricing");
+};
 
 const emit = defineEmits(["close"]);
 

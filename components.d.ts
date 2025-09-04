@@ -29,6 +29,7 @@ declare module 'vue' {
     SinglevoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']
     SingleVoyageSkeleton: typeof import('./src/components/ui/SingleVoyageSkeleton.vue')['default']
     Spinner: typeof import('./src/components/ui/Spinner.vue')['default']
+    UAccordion: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Accordion.vue')['default']
     UApp: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/App.vue')['default']
     UAvatar: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Avatar.vue')['default']
     UButton: typeof import('./node_modules/@nuxt/ui/dist/runtime/components/Button.vue')['default']

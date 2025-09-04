@@ -15,12 +15,7 @@
         @click="openProfileModal"
       >
         <UTooltip :text="userData.name">
-          <UAvatar
-            :src="userData?.profile_image"
-            :alt="userData?.name"
-            full
-            @click="openProfileModal"
-          />
+          <UAvatar :src="userData?.profile_image" :alt="userData?.name" full />
         </UTooltip>
       </div>
     </header>

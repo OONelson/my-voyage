@@ -44,7 +44,7 @@
               @click="handlePlanSelection(plans[0])"
               :disabled="isCurrentPlan(plans[0])"
               :class="[
-                'mt-8 block w-full py-3 px-6 border border-gray-800 rounded-md text-center font-medium',
+                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
                 isCurrentPlan(plans[0])
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   : 'bg-white text-gray-800 hover:bg-gray-50',
@@ -66,7 +66,7 @@
                 class="flex"
               >
                 <svg
-                  class="flex-shrink-0 h-5 w-5 text-blue-500"
+                  class="flex-shrink-0 h-5 w-5 text-accent100"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -85,10 +85,10 @@
 
         <!-- Premium Monthly (Featured) -->
         <div
-          class="relative bg-white border-2 border-blue-500 rounded-2xl shadow-sm divide-y divide-gray-200"
+          class="relative bg-white border-2 border-accent100 rounded-2xl shadow-sm divide-y divide-gray-200"
         >
           <div
-            class="absolute top-0 right-0 bg-blue-500 text-white px-4 py-1 text-xs font-bold rounded-bl-lg rounded-tr-lg uppercase tracking-wide"
+            class="absolute top-0 right-0 bg-accent100 text-white px-4 py-1 text-xs font-bold rounded-bl-lg rounded-tr-lg uppercase tracking-wide"
           >
             Popular
           </div>
@@ -105,10 +105,10 @@
               @click="handlePlanSelection(plans[1])"
               :disabled="isCurrentPlan(plans[1])"
               :class="[
-                'mt-8 block w-full py-3 px-6 border border-transparent rounded-md text-center font-medium',
+                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
                 isCurrentPlan(plans[1])
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700',
+                  : 'bg-accent100 text-white hover:bg-accent50',
               ]"
             >
               {{ getButtonText(plans[1]) }}
@@ -127,7 +127,7 @@
                 class="flex"
               >
                 <svg
-                  class="flex-shrink-0 h-5 w-5 text-blue-500"
+                  class="flex-shrink-0 h-5 w-5 text-accent50"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -159,10 +159,10 @@
               @click="handlePlanSelection(plans[2])"
               :disabled="isCurrentPlan(plans[2])"
               :class="[
-                'mt-8 block w-full py-3 px-6 border border-blue-600 rounded-md text-center font-medium',
+                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
                 isCurrentPlan(plans[2])
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'text-blue-600 hover:bg-blue-50',
+                  : 'text-accent100 hover:bg-blue-50',
               ]"
             >
               {{ getButtonText(plans[2]) }}
@@ -181,7 +181,7 @@
                 class="flex"
               >
                 <svg
-                  class="flex-shrink-0 h-5 w-5 text-blue-500"
+                  class="flex-shrink-0 h-5 w-5 text-accent50"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -200,16 +200,20 @@
       </div>
 
       <!-- FAQ Section -->
-      <div class="mt-24">
-        <h2 class="text-3xl font-extrabold text-gray-900 text-center">
-          Frequently asked questions
-        </h2>
-        <div class="mt-12 max-w-3xl mx-auto divide-y divide-gray-200">
-          <div v-for="(faq, index) in faqs" :key="index" class="py-6">
+      <div class="w-full max-w-3xl mx-auto">
+        <h4 class="text-2xl font-bold text-gray-900 mt-10 mb-2">
+          Travel Journal FAQs
+        </h4>
+        <p class="text-gray-600 mb-5">
+          Find answers to common questions about our travel journal plans and
+          features.
+        </p>
+        <div class="mt-5 max-w-3xl mx-auto divide-y divide-gray-200">
+          <div v-for="(faq, index) in faqs" :key="index" class="py-2">
             <h3 class="text-lg font-medium text-gray-900">
               {{ faq.question }}
             </h3>
-            <p class="mt-2 text-base text-gray-500">{{ faq.answer }}</p>
+            <p class="mt-2text-gray-500">{{ faq.answer }}</p>
           </div>
         </div>
       </div>
@@ -232,8 +236,12 @@ const plans = ref([
     name: "Free",
     price: "$0",
     period: "forever",
-    description: "Basic features to get started",
-    features: ["Basic analytics", "Limited templates", "Community support"],
+    description: "Basic features to get started with travel journaling",
+    features: [
+      "1 image per voyage entry",
+      "Up to 2 pinned locations per voyage entry",
+      "Maximum 10 voyage entries",
+    ],
     featured: false,
   },
   {
@@ -241,13 +249,13 @@ const plans = ref([
     name: "Premium",
     price: "$9",
     period: "per month",
-    description: "For professionals who need more power",
+    description: "Enhanced features for those who love traveling",
     features: [
-      "Advanced analytics",
-      "Unlimited templates",
-      "Priority support",
-      "API access",
-      "Premium content",
+      "Up to 8 images per travel entry",
+      "Unlimited pinned locations",
+      "Up to 50 travel entries",
+      "Advanced travel statistics",
+      "Export to PDF feature",
     ],
     featured: true,
   },
