@@ -12,5 +12,6 @@ export type VoyageTypeInfo = {
   rating: Rating;
   comment?: string;
   created_at: Date;
-  updated_at: Date;
+  updated_at?: Date;
+  isFavourite?: boolean;
 };

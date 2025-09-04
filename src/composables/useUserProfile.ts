@@ -61,7 +61,6 @@ export const useUserProfile = () => {
             ? new Date(newProfile.updated_at).toISOString()
             : new Date().toISOString(),
         };
-        console.log(userData.value);
 
         return;
       }
@@ -80,8 +79,6 @@ export const useUserProfile = () => {
           ? new Date(profileData.updated_at).toISOString()
           : new Date().toISOString(),
       };
-
-      console.log(userData.value);
     } catch (err) {
       error.value =
         err instanceof Error ? err.message : "Failed to Load Profile";
@@ -116,17 +113,12 @@ export const useUserProfile = () => {
 
   watchEffect(async () => {
     try {
-      console.log("Auth user changed:", authUser.value?.id);
-
       if (authUser.value && authUser.value.id) {
-        console.log("Fetching profile for user:", authUser.value);
-
         await fetchUserProfile(authUser.value.id);
       } else {
-        console.log("No auth user, setting userData to null");
         userData.value = null;
         if (router.currentRoute.value.path !== "/login") {
-          router.push("/login"); // 👈 works reliably
+          router.push("/login");
         }
       }
     } catch (err) {

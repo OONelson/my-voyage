@@ -48,7 +48,32 @@
           ref="fileInput"
         />
 
+        <div class="relative flex justify-center items-center">
+          <div
+            v-if="!avatarUrl"
+            class="avatar-placeholder"
+            :style="{ backgroundColor: placeholderColor }"
+            :aria-label="`Avatar for ${username}`"
+            :size="30"
+          >
+            {{ abbreviation }}
+          </div>
+          <div
+            class="absolute bottom-0 right-[30%] xs:right-[33%] sm:right-[35%]"
+          >
+            <input
+              type="file"
+              @change="handleImageUpload"
+              accept="image/*"
+              class="hidden"
+              ref="fileInput"
+            />
+            <EditIcon @click="openFileInput" />
+          </div>
+        </div>
+
         <div
+          v-if="avatarUrl"
           class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
           @click="openFileInput"
           @dragover.prevent="dragOver = true"
@@ -196,17 +221,18 @@
 
 <script setup lang="ts">
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
-import empty_state2 from "@/assets/images/empty_state2.png";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import Spinner from "@/components/ui/Spinner.vue";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useUserProfile } from "@/composables/useUserProfile";
+import { useAvatarAbbreviation } from "@/composables/useAvatarAbbreviation";
 import { UserModal } from "@/utils/userModal";
 import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { themeItems, tabs } from "@/constants/userConstant";
 import { computed } from "vue";
 import DeleteAccountModal from "./DeleteAccountModal.vue";
+import EditIcon from "@/assets/icons/EditIcon.vue";
 
 const { joinedAgo } = dateAndTime();
 const { openFileInput, handleDrop, handleImageUpload, dragOver } =
@@ -236,6 +262,35 @@ const handleClose = () => {
 const profileImg = computed(() => {
   return userData.value.profile_image;
 });
+
+interface Props {
+  avatarUrl?: string | null;
+  username: string | null;
+  size?: number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  avatarUrl: null,
+  username: null,
+  size: 100,
+});
+
+const { abbreviation } = useAvatarAbbreviation(props.username);
+
+const placeholderColor = computed(() => {
+  if (!props.username) return "#cccccc";
+
+  let hash = 0;
+  for (let i = 0; i < props.username.length; i++) {
+    hash = props.username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let color = "#";
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ("00" + value.toString(16)).substr(-2);
+  }
+  return color;
+});
 </script>
 
 <style scoped>
@@ -247,5 +302,22 @@ const profileImg = computed(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.avatar-placeholder,
+.avatar-image {
+  width: v-bind('props.size + "px"');
+  height: v-bind('props.size + "px"');
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.5);
+}
+
+.avatar-image {
+  object-fit: cover;
 }
 </style>
