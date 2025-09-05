@@ -16,25 +16,23 @@
       </h3>
     </div>
     <div
-      class="rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
+      class="flex justify-center items-center uppercase rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
       @click="openProfileModal"
     >
-      <UTooltip text="Benjamin Canac">
-        <UAvatar
-          src="https://github.com/benjamincanac.png"
-          alt="Benjamin Canac"
-          full
-          @click="openProfileModal"
-        />
+      <UTooltip :text="userData?.name">
+        <UAvatar :src="userData?.profile_image" :alt="userData?.name" full />
       </UTooltip>
     </div>
   </header>
 
   <!-- Profile modal -->
   <ReusableModal :isOpen="isProfileModal" @close="closeProfileModal">
-    <UserModal @close="closeProfileModal" />
+    <UserModal
+      :username="userData.name"
+      :avatar-url="userData.profile_image"
+      @close="closeProfileModal"
+    />
   </ReusableModal>
-
   <div v-if="isLoading">
     <SingleVoyageSkeleton />
   </div>
@@ -65,8 +63,8 @@
           <!-- Image with Heart Icon -->
           <div class="relative">
             <img
-              v-if="voyage.imageUrl"
-              :src="voyage.imageUrl"
+              v-if="voyage.image_url"
+              :src="voyage.image_url"
               :alt="voyage.title"
               class="w-full h-auto max-h-[400px] object-cover"
             />
@@ -103,7 +101,7 @@
               <span class="line-clamp-1">{{ voyage.location }}</span>
               <span class="hidden md:block">•</span>
               <span class="hidden md:block">{{
-                relativeTripDate([voyage.startDate, voyage.endDate])
+                relativeTripDate([voyage.start_date, voyage.end_date])
               }}</span>
             </div>
 
@@ -111,7 +109,7 @@
             <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
               <WhatTimeIcon size="26" />
               <span>Created:</span>
-              <span class="">{{ relativeCreatedAt(voyage.createdAt) }}</span>
+              <span class="">{{ relativeCreatedAt(voyage.created_at) }}</span>
             </div>
 
             <!-- Rating -->
@@ -202,6 +200,7 @@ import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
 import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { useVoyageManager } from "@/composables/useVoyageManager";
+import { useUserProfile } from "@/composables/useUserProfile";
 import { useRoute } from "vue-router";
 import { ref, watch } from "vue";
 
@@ -224,6 +223,7 @@ const {
   closeModal,
 } = useVoyageManager();
 
+const { userData } = useUserProfile();
 const route = useRoute();
 
 const isFavorite = ref(false);
@@ -238,12 +238,15 @@ const openShareModal = () => {
 };
 
 const loadVoyageData = async () => {
-  const voyageId = Number(route.params.id);
-  if (voyageId) {
+  try {
+    const voyageId = route.params.id?.toString();
+    if (!voyageId) return;
+
     await fetchVoyage(voyageId);
+  } catch (error) {
+    console.error("Error loading voyage data:", error);
   }
 };
-
 loadVoyageData();
 
 watch(

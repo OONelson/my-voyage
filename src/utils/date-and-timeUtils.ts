@@ -5,25 +5,25 @@ const { userData } = useUserProfile();
 
 export const dateAndTime = () => {
   const relativeTripDate = (dates: [Date | string, Date | string]): string => {
-    const [startDate, endDate] = dates.map((date) =>
+    const [start_date, end_date] = dates.map((date) =>
       typeof date === "string" ? new Date(date) : date
     );
 
-    const tripDuration = formatDistance(startDate, endDate);
+    const tripDuration = formatDistance(start_date, end_date);
 
     const now = new Date();
-    const isFutureTrip = isFuture(startDate);
+    const isFutureTrip = isFuture(start_date);
 
     if (isFutureTrip) {
       return ` ${tripDuration} trip (starts in ${formatDistance(
-        startDate,
+        start_date,
         now
       )})`;
-    } else if (isFuture(endDate)) {
-      return ` ${tripDuration} trip (ends in ${formatDistance(endDate, now)})`;
+    } else if (isFuture(end_date)) {
+      return ` ${tripDuration} trip (ends in ${formatDistance(end_date, now)})`;
     } else {
       return ` ${tripDuration} trip (ended ${formatDistanceToNow(
-        endDate
+        end_date
       )} ago)`;
     }
   };
@@ -39,7 +39,7 @@ export const dateAndTime = () => {
 
     try {
       const date = new Date(createdAt);
-      if (isNaN(date.getTime())) return null; // Invalid date
+      if (isNaN(date.getTime())) return null;
 
       return formatDistanceToNow(date, { addSuffix: true });
     } catch (error) {

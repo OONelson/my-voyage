@@ -9,13 +9,13 @@ interface VoyageManager {
   // State
   voyages: Ref<VoyageTypeInfo[]>;
   voyage: Ref<VoyageTypeInfo | null>;
-  voyageId: Ref<number | null>;
-  favorites: Ref<number[]>;
+  voyageId: Ref<string | null>;
+  favorites: Ref<string[]>;
   scrolled: Ref<boolean>;
   isMenuOpen: Ref<boolean>;
   isProfileModal: Ref<boolean>;
   isSmallModalOpen: Ref<boolean>;
-  currentVoyageId: Ref<number | null>;
+  currentVoyageId: Ref<string | null>;
   isLoading: Ref<boolean>;
   size: Ref<ModalSize>;
   error: Ref<string | null>;
@@ -25,25 +25,24 @@ interface VoyageManager {
   toggleMenu: () => void;
   navigateToCreate: () => void;
   navigateToFavorites: () => void;
-  navigateToVoyage: (id: number) => void;
+  navigateToVoyage: (id: string) => void;
   navigateToVoyages: () => void;
 
   // Modals
   openProfileModal: () => void;
   closeProfileModal: () => void;
-  openModal: (voyageId: number, modalSize?: ModalSize) => void;
+  openModal: (voyageId: string, modalSize?: ModalSize) => void;
   closeModal: () => void;
-  openOptionsModal: (voyageId: number) => void;
+  openOptionsModal: (voyageId: string) => void;
 
   // Actions
-  editVoyage: (voyageId: number) => void;
-  editVoyageInList: (voyageId: number) => void;
-  confirmDeleteVoyage: (voyageId: number) => void;
-  deleteVoyage: (voyageId: number) => void;
+  editVoyage: (voyageId: string) => void;
+  confirmDeleteVoyage: (voyageId: string) => void;
+  deleteVoyage: (voyageId: string) => void;
   handleEdit: () => void;
   handleDelete: () => void;
-  fetchVoyage: (voyageId: number) => Promise<VoyageTypeInfo | undefined>;
-  toggleFavorite: (voyageId: number) => void;
+  fetchVoyage: (voyageId: string) => Promise<VoyageTypeInfo | undefined>;
+  toggleFavorite: (voyageId: string) => void;
 }
 
 export const useVoyageManager = (): VoyageManager => {
@@ -57,22 +56,22 @@ export const useVoyageManager = (): VoyageManager => {
   const voyages = ref<VoyageTypeInfo[]>(Voyages);
   const voyage = ref<VoyageTypeInfo | null>(null);
   const isSmallModalOpen = ref(false);
-  const currentVoyageId = ref<number | null>(null);
+  const currentVoyageId = ref<string | null>(null);
   const isLoading = ref(true);
   const error = ref<string | null>(null);
   const size = ref<ModalSize>("md");
-  const favorites = ref<number[]>(
+  const favorites = ref<string[]>(
     JSON.parse(localStorage.getItem("favorites") || "[]")
   );
+
   const voyageId = computed(() => {
     try {
       const idParam = route.params?.id;
       if (!idParam) return null;
 
-      const id = parseInt(idParam.toString());
-      return isNaN(id) ? null : id;
+      return idParam.toString();
     } catch (error) {
-      console.error("Error parsing voyage ID:", error);
+      console.error("Error getting voyage ID:", error);
       return null;
     }
   });
@@ -92,15 +91,16 @@ export const useVoyageManager = (): VoyageManager => {
     isMenuOpen.value = false;
   };
 
-  const navigateToVoyage = (id: number) => {
+  const navigateToVoyage = (id: string) => {
     router.push(`/voyages/${id}`);
+    console.log(id);
     isMenuOpen.value = false;
   };
   const navigateToVoyages = () => {
     router.push("/voyages");
     isMenuOpen.value = false;
   };
-  const navigateToEdit = (voyageId: number) => {
+  const navigateToEdit = (voyageId: string) => {
     router.push(`/voyages/${voyageId}/edit`);
   };
 
@@ -117,7 +117,7 @@ export const useVoyageManager = (): VoyageManager => {
     isProfileModal.value = false;
   };
 
-  const openModal = (voyageId: number, modalSize?: ModalSize) => {
+  const openModal = (voyageId: string, modalSize?: ModalSize) => {
     size.value = modalSize ?? "md";
     currentVoyageId.value = voyageId;
     isSmallModalOpen.value = true;
@@ -128,25 +128,22 @@ export const useVoyageManager = (): VoyageManager => {
     currentVoyageId.value = null;
   };
 
-  const openOptionsModal = (voyageId: number) => {
+  const openOptionsModal = (voyageId: string) => {
     openModal(voyageId, "sm");
   };
 
   // Voyage Actions
-  const editVoyageInList = (voyageId: number) => {
+
+  const editVoyage = (voyageId: string) => {
     navigateToEdit(voyageId);
   };
 
-  const editVoyage = (voyageId: number) => {
-    navigateToEdit(voyageId);
-  };
-
-  const deleteVoyage = (voyageId: number) => {
+  const deleteVoyage = (voyageId: string) => {
     voyages.value = voyages.value.filter((v) => v.id !== voyageId);
     router.push("/voyages");
   };
 
-  const confirmDeleteVoyage = (voyageId: number) => {
+  const confirmDeleteVoyage = (voyageId: string) => {
     if (confirm("Are you sure you want to delete this voyage?")) {
       deleteVoyage(voyageId);
     }
@@ -154,7 +151,7 @@ export const useVoyageManager = (): VoyageManager => {
 
   const handleEdit = () => {
     if (currentVoyageId.value) {
-      editVoyageInList(currentVoyageId.value);
+      editVoyage(currentVoyageId.value);
       closeModal();
     }
   };
@@ -174,7 +171,7 @@ export const useVoyageManager = (): VoyageManager => {
   });
 
   // Toggle favorite status
-  const toggleFavorite = (voyageId: number) => {
+  const toggleFavorite = (voyageId: string) => {
     const index = favorites.value.indexOf(voyageId);
     if (index === -1) {
       favorites.value.push(voyageId);
@@ -186,16 +183,18 @@ export const useVoyageManager = (): VoyageManager => {
 
   // Data Loading
   const fetchVoyage = async (
-    voyageId: number
+    voyageId: string
   ): Promise<VoyageTypeInfo | undefined> => {
     isLoading.value = true;
     error.value = null;
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      // await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const foundVoyage = Voyages.find((v) => v.id === voyageId);
       if (!foundVoyage) throw new Error("Voyage not found");
+
+      voyage.value = foundVoyage;
       return foundVoyage;
     } catch (err) {
       error.value =
@@ -306,7 +305,6 @@ export const useVoyageManager = (): VoyageManager => {
     closeModal,
     openOptionsModal,
     editVoyage,
-    editVoyageInList,
     confirmDeleteVoyage,
     deleteVoyage,
     handleEdit,

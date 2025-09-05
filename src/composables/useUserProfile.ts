@@ -117,8 +117,8 @@ export const useUserProfile = () => {
         await fetchUserProfile(authUser.value.id);
       } else {
         userData.value = null;
-        if (router.currentRoute.value.path !== "/login") {
-          router.push("/login");
+        if (router?.currentRoute?.value?.path !== "/login") {
+          router?.push("/login");
         }
       }
     } catch (err) {

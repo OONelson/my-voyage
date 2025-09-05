@@ -2,8 +2,6 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 import type { AppRouteRecordRaw } from "@/types/router";
 
-const { checkAuth, user } = useAuth();
-
 export function setupRouter(routes: AppRouteRecordRaw[]) {
   const router = createRouter({
     history: createWebHistory(),
@@ -11,10 +9,14 @@ export function setupRouter(routes: AppRouteRecordRaw[]) {
   });
 
   router.beforeEach(async (to) => {
+    const { checkAuth, user } = useAuth();
     const isAuthenticated = await checkAuth();
 
     if (to.meta.requiresAuth && !isAuthenticated) {
-      return "/login";
+      return {
+        path: "/login",
+        query: { redirect: to.fullPath },
+      };
     }
 
     if (to.meta.requiresPremium && !user.value?.is_premium) {

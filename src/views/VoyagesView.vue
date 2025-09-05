@@ -14,7 +14,7 @@
         class="flex justify-center items-center uppercase rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
         @click="openProfileModal"
       >
-        <UTooltip :text="userData.name">
+        <UTooltip :text="userData?.name">
           <UAvatar :src="userData?.profile_image" :alt="userData?.name" full />
         </UTooltip>
       </div>
@@ -107,9 +107,9 @@
               >
                 {{ voyage.title }}
               </h3>
-              <button @click.stop="handleEdit()">
+              <div @click.stop="editVoyage(voyage.id)" class="cursor-pointer">
                 <EditIcon size="20" />
-              </button>
+              </div>
             </div>
 
             <!-- Location and Date -->
@@ -209,14 +209,14 @@ const {
   navigateToVoyage,
   openProfileModal,
   closeProfileModal,
-  handleEdit,
+  editVoyage,
 } = useVoyageManager();
 
 const { userData } = useUserProfile();
 
-const favorites = ref<number[]>([]);
-const isFavorite = (id: number) => favorites.value.includes(id);
-const toggleFavorite = (id: number) => {
+const favorites = ref<string[]>([]);
+const isFavorite = (id: string) => favorites.value.includes(id);
+const toggleFavorite = (id: string) => {
   const index = favorites.value.indexOf(id);
   if (index > -1) {
     favorites.value.splice(index, 1);
