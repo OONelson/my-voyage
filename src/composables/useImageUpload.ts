@@ -1,5 +1,6 @@
 import { computed, nextTick, ref, type ComputedRef, type Ref } from "vue";
 import { type FormDataType } from "@/types/formData";
+import { usePlanLimits } from "@/composables/usePlanLimits";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;
@@ -35,8 +36,15 @@ interface ImageActions {
   modules: {
     toolbar: (string[] | { list: string }[])[];
   };
+  // multi-image additions
+  activeIndex: Ref<number>;
+  canAddMoreImages: ComputedRef<boolean>;
+  selectImage: (index: number) => void;
+  removeImageAt: (index: number) => void;
 }
 export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
+  const { limits } = usePlanLimits();
+
   const isImgLoading = ref<boolean>(false);
   const dragOver = ref<boolean>(false);
   const fileInput = ref<HTMLInputElement | null>(null);
@@ -45,6 +53,9 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const cropBox = ref<HTMLElement | null>(null);
   const croppedImage = ref<string>("");
 
+  // Multi-image state
+  const activeIndex = ref(0);
+
   // Crop state
   const cropPosition = ref({ x: 0, y: 0 });
   const cropSize = ref({ width: 200, height: 200 });
@@ -52,7 +63,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const isResizing = ref(false);
   const resizeHandle = ref("");
   const rotation = ref(0);
-  const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"];
+  const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"]; // keep API the same
 
   const openFileInput = () => {
     if (!isImgLoading.value) {
@@ -72,6 +83,10 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     dragOver.value = false;
   };
 
+  const canAddMoreImages = computed(() => {
+    return formData.value.imageUrls.length < limits.value.maxImagesPerEntry;
+  });
+
   const handleDrop = (e: DragEvent) => {
     dragOver.value = false;
 
@@ -79,6 +94,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0 && files[0].type.startsWith("image/")) {
+      if (!canAddMoreImages.value) return;
       processImage(files[0]);
     }
   };
@@ -86,8 +102,8 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const handleImageUpload = (e: Event) => {
     const input = (e.target as HTMLInputElement).files?.[0];
     if (input && !isImgLoading.value) {
+      if (!canAddMoreImages.value) return;
       processImage(input);
-
       (e.target as HTMLInputElement).value = "";
     }
   };
@@ -99,16 +115,19 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     }
     isImgLoading.value = true;
     croppedImage.value = "";
-    formData.value.imageUrl = "";
 
     const reader = new FileReader();
 
     reader.onload = (e) => {
       if (e.target?.result) {
+        if (!Array.isArray(formData.value.imageUrls)) {
+          formData.value.imageUrls = [];
+        }
         formData.value = {
           ...formData.value,
-          imageUrl: e.target.result as string,
+          imageUrls: [...formData.value.imageUrls, e.target.result as string],
         };
+        activeIndex.value = formData.value.imageUrls.length - 1;
         isImgLoading.value = false;
 
         nextTick(() => {
@@ -127,8 +146,39 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   };
 
   const deleteSelectedImage = () => {
-    formData.value.imageUrl = "";
+    if (!Array.isArray(formData.value.imageUrls)) {
+      formData.value.imageUrls = [];
+      croppedImage.value = "";
+      return;
+    }
+    if (formData.value.imageUrls.length === 0) {
+      croppedImage.value = "";
+      return;
+    }
+    formData.value.imageUrls.splice(activeIndex.value, 1);
+    if (activeIndex.value >= formData.value.imageUrls.length) {
+      activeIndex.value = Math.max(0, formData.value.imageUrls.length - 1);
+    }
     croppedImage.value = "";
+  };
+
+  const selectImage = (index: number) => {
+    if (index >= 0 && index < formData.value.imageUrls.length) {
+      activeIndex.value = index;
+      croppedImage.value = "";
+      nextTick(() => {
+        if (image.value) initCropper();
+      });
+    }
+  };
+
+  const removeImageAt = (index: number) => {
+    if (!Array.isArray(formData.value.imageUrls)) return;
+    if (index < 0 || index >= formData.value.imageUrls.length) return;
+    formData.value.imageUrls.splice(index, 1);
+    if (activeIndex.value >= formData.value.imageUrls.length) {
+      activeIndex.value = Math.max(0, formData.value.imageUrls.length - 1);
+    }
   };
 
   const imageStyle = computed(() => ({
@@ -262,10 +312,15 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       cropSize.value.height
     );
 
-    // Save result
-    croppedImage.value = canvas.toDataURL("image/jpeg");
-    formData.value.imageUrl = croppedImage.value;
-    console.log(croppedImage);
+    // Save result back into current active image slot
+    const dataUrl = canvas.toDataURL("image/jpeg");
+    croppedImage.value = dataUrl;
+    if (
+      Array.isArray(formData.value.imageUrls) &&
+      formData.value.imageUrls.length > 0
+    ) {
+      formData.value.imageUrls[activeIndex.value] = dataUrl;
+    }
   };
 
   // Rotate image
@@ -273,27 +328,21 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     rotation.value = (rotation.value + degrees) % 360;
   };
 
-  const hasImage = computed(
-    () => !!formData.value.imageUrl || !!croppedImage.value
-  );
+  const hasImage = computed(() => (formData.value.imageUrls?.length || 0) > 0);
   const showActionButtons = computed(
-    () => formData.value.imageUrl && !isImgLoading.value
+    () => hasImage.value && !isImgLoading.value
   );
   const showOriginalImage = computed(
-    () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+    () => hasImage.value && !croppedImage.value && !isImgLoading.value
   );
   const showCropBox = computed(
-    () => formData.value.imageUrl && !croppedImage.value && !isImgLoading.value
+    () => hasImage.value && !croppedImage.value && !isImgLoading.value
   );
   const showCroppedImage = computed(
     () => !!croppedImage.value && !isImgLoading.value
   );
   const showEmptyState = computed(
-    () =>
-      !formData.value.imageUrl &&
-      !croppedImage.value &&
-      !isImgLoading.value &&
-      !dragOver.value
+    () => !hasImage.value && !isImgLoading.value && !dragOver.value
   );
 
   const modules = {
@@ -331,5 +380,9 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     showCroppedImage,
     showEmptyState,
     modules,
+    activeIndex,
+    canAddMoreImages,
+    selectImage,
+    removeImageAt,
   };
 };

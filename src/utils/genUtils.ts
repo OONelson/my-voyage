@@ -10,7 +10,7 @@ export const genUtils = () => {
 
   const formData = ref<FormDataType>({
     title: "",
-    imageUrl: "",
+    imageUrls: [],
     notes: "",
     location: "",
     latitude: null as number | null,

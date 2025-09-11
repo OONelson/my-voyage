@@ -1,6 +1,6 @@
 export type FormDataType = {
   title: string;
-  imageUrl: string;
+  imageUrls: string[];
   notes: string;
   location: string;
   latitude?: number | null;

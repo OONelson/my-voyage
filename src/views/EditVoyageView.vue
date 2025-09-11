@@ -34,6 +34,41 @@
             class="hidden"
             ref="fileInput"
           />
+
+          <!-- Gallery thumbnails -->
+          <div
+            v-if="formData.imageUrls.length"
+            class="flex gap-2 flex-wrap mb-2"
+          >
+            <div
+              v-for="(thumb, idx) in formData.imageUrls"
+              :key="idx"
+              class="relative w-16 h-16 border rounded overflow-hidden cursor-pointer"
+              :class="{ 'ring-2 ring-accent50': activeIndex === idx }"
+              @click="selectImage(idx)"
+            >
+              <img :src="thumb" class="w-full h-full object-cover" />
+              <button
+                type="button"
+                class="absolute -top-2 -right-2 bg-red-600 text-white w-5 h-5 rounded-full text-xs"
+                @click.stop="removeImageAt(idx)"
+                title="Remove"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
+          <div v-if="canAddMoreImages" class="mb-2">
+            <button
+              type="button"
+              @click="openFileInput"
+              class="px-3 py-1 border border-dashed rounded text-gray-600 hover:bg-gray-50"
+            >
+              Add Image
+            </button>
+          </div>
+
           <div v-if="showActionButtons" class="flex gap-2 mb-2">
             <button
               @click="cropImage"
@@ -99,7 +134,7 @@
 
             <img
               v-if="showOriginalImage"
-              :src="formData.imageUrl"
+              :src="formData.imageUrls[activeIndex]"
               ref="image"
               :style="imageStyle"
               @load="initCropper"
@@ -346,6 +381,10 @@ const {
   showCroppedImage,
   showEmptyState,
   modules,
+  activeIndex,
+  canAddMoreImages,
+  selectImage,
+  removeImageAt,
 } = useImageUpload(formData);
 
 interface DateRange extends Array<Date> {
@@ -410,7 +449,7 @@ onMounted(async () => {
   const voyage = await fetchVoyage(Number(route.params.id));
   if (voyage) {
     formData.value = {
-      imageUrl: voyage.imageUrl || "",
+      imageUrls: voyage.imageUrl ? [voyage.imageUrl] : [],
       title: voyage.title,
       location: voyage.location,
       startDate: voyage.startDate,
@@ -423,16 +462,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-:deep(.custom-rating .p-rating-icon) {
+::deep(.custom-rating .p-rating-icon) {
   color: #fbbf24;
   transition: color 0.2s;
 }
 
-:deep(.custom-rating .p-rating-icon.p-rating-icon-active) {
+::deep(.custom-rating .p-rating-icon.p-rating-icon-active) {
   color: #fbbf24;
 }
 
-:deep(.custom-rating .p-rating-icon:hover) {
+::deep(.custom-rating .p-rating-icon:hover) {
   color: #fbbf24;
 }
 </style>

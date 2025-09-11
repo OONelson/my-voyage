@@ -23,6 +23,39 @@
             class="hidden"
           />
 
+          <!-- Gallery thumbnails -->
+          <div
+            v-if="formData.imageUrls.length"
+            class="flex gap-2 flex-wrap mb-2"
+          >
+            <div
+              v-for="(thumb, idx) in formData.imageUrls"
+              :key="idx"
+              class="relative w-16 h-16 border rounded overflow-hidden cursor-pointer"
+              :class="{ 'ring-2 ring-accent50': activeIndex === idx }"
+              @click="selectImage(idx)"
+            >
+              <img :src="thumb" class="w-full h-full object-cover" />
+              <button
+                type="button"
+                class="absolute -top-2 -right-2 bg-red-600 text-white w-5 h-5 rounded-full text-xs"
+                @click.stop="removeImageAt(idx)"
+                title="Remove"
+              >
+                ×
+              </button>
+            </div>
+            <button
+              v-if="canAddMoreImages"
+              type="button"
+              @click="openFileInput"
+              class="w-16 h-16 border-dashed border-2 border-gray-300 text-gray-400 rounded flex items-center justify-center"
+              title="Add image"
+            >
+              +
+            </button>
+          </div>
+
           <!-- Action Buttons -->
           <div v-if="showActionButtons" class="flex gap-2 mb-2">
             <button
@@ -90,7 +123,7 @@
             <!-- Original Image Preview -->
             <img
               v-if="showOriginalImage"
-              :src="formData.imageUrl"
+              :src="formData.imageUrls[activeIndex]"
               ref="image"
               :style="imageStyle"
               @load="initCropper"
@@ -334,6 +367,10 @@ const {
   showCropBox,
   showCroppedImage,
   showEmptyState,
+  activeIndex,
+  canAddMoreImages,
+  selectImage,
+  removeImageAt,
 } = useImageUpload(formData);
 
 interface DateRange extends Array<Date> {
@@ -396,16 +433,16 @@ const handleClasses: Record<HandleKey, string> = {
 </script>
 
 <style scoped>
-:deep(.custom-rating .p-rating-icon) {
+::deep(.custom-rating .p-rating-icon) {
   color: #fbbf24;
   transition: color 0.2s;
 }
 
-:deep(.custom-rating .p-rating-icon.p-rating-icon-active) {
+::deep(.custom-rating .p-rating-icon.p-rating-icon-active) {
   color: #fbbf24;
 }
 
-:deep(.custom-rating .p-rating-icon:hover) {
+::deep(.custom-rating .p-rating-icon:hover) {
   color: #fbbf24;
 }
 </style>
