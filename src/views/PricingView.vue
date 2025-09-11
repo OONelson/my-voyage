@@ -226,11 +226,22 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 // import { createCheckoutSession } from "../services/supabase/subscriptions";
+import { upgradeToPremium } from "@/services/premium";
 
 const router = useRouter();
 const { user } = useAuth();
 
-const plans = ref([
+type Plan = {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  featured: boolean;
+};
+
+const plans = ref<Plan[]>([
   {
     id: "free",
     name: "Free",
@@ -306,19 +317,19 @@ onMounted(() => {
   }
 });
 
-const isCurrentPlan = (plan: any) => {
+const isCurrentPlan = (plan: Plan) => {
   if (!user.value) return false;
-  if (plan.id === "free" && !user.value.profile?.is_premium) return true;
+  if (plan.id === "free" && !user.value?.is_premium) return true;
   return false;
 };
 
-const getButtonText = (plan: any) => {
+const getButtonText = (plan: Plan) => {
   if (isCurrentPlan(plan)) return "Current Plan";
   if (loadingPlan.value === plan.id) return "Processing...";
   return plan.id === "free" ? "Continue with Free" : "Upgrade Now";
 };
 
-const handlePlanSelection = async (plan: any) => {
+const handlePlanSelection = async (plan: Plan) => {
   if (plan.id === "free") {
     router.push("/");
     return;
@@ -326,10 +337,12 @@ const handlePlanSelection = async (plan: any) => {
 
   try {
     loadingPlan.value = plan.id;
-    const { url } = await createCheckoutSession(plan.id);
-    if (url) {
-      window.location.href = url;
-    }
+    if (!user.value) return;
+
+    // Temporary direct upgrade until checkout is implemented
+    await upgradeToPremium(user.value.id);
+    user.value.is_premium = true;
+    showSuccess.value = true;
   } catch (error) {
     console.error("Subscription error:", error);
   } finally {

@@ -19,9 +19,9 @@
       class="flex justify-center items-center uppercase rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
       @click="openProfileModal"
     >
-      <UTooltip :text="userData?.name">
+      <!-- <UTooltip :text="userData?.name">
         <UAvatar :src="userData?.profile_image" :alt="userData?.name" full />
-      </UTooltip>
+      </UTooltip> -->
     </div>
   </header>
 

@@ -2,6 +2,7 @@ import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { VoyageTypeInfo } from "@/types/voyage";
 import { Voyages } from "@/constants/constant";
+import { usePlanLimits } from "@/composables/usePlanLimits";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
 
@@ -64,6 +65,8 @@ export const useVoyageManager = (): VoyageManager => {
     JSON.parse(localStorage.getItem("favorites") || "[]")
   );
 
+  const { limits } = usePlanLimits();
+
   const voyageId = computed(() => {
     try {
       const idParam = route.params?.id;
@@ -83,6 +86,11 @@ export const useVoyageManager = (): VoyageManager => {
 
   // Navigations
   const navigateToCreate = () => {
+    if (voyages.value.length >= limits.value.maxVoyageEntries) {
+      router.push("/pricing");
+      isMenuOpen.value = false;
+      return;
+    }
     router.push("/voyages/create");
     isMenuOpen.value = false;
   };
@@ -91,11 +99,11 @@ export const useVoyageManager = (): VoyageManager => {
     isMenuOpen.value = false;
   };
 
-  const navigateToVoyage = (id: string) => {
-    router.push(`/voyages/${id}`);
-    console.log(id);
+  const navigateToVoyage = (voyageId: string) => {
+    router.push(`/voyages/${voyageId}`);
     isMenuOpen.value = false;
   };
+
   const navigateToVoyages = () => {
     router.push("/voyages");
     isMenuOpen.value = false;
@@ -192,9 +200,14 @@ export const useVoyageManager = (): VoyageManager => {
       // await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const foundVoyage = Voyages.find((v) => v.id === voyageId);
-      if (!foundVoyage) throw new Error("Voyage not found");
+      if (!foundVoyage) {
+        error.value = "voyage not found";
+        console.log("Voyage not found");
+        return undefined;
+      }
 
       voyage.value = foundVoyage;
+      // console.log(foundVoyage);
       return foundVoyage;
     } catch (err) {
       error.value =

@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
+import { usePremium } from "@/composables/usePremium";
 import type { AppRouteRecordRaw } from "@/types/router";
 
 export function setupRouter(routes: AppRouteRecordRaw[]) {
@@ -19,8 +20,10 @@ export function setupRouter(routes: AppRouteRecordRaw[]) {
       };
     }
 
-    if (to.meta.requiresPremium && !user.value?.is_premium) {
-      return "/pricing";
+    if (to.meta.requiresPremium && user.value) {
+      const { checkStatus } = usePremium(user.value.id);
+      const isStillPremium = await checkStatus();
+      if (!isStillPremium) return "/pricing";
     }
 
     if ((to.path === "/login" || to.path === "/signup") && isAuthenticated) {
