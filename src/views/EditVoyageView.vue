@@ -174,7 +174,7 @@
           </div>
         </div>
 
-        <!-- Title -->
+        <!-- Title and Location -->
         <div>
           <ReusableInput
             label="Title"
@@ -201,8 +201,8 @@
                 >
                   <li
                     v-for="suggestion in locationSuggestions"
-                    :key="suggestion.place_id"
-                    @click="selectSuggestion(suggestion)"
+                    :key="suggestion.place_id || suggestion.display_name"
+                    @click="selectSuggestionAndMaybePin(suggestion)"
                     class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                   >
                     {{ suggestion.display_name }}
@@ -220,24 +220,44 @@
               </button>
             </div>
             <MapView />
-            <div
-              v-if="selectedLocation"
-              class="p-3 bg-gray-50 rounded-lg border"
-            >
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-medium">{{ selectedLocation.display_name }}</p>
-                  <p class="text-sm text-gray-600 mt-1">
-                    Lat: {{ selectedLocation.lat.toFixed(4) }}, Lng:
-                    {{ selectedLocation.lon.toFixed(4) }}
+
+            <!-- Pin Controls -->
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                @click="pinSelectedLocation()"
+                class="px-3 py-1 bg-accent50 text-white rounded disabled:opacity-50"
+                :disabled="!selectedLocation || reachedPinLimit"
+                title="Pin the selected map location"
+              >
+                Pin This Spot
+              </button>
+              <span class="text-sm text-gray-600"
+                >Pins: {{ pins.length }} / {{ pinLimitDisplay }}</span
+              >
+            </div>
+
+            <!-- Pinned List -->
+            <div v-if="pins.length" class="mt-2 border rounded p-2 bg-white">
+              <div
+                v-for="(p, i) in pins"
+                :key="i"
+                class="flex items-center justify-between py-1 border-b last:border-b-0"
+              >
+                <div class="text-sm">
+                  <p class="font-medium truncate max-w-[360px]">
+                    {{ p.display_name }}
+                  </p>
+                  <p class="text-gray-500">
+                    {{ p.lat.toFixed(4) }}, {{ p.lon.toFixed(4) }}
                   </p>
                 </div>
                 <button
-                  @click="clearLocation"
-                  class="text-gray-500 hover:text-red-500 transition-colors"
-                  title="Clear location"
+                  type="button"
+                  class="text-red-600 hover:underline"
+                  @click="removePinAt(i)"
                 >
-                  <CloseIcon fillColor="#000" size="18" />
+                  Remove
                 </button>
               </div>
             </div>
@@ -336,6 +356,8 @@ import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
 import { genUtils } from "@/utils/genUtils";
+import type { LocationSuggestion } from "@/composables/useMap";
+import { usePlanLimits } from "@/composables/usePlanLimits";
 
 const route = useRoute();
 
@@ -352,7 +374,38 @@ const {
   selectSuggestion,
   useCurrentLocation,
   clearLocation,
+  // new pins api
+  pins,
+  addPin,
+  removePinAt,
 } = useMap();
+
+const reachedPinLimit = computed(
+  () => pins.value.length >= limits.value.maxPinnedLocations
+);
+const pinLimitDisplay = computed(() =>
+  Number.isFinite(limits.value.maxPinnedLocations)
+    ? limits.value.maxPinnedLocations
+    : "∞"
+);
+
+const selectSuggestionAndMaybePin = (suggestion: LocationSuggestion) => {
+  selectSuggestion(suggestion);
+};
+
+const pinSelectedLocation = () => {
+  if (!selectedLocation.value) return;
+  addPin({
+    display_name: selectedLocation.value.display_name,
+    lat: selectedLocation.value.lat,
+    lon: selectedLocation.value.lon,
+  });
+  formData.value.pins = pins.value;
+};
+
+watch(pins, (nv) => {
+  formData.value.pins = nv;
+});
 
 const {
   rotate,
@@ -445,17 +498,20 @@ const handleClasses: Record<HandleKey, string> = {
   right: "right-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
 };
 
+const { limits } = usePlanLimits();
+
 onMounted(async () => {
   const voyage = await fetchVoyage(Number(route.params.id));
   if (voyage) {
     formData.value = {
-      imageUrls: voyage.imageUrl ? [voyage.imageUrl] : [],
+      imageUrls: voyage.image_url ? [voyage.image_url] : [],
       title: voyage.title,
       location: voyage.location,
-      startDate: voyage.startDate,
-      endDate: voyage.endDate,
+      startDate: voyage.start_date,
+      endDate: voyage.end_date,
       rating: voyage.rating,
       notes: voyage.notes,
+      pins: [],
     };
   }
 });

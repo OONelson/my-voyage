@@ -6,7 +6,32 @@
       <logo />
       <h4 class="text-textblack300 font-medium">Zende</h4>
     </div>
-    <Menu @click="openMenu" fillColor="text-textblack300" size="22" />
+
+    <!-- Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-6 text-sm text-textblack300">
+      <a href="#start" class="hover:text-accent50">Start Here</a>
+      <a href="#benefits" class="hover:text-accent50">Benefits</a>
+      <a href="#process" class="hover:text-accent50">Process</a>
+      <a href="#compare" class="hover:text-accent50">Compare</a>
+      <router-link to="/pricing" class="hover:text-accent50"
+        >Pricing</router-link
+      >
+      <a href="#faqs" class="hover:text-accent50">FAQs</a>
+      <router-link
+        to="/pricing"
+        class="ml-2 px-4 py-2 rounded-full bg-black text-white hover:bg-gray-800"
+      >
+        View Plans
+      </router-link>
+    </nav>
+
+    <!-- Mobile -->
+    <Menu
+      @click="openMenu"
+      fillColor="text-textblack300"
+      size="22"
+      class="md:hidden"
+    />
   </header>
   <SideSlider :isOpen="isMenuOpen" @close="closeMenu" />
 </template>

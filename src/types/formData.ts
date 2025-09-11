@@ -8,4 +8,5 @@ export type FormDataType = {
   startDate: Date | string;
   endDate: Date | string;
   rating: number;
+  pins?: { display_name: string; lat: number; lon: number }[];
 };

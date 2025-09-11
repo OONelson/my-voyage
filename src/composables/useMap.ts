@@ -5,15 +5,35 @@ import maplibregl, {
   type LngLatLike,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { usePlanLimits } from "@/composables/usePlanLimits";
+
+type LocationSuggestion = {
+  display_name: string;
+  lat: string;
+  lon: string;
+  place_id?: string | number;
+};
+
+type SelectedLocation = {
+  display_name: string;
+  lat: number;
+  lon: number;
+} | null;
 
 export const useMap = () => {
+  const { limits } = usePlanLimits();
+
   const map = ref<Map>();
   const mapContainer = ref<HTMLDivElement>();
   const isMapInitialized = ref(false);
-  const selectedLocation = ref<any>(null);
+  const selectedLocation = ref<SelectedLocation>(null);
   const locationMarker = ref<Marker | null>(null);
   const locationSearch = ref("");
-  const locationSuggestions = ref<any[]>([]);
+  const locationSuggestions = ref<LocationSuggestion[]>([]);
+
+  // Multi-pin state
+  const markers = ref<Marker[]>([]);
+  const pins = ref<{ display_name: string; lat: number; lon: number }[]>([]);
 
   const initMap = async (
     container: HTMLDivElement,
@@ -23,7 +43,7 @@ export const useMap = () => {
       map.value = new maplibregl.Map({
         container: container,
         style: "https://demotiles.maplibre.org/style.json",
-        center: options.center,
+        center: options.center as [number, number],
         zoom: options.zoom,
       });
 
@@ -59,7 +79,8 @@ export const useMap = () => {
           locationSearch.value
         )}&addressdetails=1&limit=5`
       );
-      locationSuggestions.value = await response.json();
+      locationSuggestions.value =
+        (await response.json()) as LocationSuggestion[];
     } catch (error) {
       console.error("Location search error:", error);
       locationSuggestions.value = [];
@@ -67,7 +88,7 @@ export const useMap = () => {
   };
 
   // Handle location selection from search results
-  const selectSuggestion = (suggestion: any) => {
+  const selectSuggestion = (suggestion: LocationSuggestion) => {
     const lat = parseFloat(suggestion.lat);
     const lon = parseFloat(suggestion.lon);
 
@@ -88,7 +109,7 @@ export const useMap = () => {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lngLat.lat}&lon=${lngLat.lng}`
       );
-      const data = await response.json();
+      const data = (await response.json()) as { display_name: string };
 
       selectedLocation.value = {
         display_name: data.display_name,
@@ -101,17 +122,6 @@ export const useMap = () => {
       console.error("Error reverse geocoding:", error);
     }
   };
-
-  // Update or create marker
-  // const updateMarker = (coordinates: [number, number], title: string) => {
-  //   if (locationMarker.value) {
-  //     locationMarker.value.remove();
-  //   }
-  //   locationMarker.value = addMarker(coordinates, {
-  //     color: "#006E63",
-  //     popup: `<h3 class="text-sm font-medium">${title}</h3>`,
-  //   });
-  // };
 
   // Add a marker to the map
   // Enhanced marker implementation
@@ -260,10 +270,44 @@ export const useMap = () => {
     map.value.zoomOut();
   };
 
+  // Pin management
+  const addPin = (pin: { display_name: string; lat: number; lon: number }) => {
+    if (pins.value.length >= limits.value.maxPinnedLocations) return false;
+    pins.value.push(pin);
+    const marker = addMarker([pin.lon, pin.lat], {
+      color: "#0ea5e9",
+      title: pin.display_name[0],
+      popup: `
+      <div class="marker-popup-content">
+        <h3 class="font-medium text-base">${pin.display_name}</h3>
+        <p class="text-sm text-gray-600 mt-1">${pin.lat.toFixed(
+          4
+        )}, ${pin.lon.toFixed(4)}</p>
+      </div>
+      `,
+    });
+    markers.value.push(marker);
+    return true;
+  };
+
+  const removePinAt = (index: number) => {
+    if (index < 0 || index >= pins.value.length) return;
+    pins.value.splice(index, 1);
+    const marker = markers.value.splice(index, 1)[0];
+    marker?.remove();
+  };
+
+  const clearPins = () => {
+    pins.value = [];
+    markers.value.forEach((m) => m.remove());
+    markers.value = [];
+  };
+
   onUnmounted(() => {
     if (locationMarker.value) {
       locationMarker.value.remove();
     }
+    markers.value.forEach((m) => m.remove());
     map.value?.remove();
   });
 
@@ -303,5 +347,11 @@ export const useMap = () => {
         locationData.display_name
       );
     },
+
+    // Pins API
+    pins,
+    addPin,
+    removePinAt,
+    clearPins,
   };
 };

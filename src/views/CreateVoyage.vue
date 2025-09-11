@@ -164,7 +164,7 @@
           </div>
         </div>
 
-        <!-- Title -->
+        <!-- Title and Location -->
         <div>
           <ReusableInput
             label="Title"
@@ -191,8 +191,8 @@
                 >
                   <li
                     v-for="suggestion in locationSuggestions"
-                    :key="suggestion.place_id"
-                    @click="selectSuggestion(suggestion)"
+                    :key="suggestion.place_id || suggestion.display_name"
+                    @click="selectSuggestionAndMaybePin(suggestion)"
                     class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                   >
                     {{ suggestion.display_name }}
@@ -210,28 +210,50 @@
               </button>
             </div>
             <MapView />
-            <div
-              v-if="selectedLocation"
-              class="p-3 bg-gray-50 rounded-lg border"
-            >
-              <div class="flex justify-between items-start">
-                <div>
-                  <p class="font-medium">{{ selectedLocation.display_name }}</p>
-                  <p class="text-sm text-gray-600 mt-1">
-                    Lat: {{ selectedLocation.lat.toFixed(4) }}, Lng:
-                    {{ selectedLocation.lon.toFixed(4) }}
+
+            <!-- Pin Controls -->
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                @click="pinSelectedLocation()"
+                class="px-3 py-1 bg-accent50 text-white rounded disabled:opacity-50"
+                :disabled="!selectedLocation || reachedPinLimit"
+                title="Pin the selected map location"
+              >
+                Pin This Spot
+              </button>
+              <span class="text-sm text-gray-600"
+                >Pins: {{ pins.length }} / {{ pinLimitDisplay }}</span
+              >
+            </div>
+
+            <!-- Pinned List -->
+            <div v-if="pins.length" class="mt-2 border rounded p-2 bg-white">
+              <div
+                v-for="(p, i) in pins"
+                :key="i"
+                class="flex items-center justify-between py-1 border-b last:border-b-0"
+              >
+                <div class="text-sm">
+                  <p class="font-medium truncate max-w-[360px]">
+                    {{ p.display_name }}
+                  </p>
+                  <p class="text-gray-500">
+                    {{ p.lat.toFixed(4) }}, {{ p.lon.toFixed(4) }}
                   </p>
                 </div>
                 <button
-                  @click="clearLocation"
-                  class="text-gray-500 hover:text-red-500 transition-colors"
-                  title="Clear location"
+                  type="button"
+                  class="text-red-600 hover:underline"
+                  @click="removePinAt(i)"
                 >
-                  <CloseIcon fillColor="#000" size="18" />
+                  Remove
                 </button>
               </div>
             </div>
           </div>
+
+          <!-- Date range -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <div>
               <label class="block text-textblack100 font-medium mb-1"
@@ -327,19 +349,11 @@ import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
 import { genUtils } from "@/utils/genUtils";
+import type { LocationSuggestion } from "@/composables/useMap";
+import { usePlanLimits } from "@/composables/usePlanLimits";
 
 const { isLoading, navigateToVoyages } = useVoyageManager();
 const { handleSubmit, isSubmitting, formData, formatDateForInput } = genUtils();
-const {
-  selectedLocation,
-  locationSearch,
-  locationSuggestions,
-  searchLocation,
-  selectSuggestion,
-  useCurrentLocation,
-  clearLocation,
-} = useMap();
-
 const {
   rotate,
   initCropper,
@@ -372,6 +386,49 @@ const {
   selectImage,
   removeImageAt,
 } = useImageUpload(formData);
+
+const { limits } = usePlanLimits();
+
+const {
+  selectedLocation,
+  locationSearch,
+  locationSuggestions,
+  searchLocation,
+  selectSuggestion,
+  useCurrentLocation,
+  clearLocation,
+  // new pins api
+  pins,
+  addPin,
+  removePinAt,
+} = useMap();
+
+const reachedPinLimit = computed(
+  () => pins.value.length >= limits.value.maxPinnedLocations
+);
+const pinLimitDisplay = computed(() =>
+  Number.isFinite(limits.value.maxPinnedLocations)
+    ? limits.value.maxPinnedLocations
+    : "∞"
+);
+
+const selectSuggestionAndMaybePin = (suggestion: LocationSuggestion) => {
+  selectSuggestion(suggestion);
+};
+
+const pinSelectedLocation = () => {
+  if (!selectedLocation.value) return;
+  addPin({
+    display_name: selectedLocation.value.display_name,
+    lat: selectedLocation.value.lat,
+    lon: selectedLocation.value.lon,
+  });
+  formData.value.pins = pins.value;
+};
+
+watch(pins, (nv) => {
+  formData.value.pins = nv;
+});
 
 interface DateRange extends Array<Date> {
   0: Date;
