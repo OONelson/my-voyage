@@ -63,8 +63,8 @@
           <!-- Image with Heart Icon -->
           <div class="relative">
             <img
-              v-if="voyage.image_url"
-              :src="voyage.image_url"
+              v-if="voyage.image_urls"
+              :src="voyage.image_urls[0]"
               :alt="voyage.title"
               class="w-full h-auto max-h-[400px] object-cover"
             />
@@ -109,7 +109,7 @@
             <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
               <WhatTimeIcon size="26" />
               <span>Created:</span>
-              <span class="">{{ relativeCreatedAt(voyage.created_at) }}</span>
+              <span class="">{{ relativeCreatedAt(new Date(voyage.created_at)) }}</span>
             </div>
 
             <!-- Rating -->

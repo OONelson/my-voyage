@@ -1,8 +1,15 @@
 import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { VoyageTypeInfo } from "@/types/voyage";
-import { Voyages } from "@/constants/constant";
+// import { Voyages } from "@/constants/constant";
 import { usePlanLimits } from "@/composables/usePlanLimits";
+import {
+  createVoyage,
+  deleteVoyage,
+  fetchVoyageById,
+  fetchVoyages,
+} from "@/services/supabase/voyage";
+import type { FormDataType } from "@/types/formData";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
 
@@ -16,7 +23,7 @@ interface VoyageManager {
   isMenuOpen: Ref<boolean>;
   isProfileModal: Ref<boolean>;
   isSmallModalOpen: Ref<boolean>;
-  currentVoyageId: Ref<string | null>;
+  // currentVoyageId: Ref<string>;
   isLoading: Ref<boolean>;
   size: Ref<ModalSize>;
   error: Ref<string | null>;
@@ -54,7 +61,7 @@ export const useVoyageManager = (): VoyageManager => {
   const scrolled = ref(false);
   const isProfileModal = ref(false);
   const isMenuOpen = ref(false);
-  const voyages = ref<VoyageTypeInfo[]>(Voyages);
+  const voyages = ref<VoyageTypeInfo[]>([]);
   const voyage = ref<VoyageTypeInfo | null>(null);
   const isSmallModalOpen = ref(false);
   const currentVoyageId = ref<string | null>(null);
@@ -142,19 +149,38 @@ export const useVoyageManager = (): VoyageManager => {
 
   // Voyage Actions
 
+  const handleFetchVoyages = async () => {
+    try {
+      isLoading.value = false;
+      const data = await fetchVoyages();
+
+      voyages.value = data || [];
+    } catch (err: any) {
+      error.value = err.message;
+    }
+  };
+
+  const handleFetchSingleVoyage = async () => {
+    try {
+      isLoading.value = false;
+      error.value = null;
+
+      await fetchVoyageById(currentVoyageId.value);
+    } catch (err: any) {
+      error.value = err.message;
+    }
+  };
+
+  const handleCreateVoyage = async (newVoyageData: FormDataType) => {
+    try {
+      const newVoyage = await createVoyage(newVoyageData);
+
+      voyages.value.unshift(newVoyage);
+      return newVoyage;
+    } catch (error) {}
+  };
   const editVoyage = (voyageId: string) => {
     navigateToEdit(voyageId);
-  };
-
-  const deleteVoyage = (voyageId: string) => {
-    voyages.value = voyages.value.filter((v) => v.id !== voyageId);
-    router.push("/voyages");
-  };
-
-  const confirmDeleteVoyage = (voyageId: string) => {
-    if (confirm("Are you sure you want to delete this voyage?")) {
-      deleteVoyage(voyageId);
-    }
   };
 
   const handleEdit = () => {
@@ -164,10 +190,14 @@ export const useVoyageManager = (): VoyageManager => {
     }
   };
 
-  const handleDelete = () => {
-    if (currentVoyageId.value) {
-      confirmDeleteVoyage(currentVoyageId.value);
+  const handleDeleteVoyage = async () => {
+    try {
+      await deleteVoyage(currentVoyageId.value);
+      voyages.value = voyages.value.filter((voyage) => voyage.id);
+
       closeModal();
+    } catch (err: any) {
+      error.value = err.message;
     }
   };
 

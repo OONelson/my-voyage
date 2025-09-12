@@ -74,8 +74,8 @@
           <!-- Image with Favorite Button -->
           <div class="relative aspect-[4/3]">
             <img
-              v-if="voyage.image_url"
-              :src="voyage.image_url"
+              v-if="voyage.image_urls"
+              :src="voyage.image_urls[0]"
               :alt="voyage.title"
               loading="lazy"
               class="w-full h-full object-cover transition-transform duration-300 md:group-hover:scale-105"
@@ -122,7 +122,9 @@
             <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
               <WhatTimeIcon size="26" />
               <span>Created:</span>
-              <span>{{ relativeCreatedAt(voyage.created_at) }}</span>
+              <span class="">{{
+                relativeCreatedAt(new Date(voyage.created_at))
+              }}</span>
             </div>
 
             <!-- Rating -->
