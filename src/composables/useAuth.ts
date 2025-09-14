@@ -1,13 +1,12 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import {
-  getCurrentUser,
-  getUserProfile,
   signInWithEmail,
   signUpWithEmail,
   signInWithGoogle,
   signOut,
 } from "@/services/supabase/auth";
+import { getCurrentUser, getUserProfile } from "@/services/supabase/profile";
 import type { UserProfile } from "@/types/user";
 
 export const useAuth = () => {

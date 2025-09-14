@@ -1,5 +1,5 @@
 import { supabase } from "@/config/supabase";
-import type { UserProfile, AuthUser } from "@/types/user";
+import type { AuthUser } from "@/types/user";
 
 export const signUpWithEmail = async (
   email: string,
@@ -7,8 +7,6 @@ export const signUpWithEmail = async (
   name: string
 ): Promise<{ user: AuthUser | null; error: Error | null }> => {
   try {
-    console.log("3");
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -18,11 +16,7 @@ export const signUpWithEmail = async (
       },
     });
 
-    console.log("4");
-
     if (error) return { user: null, error };
-
-    console.log("5");
 
     return {
       user: data.user,
@@ -69,7 +63,6 @@ export const deleteUserAccount = async (
   userId: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // 1. First delete user data from your tables
     const { error: dataError } = await supabase
       .from("profiles")
       .delete()
@@ -79,7 +72,6 @@ export const deleteUserAccount = async (
       throw new Error(`Failed to delete user data: ${dataError.message}`);
     }
 
-    // 2. Delete the auth user (this removes the account completely)
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
     if (authError) {
@@ -97,27 +89,6 @@ export const deleteUserAccount = async (
   }
 };
 
-export const getCurrentUser = async (): Promise<AuthUser> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-};
-
-export const getUserProfile = async (
-  userId: string | undefined
-): Promise<UserProfile | null> => {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", userId)
-    .single();
-
-  if (error) return null;
-
-  return data;
-};
-
 export const handleAuthCallback = async (): Promise<AuthUser> => {
   const {
     data: { user },
@@ -127,9 +98,6 @@ export const handleAuthCallback = async (): Promise<AuthUser> => {
   if (error || !user) {
     throw error || new Error("No user found");
   }
-
-  // const emailHash = await generateEmailHash(email);
-  // const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=identicon`;
 
   const avatarUrl = user.user_metadata?.avatar_url as string | null;
 

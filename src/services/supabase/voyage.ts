@@ -107,10 +107,3 @@ export const filterByRating = async (
     return [];
   }
 };
-
-// Clear the current error
-export const clearError = () => {
-  // This function is not directly related to the new_code,
-  // but it's part of the original file.
-  // Keeping it as is, but it might become redundant if error state is removed.
-};
