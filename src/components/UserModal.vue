@@ -70,10 +70,10 @@
 
           <div
             v-if="userData.profile_image"
-            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative"
+            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative cursor-pointer"
             @click="openFileInput"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
+            @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave"
             @drop.prevent="handleDrop"
           >
             <!-- Drag overlay state -->
@@ -84,19 +84,66 @@
               <span class="text-accent50 font-medium">Drop image here</span>
             </div>
 
+            <!-- Loading state -->
+            <div
+              v-if="isImgLoading"
+              class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-md"
+            >
+              <Spinner />
+            </div>
+
             <!-- Image preview -->
             <img
-              v-if="userData.profile_image"
+              v-if="userData.profile_image && !isImgLoading"
               :src="userData.profile_image"
               class="rounded-md w-full h-full object-cover"
             />
 
-            <!-- Edit overlay (shown when image exists) -->
+            <!-- Edit overlay (shown when image exists and not loading) -->
             <div
-              v-if="userData.profile_image"
+              v-if="userData.profile_image && !isImgLoading"
               class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center rounded-md"
             >
               <EditIcon fillColor="white" size="30" class="opacity-90" />
+            </div>
+          </div>
+
+          <!-- Empty state with drag and drop -->
+          <div
+            v-if="!userData.profile_image"
+            class="h-48 bg-gray-100 rounded-md flex items-center justify-center gap-2 relative cursor-pointer border-2 border-dashed border-gray-300 hover:border-accent200 transition-colors"
+            @click="openFileInput"
+            @dragover.prevent="handleDragOver"
+            @dragleave="handleDragLeave"
+            @drop.prevent="handleDrop"
+            :class="{
+              'border-accent200 bg-accent50 bg-opacity-10': dragOver,
+              'cursor-not-allowed opacity-50': isImgLoading,
+            }"
+          >
+            <!-- Loading state -->
+            <div
+              v-if="isImgLoading"
+              class="absolute inset-0 bg-gray-200 bg-opacity-50 flex items-center justify-center rounded-md"
+            >
+              <Spinner />
+            </div>
+
+            <!-- Drag overlay -->
+            <div
+              v-else-if="dragOver"
+              class="absolute inset-0 flex items-center justify-center"
+            >
+              <span class="text-accent200 font-medium">Drop image here</span>
+            </div>
+
+            <!-- Default state -->
+            <div v-else class="text-center">
+              <EditIcon size="40" class="mx-auto mb-2 text-gray-400" />
+              <p class="text-sm text-gray-500">
+                Click to upload or drag and drop
+              </p>
+              <p class="text-xs text-gray-400">PNG, JPG, JPEG up to 10MB</p>
             </div>
           </div>
 
@@ -105,11 +152,13 @@
             <ReusableButton
               class="text-sm px-3 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200"
               @click="openFileInput"
+              :disabled="isImgLoading"
               label="Change Photo"
             />
             <ReusableButton
               class="text-sm px-3 py-1 bg-red-50 text-red-600 hover:bg-red-100"
               @click="handleDeleteImage"
+              :disabled="isImgLoading"
               label="Remove Photo"
             />
           </div>
@@ -132,6 +181,7 @@
             <template v-else>
               <ReusableButton
                 class="text-sm px-4 py-2 bg-green-600 text-white hover:bg-green-700"
+                @click="saveProfileChanges"
                 :disabled="isUpdating"
                 label="Save"
               />
@@ -289,6 +339,7 @@
         <p class="text-sm text-green-600">{{ successMessage }}</p>
         <ReusableButton
           class="mt-2 text-xs px-3 py-1 bg-green-100 text-green-700 hover:bg-green-200"
+          @click="successMessage = ''"
           label="Dismiss"
         />
       </div>
@@ -340,14 +391,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import LogoutModal from "@/components/LogoutModal.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
-import { useImageUpload } from "@/composables/useImageUpload";
 import { useUserProfile } from "@/composables/useUserProfile";
 import { useAvatarAbbreviation } from "@/composables/useAvatarAbbreviation";
 import { UserModal } from "@/utils/userModal";
@@ -357,8 +407,6 @@ import DeleteAccountModal from "./DeleteAccountModal.vue";
 import EditIcon from "@/assets/icons/EditIcon.vue";
 
 const { joinedAgo } = dateAndTime();
-const { openFileInput, handleDrop, handleImageUpload, dragOver } =
-  useImageUpload();
 
 const {
   selectedTheme,
@@ -371,6 +419,24 @@ const {
   closeDeleteAccountModal,
   confirmLogout,
   confirmDeleteAccount,
+  isEditingProfile,
+  editForm,
+  editFormErrors,
+  startEditingProfile,
+  cancelEditingProfile,
+  saveProfileChanges,
+  successMessage,
+  // Profile image handling
+  dragOver,
+  fileInput,
+  isImgLoading,
+  openFileInput,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
+  handleImageUpload,
+  handleDeleteImage,
+  resendEmailConfirmation,
 } = UserModal();
 
 const {
@@ -380,186 +446,10 @@ const {
   error,
   isUpdating,
   isEmailConfirmed,
-  handleUpdateUserProfile,
-  handleUpdateUserEmail,
-  handleUploadUserProfileImage,
-  handleDeleteUserProfileImage,
-  resendUserEmailConfirmation,
   clearError,
 } = useUserProfile();
 
 const router = useRouter();
-
-// Edit state management
-const isEditingProfile = ref(false);
-const successMessage = ref("");
-
-// Edit form data
-const editForm = ref({
-  name: "",
-  email: "",
-});
-
-// Form validation errors
-const editFormErrors = ref({
-  name: "",
-  email: "",
-});
-
-// Initialize edit form with current user data
-const initializeEditForm = () => {
-  if (userData.value) {
-    editForm.value = {
-      name: userData.value.name || "",
-      email: userData.value.email || "",
-    };
-  }
-};
-
-// Watch for userData changes to update edit form
-watch(
-  userData,
-  () => {
-    if (userData.value) {
-      initializeEditForm();
-    }
-  },
-  { immediate: true }
-);
-
-// Form validation
-const validateForm = () => {
-  const errors = { name: "", email: "" };
-  let isValid = true;
-
-  if (!editForm.value.name.trim()) {
-    errors.name = "Name is required";
-    isValid = false;
-  }
-
-  if (!editForm.value.email.trim()) {
-    errors.email = "Email is required";
-    isValid = false;
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editForm.value.email)) {
-    errors.email = "Please enter a valid email address";
-    isValid = false;
-  }
-
-  editFormErrors.value = errors;
-  return isValid;
-};
-
-// Start editing profile
-const startEditingProfile = () => {
-  isEditingProfile.value = true;
-  initializeEditForm();
-  editFormErrors.value = { name: "", email: "" };
-};
-
-// Cancel editing profile
-const cancelEditingProfile = () => {
-  isEditingProfile.value = false;
-  initializeEditForm();
-  editFormErrors.value = { name: "", email: "" };
-};
-
-// Save profile changes
-const saveProfileChanges = async () => {
-  if (!validateForm()) return;
-
-  try {
-    const updates: any = {};
-    let emailUpdateNeeded = false;
-
-    // Check if name changed
-    if (editForm.value.name !== userData.value?.name) {
-      updates.name = editForm.value.name;
-    }
-
-    // Check if email changed
-    if (editForm.value.email !== userData.value?.email) {
-      emailUpdateNeeded = true;
-    }
-
-    // Update profile data (name and image)
-    if (Object.keys(updates).length > 0) {
-      const result = await handleUpdateUserProfile(updates);
-      if (!result.success) {
-        return;
-      }
-    }
-
-    // Update email if changed
-    if (emailUpdateNeeded) {
-      const password = prompt(
-        "Please enter your current password to update email:"
-      );
-      if (!password) {
-        editFormErrors.value.email = "Password required to update email";
-        return;
-      }
-
-      const emailResult = await handleUpdateUserEmail({
-        newEmail: editForm.value.email,
-        currentPassword: password,
-      });
-
-      if (!emailResult.success) {
-        editFormErrors.value.email =
-          emailResult.error || "Failed to update email";
-        return;
-      }
-    }
-
-    isEditingProfile.value = false;
-    successMessage.value = "Profile updated successfully!";
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
-  } catch (err) {
-    console.error("Error updating profile:", err);
-  }
-};
-
-// Handle image upload
-// const handleImageUpload = async (event: Event) => {
-//   const target = event.target as HTMLInputElement;
-//   const file = target.files?.[0];
-
-//   if (!file) return;
-
-//   const result = await handleUploadUserProfileImage(file);
-//   if (result.success) {
-//     successMessage.value = "Profile image updated successfully!";
-//     setTimeout(() => {
-//       successMessage.value = "";
-//     }, 3000);
-//   }
-// };
-
-// Handle image deletion
-const handleDeleteImage = async () => {
-  if (confirm("Are you sure you want to delete your profile image?")) {
-    const result = await handleDeleteUserProfileImage();
-    if (result.success) {
-      successMessage.value = "Profile image deleted successfully!";
-      setTimeout(() => {
-        successMessage.value = "";
-      }, 3000);
-    }
-  }
-};
-
-// Resend email confirmation
-const resendEmailConfirmation = async () => {
-  const result = await resendUserEmailConfirmation();
-  if (result.success) {
-    successMessage.value = "Verification email sent!";
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
-  }
-};
 
 const navigateToPricing = () => {
   router.push("/pricing");
@@ -570,10 +460,6 @@ const emit = defineEmits(["close"]);
 const handleClose = () => {
   emit("close");
 };
-
-const profileImg = computed(() => {
-  return userData.value?.profile_image;
-});
 
 interface Props {
   avatarUrl?: string | null;
