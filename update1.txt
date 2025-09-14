@@ -1,1 +1,0 @@
-// Updating CreateVoyage.vue to auto-pin suggestions 

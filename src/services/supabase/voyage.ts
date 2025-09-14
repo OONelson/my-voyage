@@ -1,10 +1,8 @@
 import { supabase } from "@/config/supabase";
-import { useVoyageManager } from "@/composables/useVoyageManager";
 import type { FormDataType } from "@/types/formData";
+import type { VoyageTypeInfo, Rating } from "@/types/voyage";
 
-const { voyages, error, isLoading } = useVoyageManager();
-
-export const fetchVoyages = async () => {
+export const fetchVoyages = async (): Promise<VoyageTypeInfo[]> => {
   const { data, error: supabaseError } = await supabase
     .from("voyages")
     .select("*")
@@ -12,14 +10,15 @@ export const fetchVoyages = async () => {
 
   if (supabaseError) throw supabaseError;
 
-  return data;
+  return data || [];
 };
 
-export const fetchVoyageById = async (id: string | null) => {
-  try {
-    isLoading.value = false;
-    error.value = null;
+export const fetchVoyageById = async (
+  id: string | null
+): Promise<VoyageTypeInfo | null> => {
+  if (!id) return null;
 
+  try {
     const { data, error: supabaseError } = await supabase
       .from("voyages")
       .select("*")
@@ -29,25 +28,36 @@ export const fetchVoyageById = async (id: string | null) => {
     if (supabaseError) throw supabaseError;
 
     return data;
-  } catch (err) {}
+  } catch (err) {
+    console.error("Error fetching voyage:", err);
+    return null;
+  }
 };
-export const createVoyage = async (voyage: FormDataType | null) => {
+
+export const createVoyage = async (
+  voyage: FormDataType | null
+): Promise<VoyageTypeInfo | null> => {
+  if (!voyage) return null;
+
   try {
     const { data, error: supabaseError } = await supabase
       .from("voyages")
       .insert([voyage])
-      .select();
+      .select()
+      .single();
 
     if (supabaseError) throw supabaseError;
+
     return data;
-  } catch (err: any) {
-    error.value = err.message;
+  } catch (err) {
+    console.error("Error creating voyage:", err);
+    return null;
   }
 };
 
-// export const updateVoyage= async(id: string | number)
+export const deleteVoyage = async (id: string | null): Promise<void> => {
+  if (!id) return;
 
-export const deleteVoyage = async (id: string | null) => {
   const { error: supabaseError } = await supabase
     .from("voyages")
     .delete()
@@ -56,15 +66,11 @@ export const deleteVoyage = async (id: string | null) => {
   if (supabaseError) throw supabaseError;
 };
 
-// export const toggleFavourite = async (id: string, isFavourite: boolean) => {
-//   return await updateVoyage(id, { isFavourite });
-// };
-
-export const searchVoyages = async (userId: string, query: string) => {
+export const searchVoyages = async (
+  userId: string,
+  query: string
+): Promise<VoyageTypeInfo[]> => {
   try {
-    isLoading.value = true;
-    error.value = null;
-
     const { data, error: supabaseError } = await supabase
       .from("voyages")
       .select("*")
@@ -74,22 +80,18 @@ export const searchVoyages = async (userId: string, query: string) => {
 
     if (supabaseError) throw supabaseError;
 
-    voyages.value = data || [];
-    return data;
+    return data || [];
   } catch (err) {
-    error.value = err.message;
     console.error("Error searching voyages:", err);
-    return null;
-  } finally {
-    isLoading.value = false;
+    return [];
   }
 };
 
-export const filterByRating = async (userId: string, rating: Rating) => {
+export const filterByRating = async (
+  userId: string,
+  rating: Rating
+): Promise<VoyageTypeInfo[]> => {
   try {
-    loading.value = true;
-    error.value = null;
-
     const { data, error: supabaseError } = await supabase
       .from("voyages")
       .select("*")
@@ -99,18 +101,16 @@ export const filterByRating = async (userId: string, rating: Rating) => {
 
     if (supabaseError) throw supabaseError;
 
-    voyages.value = data || [];
-    return data;
+    return data || [];
   } catch (err) {
-    error.value = err.message;
     console.error("Error filtering voyages:", err);
-    return null;
-  } finally {
-    isLoading.value = false;
+    return [];
   }
 };
 
 // Clear the current error
 export const clearError = () => {
-  error.value = null;
+  // This function is not directly related to the new_code,
+  // but it's part of the original file.
+  // Keeping it as is, but it might become redundant if error state is removed.
 };
