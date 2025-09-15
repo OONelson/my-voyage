@@ -27,6 +27,7 @@ interface VoyageManager {
   size: Ref<ModalSize>;
   error: Ref<string | null>;
   favoriteVoyages: Ref<VoyageTypeInfo[]>;
+  formData: Ref<FormDataType>;
 
   // Navigation
   toggleMenu: () => void;
@@ -74,6 +75,15 @@ export const useVoyageManager = (): VoyageManager => {
   const favorites = ref<string[]>(
     JSON.parse(localStorage.getItem("favorites") || "[]")
   );
+  const formData = ref<FormDataType>({
+    title: "",
+    imageUrls: [],
+    notes: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+    rating: 0,
+  });
 
   const { limits } = usePlanLimits();
 
@@ -124,7 +134,7 @@ export const useVoyageManager = (): VoyageManager => {
     router.push(`/voyages/${voyageId}/edit`);
   };
 
-  // Modal Methods
+  // Modal fuunctions
   const toggleMenu = () => {
     isMenuOpen.value = !isMenuOpen.value;
   };
@@ -153,6 +163,7 @@ export const useVoyageManager = (): VoyageManager => {
   };
 
   // Voyage Actions
+
   const handleFetchVoyages = async (): Promise<void> => {
     try {
       isLoading.value = true;
@@ -174,16 +185,68 @@ export const useVoyageManager = (): VoyageManager => {
       isLoading.value = true;
       error.value = null;
 
-      const newVoyage = await createVoyage(newVoyageData);
+      // Basic validation using the structure you highlighted
+      const payload: FormDataType = {
+        title: newVoyageData.title?.trim() || formData.value.title?.trim(),
+        imageUrls: newVoyageData.imageUrls?.length
+          ? newVoyageData.imageUrls
+          : formData.value.imageUrls,
+        notes: newVoyageData.notes ?? formData.value.notes,
+        location: newVoyageData.location ?? formData.value.location,
+        startDate: newVoyageData.startDate ?? formData.value.startDate,
+        endDate: newVoyageData.endDate ?? formData.value.endDate,
+        rating: newVoyageData.rating ?? formData.value.rating,
+      };
 
-      if (newVoyage) {
-        voyages.value.unshift(newVoyage);
-        return newVoyage;
+      if (!payload.title) {
+        throw new Error("Please enter a title for your voyage");
       }
+
+      const created = await createVoyage(payload);
+
+      if (created) {
+        voyages.value.unshift(created);
+        // reset minimal fields after create
+        formData.value = {
+          title: "",
+          imageUrls: [],
+          notes: "",
+          location: "",
+          startDate: "",
+          endDate: "",
+          rating: 0,
+        };
+
+        // navigate to list or to the created item
+        navigateToVoyage(created.id);
+
+        // toast success
+        try {
+          const { useToast } = await import("@/composables/useToast");
+          const { addToast } = useToast();
+          addToast("Voyage created successfully", { type: "success" });
+        } catch (err) {
+          console.error("Error adding toast:", err);
+        }
+
+        return created;
+      }
+
       return null;
     } catch (err) {
-      error.value =
+      const message =
         err instanceof Error ? err.message : "Failed to create voyage";
+      error.value = message;
+
+      // toast error
+      try {
+        const { useToast } = await import("@/composables/useToast");
+        const { addToast } = useToast();
+        addToast(message, { type: "error" });
+      } catch (err) {
+        console.error("Error adding toast:", err);
+      }
+
       return null;
     } finally {
       isLoading.value = false;
@@ -295,6 +358,7 @@ export const useVoyageManager = (): VoyageManager => {
     isLoading,
     size,
     error,
+    formData,
     toggleMenu,
     toggleFavorite,
     navigateToCreate,

@@ -29,12 +29,10 @@ export const checkPremiumStatus = async (userId: string): Promise<boolean> => {
 
   if (error) throw error;
 
-  // Check if subscription is still valid
   if (data.subscription_end && new Date(data.subscription_end) > new Date()) {
     return true;
   }
 
-  // If subscription expired, downgrade user
   if (
     data.is_premium &&
     (!data.subscription_end || new Date(data.subscription_end) <= new Date())

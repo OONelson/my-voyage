@@ -8,7 +8,7 @@ export type UserProfile = {
   is_premium: boolean;
   subscription_end?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 };
 export type AuthUser =
   | (User & {

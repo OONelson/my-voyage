@@ -72,7 +72,6 @@ export const updateEmail = async (
   emailData: EmailUpdateData
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // First, verify the current password
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -155,7 +154,6 @@ export const deleteProfileImage = async (
   imageUrl: string
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Extract file path from URL
     const urlParts = imageUrl.split("/");
     const fileName = urlParts[urlParts.length - 1];
     const filePath = `profile-images/${fileName}`;
@@ -164,7 +162,6 @@ export const deleteProfileImage = async (
 
     if (error) throw error;
 
-    // Update profile to remove image
     const { error: updateError } = await supabase
       .from("profiles")
       .update({

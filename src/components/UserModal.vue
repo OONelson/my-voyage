@@ -7,7 +7,7 @@
       <h2
         class="text-2xl font-semibold text-gray-800 dark:text-dark-textblack200"
       >
-        Settings
+        User Modal
       </h2>
       <CloseIcon
         fillColor="border300"
@@ -19,7 +19,7 @@
     <!-- Tabs -->
     <nav
       aria-label="Settings tabs"
-      class="h-12 flex rounded-lg bg-gray-100 dark:bg-dark-background200 text-gray-600 dark:text-dark-text text-sm font-medium mb-8 select-none sticky top-16 bg-white dark:bg-dark-background100 z-10"
+      class="h-12 flex rounded-lg bg-gray-100 dark:bg-dark-background200 text-gray-600 dark:text-dark-text text-sm font-medium mb-8 select-none sticky top-16 z-10"
     >
       <button
         v-for="tab in tabs"
@@ -39,7 +39,6 @@
       </button>
     </nav>
 
-    <!-- Content Container -->
     <div class="space-y-6 pb-6">
       <!-- Profile Tab Content -->
       <div v-if="loading" class="flex justify-center items-center py-8">
@@ -66,7 +65,6 @@
             <div class="flex flex-col items-center space-y-4">
               <!-- Profile Image Display -->
               <div class="relative">
-                <!-- When no image is selected - show abbreviation -->
                 <div
                   v-if="!userData.profile_image"
                   class="w-24 h-24 rounded-full flex items-center justify-center text-white text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
@@ -77,7 +75,6 @@
                   {{ abbreviation }}
                 </div>
 
-                <!-- When image is selected - show image with overlay -->
                 <div
                   v-else
                   class="relative w-24 h-24 rounded-full overflow-hidden cursor-pointer group"
@@ -89,7 +86,6 @@
                     class="w-full h-full object-cover"
                   />
 
-                  <!-- Hover overlay for image -->
                   <div
                     class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center transition-all duration-200"
                   >

@@ -12,7 +12,7 @@
           class="cursor-pointer"
         />
       </div>
-      <form @submit.prevent="handleSubmit" class="space-y-4">
+      <form @submit.prevent="onSubmit" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
           <input
@@ -352,8 +352,11 @@ import { genUtils } from "@/utils/genUtils";
 import type { LocationSuggestion } from "@/composables/useMap";
 import { usePlanLimits } from "@/composables/usePlanLimits";
 
-const { isLoading, navigateToVoyages } = useVoyageManager();
-const { handleSubmit, isSubmitting, formData, formatDateForInput } = genUtils();
+const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
+  useVoyageManager();
+const onSubmit = () => handleCreateVoyage(formData.value);
+
+const { isSubmitting, formatDateForInput } = genUtils();
 const {
   rotate,
   initCropper,
@@ -396,7 +399,7 @@ const {
   searchLocation,
   selectSuggestion,
   useCurrentLocation,
-  clearLocation,
+  // clearLocation,
   // new pins api
   pins,
   addPin,

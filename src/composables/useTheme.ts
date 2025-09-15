@@ -6,7 +6,6 @@ export const useTheme = () => {
   const theme = ref<Theme>("system");
   const systemTheme = ref<"light" | "dark">("light");
 
-  // Computed property for the actual theme being applied
   const actualTheme = computed(() => {
     if (theme.value === "system") {
       return systemTheme.value;
@@ -14,19 +13,14 @@ export const useTheme = () => {
     return theme.value;
   });
 
-  // Check if the current theme is dark
   const isDark = computed(() => actualTheme.value === "dark");
 
-  // Check if the current theme is light
   const isLight = computed(() => actualTheme.value === "light");
 
-  // Check if the current theme is system
   const isSystem = computed(() => theme.value === "system");
 
-  // Media query listener for system theme changes
   let mediaQuery: MediaQueryList | null = null;
 
-  // Initialize theme from localStorage or default to system
   const initializeTheme = () => {
     const savedTheme = localStorage.getItem("theme") as Theme;
     if (savedTheme && ["light", "dark", "system"].includes(savedTheme)) {
@@ -48,7 +42,6 @@ export const useTheme = () => {
 
       mediaQuery.addEventListener("change", handleChange);
 
-      // Return cleanup function
       return () => {
         if (mediaQuery) {
           mediaQuery.removeEventListener("change", handleChange);
@@ -65,20 +58,15 @@ export const useTheme = () => {
     const root = document.documentElement;
     const currentTheme = actualTheme.value;
 
-    // Remove existing theme classes
     root.classList.remove("light", "dark");
 
-    // Add current theme class
     root.classList.add(currentTheme);
 
-    // Set data attribute for CSS targeting
     root.setAttribute("data-theme", currentTheme);
 
-    // Update meta theme-color for mobile browsers
     updateMetaThemeColor(currentTheme);
   };
 
-  // Update meta theme-color for mobile browsers
   const updateMetaThemeColor = (currentTheme: "light" | "dark") => {
     if (typeof document === "undefined") return;
 
@@ -91,8 +79,8 @@ export const useTheme = () => {
 
     // Set theme color based on current theme
     const colors = {
-      light: "#fcfcfc", // background100 from tailwind config
-      dark: "#121212", // textblack200 from tailwind config
+      light: "#fcfcfc",
+      dark: "#121212",
     };
 
     metaThemeColor.setAttribute("content", colors[currentTheme]);
@@ -150,7 +138,6 @@ export const useTheme = () => {
     applyTheme();
   });
 
-  // Cleanup on unmount
   onUnmounted(() => {
     if (cleanup) {
       cleanup();
@@ -158,7 +145,6 @@ export const useTheme = () => {
   });
 
   return {
-    // State
     theme: computed(() => theme.value),
     actualTheme,
     systemTheme: computed(() => systemTheme.value),
@@ -166,13 +152,11 @@ export const useTheme = () => {
     isLight,
     isSystem,
 
-    // Actions
     setTheme,
     toggleTheme,
     getThemeDisplayName,
     availableThemes,
 
-    // Utilities
     applyTheme,
   };
 };
