@@ -225,7 +225,7 @@
             <div class="mt-3 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                @click="pinSelectedLocation()"
+                @click="addPin(selectedLocation)"
                 class="px-3 py-1 bg-accent50 text-white rounded disabled:opacity-50"
                 :disabled="!selectedLocation || reachedPinLimit"
                 title="Pin the selected map location"
@@ -356,15 +356,92 @@ import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
 import { genUtils } from "@/utils/genUtils";
-import type { LocationSuggestion } from "@/composables/useMap";
 import { usePlanLimits } from "@/composables/usePlanLimits";
+import type { FormDataType } from "@/types/formData";
+import { VoyageTypeInfo } from "@/types/voyage";
 
 const route = useRoute();
 
-const { voyageId, isLoading, fetchVoyage, navigateToVoyage } =
-  useVoyageManager();
-const { handleSubmit, isSubmitting, formData, error, formatDateForInput } =
-  genUtils();
+const {
+  voyageId,
+  isLoading,
+  fetchVoyage,
+  navigateToVoyage,
+  handleUpdateVoyage,
+} = useVoyageManager();
+const { isSubmitting, formatDateForInput, error } = genUtils();
+
+// Local form state bound to inputs
+const formData = ref({
+  imageUrls: [] as string[],
+  title: "",
+  location: "",
+  startDate: "",
+  endDate: "",
+  rating: 0,
+  notes: "",
+  pins: [] as { display_name: string; lat: number; lon: number }[],
+  latitude: null as number | null,
+  longitude: null as number | null,
+});
+
+// Keep original for diffing
+const original = ref<VoyageTypeInfo | null>(null);
+
+const load = async () => {
+  const v = await fetchVoyage(String(route.params.id));
+  if (!v) return;
+  original.value = { ...v };
+  formData.value = {
+    imageUrls: v.image_urls ?? [],
+    title: v.title ?? "",
+    location: v.location ?? "",
+    startDate: v.start_date ?? "",
+    endDate: v.end_date ?? "",
+    rating: v.rating ?? 0,
+    notes: v.notes ?? "",
+    pins: [],
+    latitude: v.latitude ?? null,
+    longitude: v.longitude ?? null,
+  };
+};
+
+onMounted(load);
+
+type MapSuggestion = {
+  display_name: string;
+  lat: string | number;
+  lon: string | number;
+  place_id?: string | number;
+};
+
+const buildUpdates = () => {
+  const updates: Partial<FormDataType> & {
+    latitude?: number | null;
+    longitude?: number | null;
+  } = {};
+  if (!original.value) return updates;
+  if (formData.value.title !== original.value.title)
+    updates.title = formData.value.title;
+  if (formData.value.location !== original.value.location)
+    updates.location = formData.value.location;
+  if (formData.value.notes !== original.value.notes)
+    updates.notes = formData.value.notes;
+  if (formData.value.rating !== original.value.rating)
+    updates.rating = formData.value.rating;
+  if (formData.value.startDate !== original.value.start_date)
+    updates.start_date = formData.value.startDate;
+  if (formData.value.endDate !== original.value.end_date)
+    updates.end_date = formData.value.endDate;
+  const origUrl = original.value.image_urls ?? [];
+  if (JSON.stringify(formData.value.imageUrls) !== JSON.stringify(origUrl))
+    updates.image_urls = formData.value.imageUrls;
+  if (formData.value.latitude !== (original.value.latitude ?? null))
+    updates.latitude = formData.value.latitude;
+  if (formData.value.longitude !== (original.value.longitude ?? null))
+    updates.longitude = formData.value.longitude;
+  return updates;
+};
 
 const {
   selectedLocation,
@@ -373,8 +450,6 @@ const {
   searchLocation,
   selectSuggestion,
   useCurrentLocation,
-  clearLocation,
-  // new pins api
   pins,
   addPin,
   removePinAt,
@@ -389,18 +464,28 @@ const pinLimitDisplay = computed(() =>
     : "∞"
 );
 
-const selectSuggestionAndMaybePin = (suggestion: LocationSuggestion) => {
-  selectSuggestion(suggestion);
+const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
+  selectSuggestion(suggestion as any);
 };
 
-const pinSelectedLocation = () => {
-  if (!selectedLocation.value) return;
-  addPin({
-    display_name: selectedLocation.value.display_name,
-    lat: selectedLocation.value.lat,
-    lon: selectedLocation.value.lon,
-  });
-  formData.value.pins = pins.value;
+const handleSubmit = async () => {
+  if (!voyageId.value) return;
+  isSubmitting.value = true;
+  try {
+    const updates = buildUpdates();
+    if (Object.keys(updates).length === 0) {
+      navigateToVoyage(voyageId.value);
+      return;
+    }
+    const updated = await handleUpdateVoyage(voyageId.value, updates);
+    if (updated) {
+      navigateToVoyage(voyageId.value);
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 
 watch(pins, (nv) => {
@@ -438,7 +523,7 @@ const {
   canAddMoreImages,
   selectImage,
   removeImageAt,
-} = useImageUpload(formData);
+} = useImageUpload(formData as any);
 
 interface DateRange extends Array<Date> {
   0: Date;
@@ -499,22 +584,6 @@ const handleClasses: Record<HandleKey, string> = {
 };
 
 const { limits } = usePlanLimits();
-
-onMounted(async () => {
-  const voyage = await fetchVoyage(Number(route.params.id));
-  if (voyage) {
-    formData.value = {
-      imageUrls: voyage.image_url ? [voyage.image_url] : [],
-      title: voyage.title,
-      location: voyage.location,
-      startDate: voyage.start_date,
-      endDate: voyage.end_date,
-      rating: voyage.rating,
-      notes: voyage.notes,
-      pins: [],
-    };
-  }
-});
 </script>
 
 <style scoped>

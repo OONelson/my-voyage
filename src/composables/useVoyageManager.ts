@@ -7,8 +7,10 @@ import {
   deleteVoyage,
   fetchVoyageById,
   fetchVoyages,
+  updateVoyage,
 } from "@/services/supabase/voyage";
 import type { FormDataType } from "@/types/formData";
+// import type { LocationSuggestion } from "@/composables/useMap";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
 
@@ -55,6 +57,13 @@ interface VoyageManager {
   ) => Promise<VoyageTypeInfo | null>;
   handleFetchVoyages: () => Promise<void>;
   handleDeleteVoyage: (voyageId: string) => Promise<void>;
+  handleUpdateVoyage: (
+    id: string,
+    updates: Partial<FormDataType> & {
+      latitude?: number | null;
+      longitude?: number | null;
+    }
+  ) => Promise<VoyageTypeInfo | null>;
 }
 
 export const useVoyageManager = (): VoyageManager => {
@@ -77,11 +86,11 @@ export const useVoyageManager = (): VoyageManager => {
   );
   const formData = ref<FormDataType>({
     title: "",
-    imageUrls: [],
+    image_urls: [],
     notes: "",
     location: "",
-    startDate: "",
-    endDate: "",
+    start_date: "",
+    end_date: "",
     rating: 0,
   });
 
@@ -185,42 +194,30 @@ export const useVoyageManager = (): VoyageManager => {
       isLoading.value = true;
       error.value = null;
 
-      // Basic validation using the structure you highlighted
-      const payload: FormDataType = {
-        title: newVoyageData.title?.trim() || formData.value.title?.trim(),
-        imageUrls: newVoyageData.imageUrls?.length
-          ? newVoyageData.imageUrls
-          : formData.value.imageUrls,
-        notes: newVoyageData.notes ?? formData.value.notes,
-        location: newVoyageData.location ?? formData.value.location,
-        startDate: newVoyageData.startDate ?? formData.value.startDate,
-        endDate: newVoyageData.endDate ?? formData.value.endDate,
-        rating: newVoyageData.rating ?? formData.value.rating,
-      };
-
-      if (!payload.title) {
+      // Simplified validation - just check title
+      if (!newVoyageData.title?.trim()) {
         throw new Error("Please enter a title for your voyage");
       }
 
-      const created = await createVoyage(payload);
+      // Pass the data directly without complex merging
+      const created = await createVoyage(newVoyageData);
 
+      console.log("created", created);
       if (created) {
         voyages.value.unshift(created);
-        // reset minimal fields after create
+        // Reset form data
         formData.value = {
           title: "",
-          imageUrls: [],
+          image_urls: [],
           notes: "",
           location: "",
-          startDate: "",
-          endDate: "",
+          start_date: "",
+          end_date: "",
           rating: 0,
         };
 
-        // navigate to list or to the created item
         navigateToVoyage(created.id);
 
-        // toast success
         try {
           const { useToast } = await import("@/composables/useToast");
           const { addToast } = useToast();
@@ -238,7 +235,6 @@ export const useVoyageManager = (): VoyageManager => {
         err instanceof Error ? err.message : "Failed to create voyage";
       error.value = message;
 
-      // toast error
       try {
         const { useToast } = await import("@/composables/useToast");
         const { addToast } = useToast();
@@ -289,6 +285,56 @@ export const useVoyageManager = (): VoyageManager => {
   const handleDelete = () => {
     if (currentVoyageId.value) {
       handleDeleteVoyage(currentVoyageId.value);
+    }
+  };
+
+  const handleUpdateVoyage = async (
+    id: string,
+    updates: Partial<FormDataType> & {
+      latitude?: number | null;
+      longitude?: number | null;
+    }
+  ): Promise<VoyageTypeInfo | null> => {
+    try {
+      isLoading.value = true;
+      error.value = null;
+
+      const updated = await updateVoyage(id, updates);
+      if (updated) {
+        // update local list cache
+        const idx = voyages.value.findIndex((v) => v.id === id);
+        if (idx !== -1) {
+          voyages.value[idx] = {
+            ...voyages.value[idx],
+            ...updated,
+          } as VoyageTypeInfo;
+        }
+
+        try {
+          const { useToast } = await import("@/composables/useToast");
+          const { addToast } = useToast();
+          addToast("Voyage updated", { type: "success" });
+        } catch (err) {
+          console.error("Error adding toast:", err);
+        }
+
+        return updated;
+      }
+      return null;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update voyage";
+      error.value = message;
+      try {
+        const { useToast } = await import("@/composables/useToast");
+        const { addToast } = useToast();
+        addToast(message, { type: "error" });
+      } catch (e) {
+        console.error("Error adding toast:", e);
+      }
+      return null;
+    } finally {
+      isLoading.value = false;
     }
   };
 
@@ -378,6 +424,7 @@ export const useVoyageManager = (): VoyageManager => {
     handleCreateVoyage,
     handleFetchVoyages,
     handleDeleteVoyage,
+    handleUpdateVoyage,
     favorites,
   };
 };

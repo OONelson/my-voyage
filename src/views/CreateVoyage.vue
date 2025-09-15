@@ -25,11 +25,11 @@
 
           <!-- Gallery thumbnails -->
           <div
-            v-if="formData.imageUrls.length"
+            v-if="formData.image_urls.length"
             class="flex gap-2 flex-wrap mb-2"
           >
             <div
-              v-for="(thumb, idx) in formData.imageUrls"
+              v-for="(thumb, idx) in formData.image_urls"
               :key="idx"
               class="relative w-16 h-16 border rounded overflow-hidden cursor-pointer"
               :class="{ 'ring-2 ring-accent50': activeIndex === idx }"
@@ -123,7 +123,7 @@
             <!-- Original Image Preview -->
             <img
               v-if="showOriginalImage"
-              :src="formData.imageUrls[activeIndex]"
+              :src="formData.image_urls[activeIndex]"
               ref="image"
               :style="imageStyle"
               @load="initCropper"
@@ -349,7 +349,6 @@ import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
 import { genUtils } from "@/utils/genUtils";
-import type { LocationSuggestion } from "@/composables/useMap";
 import { usePlanLimits } from "@/composables/usePlanLimits";
 
 const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
@@ -415,8 +414,15 @@ const pinLimitDisplay = computed(() =>
     : "∞"
 );
 
-const selectSuggestionAndMaybePin = (suggestion: LocationSuggestion) => {
-  selectSuggestion(suggestion);
+type MapSuggestion = {
+  display_name: string;
+  lat: string | number;
+  lon: string | number;
+  place_id?: string | number;
+};
+
+const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
+  selectSuggestion(suggestion as any);
 };
 
 const pinSelectedLocation = () => {
@@ -441,11 +447,11 @@ const dateRange = ref<DateRange | null>(null);
 
 const handleDateRangeChange = (range: DateRange | null) => {
   if (range && range.length === 2) {
-    formData.value.startDate = formatDateForInput(range[0]);
-    formData.value.endDate = formatDateForInput(range[1]);
+    formData.value.start_date = formatDateForInput(range[0]);
+    formData.value.end_date = formatDateForInput(range[1]);
   } else {
-    formData.value.startDate = "";
-    formData.value.endDate = "";
+    formData.value.start_date = "";
+    formData.value.end_date = "";
   }
 };
 // Date constraints

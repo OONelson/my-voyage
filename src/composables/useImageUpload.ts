@@ -84,7 +84,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   };
 
   const canAddMoreImages = computed(() => {
-    return formData.value.imageUrls.length < limits.value.maxImagesPerEntry;
+    return formData.value.image_urls.length < limits.value.maxImagesPerEntry;
   });
 
   const handleDrop = (e: DragEvent) => {
@@ -120,14 +120,14 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
 
     reader.onload = (e) => {
       if (e.target?.result) {
-        if (!Array.isArray(formData.value.imageUrls)) {
-          formData.value.imageUrls = [];
+        if (!Array.isArray(formData.value.image_urls)) {
+          formData.value.image_urls = [];
         }
         formData.value = {
           ...formData.value,
-          imageUrls: [...formData.value.imageUrls, e.target.result as string],
+          image_urls: [...formData.value.image_urls, e.target.result as string],
         };
-        activeIndex.value = formData.value.imageUrls.length - 1;
+        activeIndex.value = formData.value.image_urls.length - 1;
         isImgLoading.value = false;
 
         nextTick(() => {
@@ -146,24 +146,24 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   };
 
   const deleteSelectedImage = () => {
-    if (!Array.isArray(formData.value.imageUrls)) {
-      formData.value.imageUrls = [];
+    if (!Array.isArray(formData.value.image_urls)) {
+      formData.value.image_urls = [];
       croppedImage.value = "";
       return;
     }
-    if (formData.value.imageUrls.length === 0) {
+    if (formData.value.image_urls.length === 0) {
       croppedImage.value = "";
       return;
     }
-    formData.value.imageUrls.splice(activeIndex.value, 1);
-    if (activeIndex.value >= formData.value.imageUrls.length) {
-      activeIndex.value = Math.max(0, formData.value.imageUrls.length - 1);
+    formData.value.image_urls.splice(activeIndex.value, 1);
+    if (activeIndex.value >= formData.value.image_urls.length) {
+      activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
     }
     croppedImage.value = "";
   };
 
   const selectImage = (index: number) => {
-    if (index >= 0 && index < formData.value.imageUrls.length) {
+    if (index >= 0 && index < formData.value.image_urls.length) {
       activeIndex.value = index;
       croppedImage.value = "";
       nextTick(() => {
@@ -173,11 +173,11 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   };
 
   const removeImageAt = (index: number) => {
-    if (!Array.isArray(formData.value.imageUrls)) return;
-    if (index < 0 || index >= formData.value.imageUrls.length) return;
-    formData.value.imageUrls.splice(index, 1);
-    if (activeIndex.value >= formData.value.imageUrls.length) {
-      activeIndex.value = Math.max(0, formData.value.imageUrls.length - 1);
+    if (!Array.isArray(formData.value.image_urls)) return;
+    if (index < 0 || index >= formData.value.image_urls.length) return;
+    formData.value.image_urls.splice(index, 1);
+    if (activeIndex.value >= formData.value.image_urls.length) {
+      activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
     }
   };
 
@@ -316,10 +316,10 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     const dataUrl = canvas.toDataURL("image/jpeg");
     croppedImage.value = dataUrl;
     if (
-      Array.isArray(formData.value.imageUrls) &&
-      formData.value.imageUrls.length > 0
+      Array.isArray(formData.value.image_urls) &&
+      formData.value.image_urls.length > 0
     ) {
-      formData.value.imageUrls[activeIndex.value] = dataUrl;
+      formData.value.image_urls[activeIndex.value] = dataUrl;
     }
   };
 
@@ -328,7 +328,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     rotation.value = (rotation.value + degrees) % 360;
   };
 
-  const hasImage = computed(() => (formData.value.imageUrls?.length || 0) > 0);
+  const hasImage = computed(() => (formData.value.image_urls?.length || 0) > 0);
   const showActionButtons = computed(
     () => hasImage.value && !isImgLoading.value
   );

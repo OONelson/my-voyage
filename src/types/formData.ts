@@ -1,12 +1,12 @@
 export type FormDataType = {
   title: string;
-  imageUrls: string[];
+  image_urls: string[];
   notes: string;
   location: string;
   latitude?: number | null;
   longitude?: number | null;
-  startDate: Date | string;
-  endDate: Date | string;
+  start_date: Date | string;
+  end_date: Date | string;
   rating: number;
   pins?: { display_name: string; lat: number; lon: number }[];
 };
