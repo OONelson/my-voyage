@@ -1,70 +1,91 @@
 <template>
-  <transition name="modal">
-    <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto">
+  <Teleport to="body">
+    <Transition name="modal" appear>
       <div
-        class="fixed inset-0 bg-black bg-opacity-50"
-        @click="closeModal"
-      ></div>
-
-      <div class="flex items-center justify-center min-h-screen p-4">
+        v-if="isOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @click.self="closeModal"
+      >
+        <!-- Backdrop -->
         <div
-          class="relative bg-white rounded-lg shadow-xl mx-auto"
-          :class="sizeClasses"
-          @click.stop
+          class="absolute inset-0 bg-black/50 dark:bg-black/70 transition-opacity"
+          @click="closeModal"
+        ></div>
+
+        <!-- Modal Content -->
+        <div
+          class="relative w-full max-w-md mx-auto bg-white dark:bg-dark-background100 rounded-lg shadow-xl dark:shadow-2xl border dark:border-dark-border100 transform transition-all"
+          :class="modalClass"
         >
+          <!-- Header -->
           <div
-            v-if="title"
-            class="flex justify-between items-center p-4 border-b"
+            v-if="title || $slots.header"
+            class="px-6 py-4 border-b border-gray-200 dark:border-dark-border100"
           >
-            <h3 class="text-lg font-semibold">{{ title }}</h3>
-            <button
-              @click="closeModal"
-              class="text-gray-500 hover:text-gray-700"
-              aria-label="Close modal"
-            >
-              <span class="sr-only">Close</span>
-              &times;
-            </button>
+            <div class="flex items-center justify-between">
+              <slot name="header">
+                <h3
+                  class="text-lg font-semibold text-gray-900 dark:text-dark-textblack200"
+                >
+                  {{ title }}
+                </h3>
+              </slot>
+              <button
+                v-if="showCloseButton"
+                @click="closeModal"
+                class="text-gray-400 dark:text-dark-textblack50 hover:text-gray-600 dark:hover:text-dark-textblack100 focus:outline-none focus:ring-2 focus:ring-accent200 dark:focus:ring-dark-accent200 rounded-md p-1 transition-colors"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fill-rule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
-          <div class="p-4">
+          <!-- Body -->
+          <div class="px-6 py-4">
             <slot></slot>
           </div>
 
-          <div v-if="useSlots().footer" class="p-4 border-t">
+          <!-- Footer -->
+          <div
+            v-if="$slots.footer"
+            class="px-6 py-4 border-t border-gray-200 dark:border-dark-border100 bg-gray-50 dark:bg-dark-background200 rounded-b-lg"
+          >
             <slot name="footer"></slot>
           </div>
         </div>
       </div>
-    </div>
-  </transition>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { type PropType, computed, useSlots } from "vue";
+interface Props {
+  isOpen: boolean;
+  title?: string;
+  showCloseButton?: boolean;
+  closeOnOutsideClick?: boolean;
+  modalClass?: string;
+}
 
-const props = defineProps({
-  isOpen: Boolean,
-  title: String,
-  size: {
-    type: String as PropType<"sm" | "md" | "lg" | "xl">,
-    default: "md",
-  },
+const props = withDefaults(defineProps<Props>(), {
+  showCloseButton: true,
+  closeOnOutsideClick: true,
 });
 
 const emit = defineEmits<{
-  (e: "close"): void;
+  close: [];
 }>();
 
-const sizeClasses = computed(() => ({
-  "w-[250px]": props.size === "sm",
-  "w-[400px]": props.size === "md",
-  "w-[500px]": props.size === "lg",
-  "w-[600px]": props.size === "xl",
-}));
-
 const closeModal = () => {
-  emit("close");
+  if (props.closeOnOutsideClick) {
+    emit("close");
+  }
 };
 </script>
 
@@ -77,5 +98,15 @@ const closeModal = () => {
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
+}
+
+.modal-enter-active .relative,
+.modal-leave-active .relative {
+  transition: transform 0.3s ease;
+}
+
+.modal-enter-from .relative,
+.modal-leave-to .relative {
+  transform: scale(0.9) translateY(-10px);
 }
 </style>

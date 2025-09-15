@@ -2,17 +2,21 @@
   <transition name="fade">
     <div
       v-if="isOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40"
+      class="fixed inset-0 bg-black/50 dark:bg-black/70 z-40 transition-opacity"
       @click="close"
     />
   </transition>
   <transition name="slide">
     <aside
       v-if="isOpen"
-      class="fixed top-0 right-0 h-full w-64 bg-white shadow-xl z-50 flex flex-col"
+      class="fixed top-0 right-0 h-full w-64 bg-white dark:bg-dark-background100 shadow-xl dark:shadow-2xl z-50 flex flex-col border-l dark:border-dark-border100"
     >
-      <div class="p-4 border-b flex justify-between items-center">
-        <h4 class="font-semibold text-textblack200">Menu</h4>
+      <div
+        class="p-4 border-b border-gray-200 dark:border-dark-border100 flex justify-between items-center"
+      >
+        <h4 class="font-semibold text-textblack200 dark:text-dark-textblack200">
+          Menu
+        </h4>
         <CloseIcon @click="close" stroke="textblack300" />
       </div>
 
@@ -21,8 +25,12 @@
           <li v-for="item in NavPaths" :key="item.path">
             <RouterLink
               :to="item.path"
-              class="block px-4 py-2 rounded-md text-textblack100 hover:bg-gray-100 transition-colors"
-              :class="{ 'bg-gray-100 font-medium': isActive(item.path) }"
+              class="block px-4 py-2 rounded-md text-textblack100 dark:text-dark-textblack100 hover:bg-gray-100 dark:hover:bg-dark-background200 transition-colors"
+              :class="{
+                'bg-gray-100 dark:bg-dark-background200 font-medium': isActive(
+                  item.path
+                ),
+              }"
               @click="close"
             >
               {{ item.name }}
@@ -51,19 +59,17 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:isOpen", value: boolean): void;
-  (e: "close"): void;
+  close: [];
 }>();
 
 const route = useRoute();
 
-const isActive = (path: string) => {
-  return route.path === path || route.path.startsWith(`${path}/`);
+const close = () => {
+  emit("close");
 };
 
-const close = () => {
-  emit("update:isOpen", false);
-  emit("close");
+const isActive = (path: string) => {
+  return route.path === path;
 };
 </script>
 

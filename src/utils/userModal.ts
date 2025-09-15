@@ -1,6 +1,7 @@
 import { ref, watch } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { useUserProfile } from "@/composables/useUserProfile";
+import { useTheme } from "@/composables/useTheme";
 import { deleteUserAccount } from "@/services/supabase/auth";
 
 const { handleLogout } = useAuth();
@@ -14,7 +15,9 @@ const {
 } = useUserProfile();
 
 export const UserModal = () => {
-  const selectedTheme = ref("system");
+  // Theme management
+  const { theme, setTheme, availableThemes } = useTheme();
+
   const activeTab = ref("profile");
   const showLogoutModal = ref<boolean>(false);
   const showDeleteAccountModal = ref<boolean>(false);
@@ -266,7 +269,6 @@ export const UserModal = () => {
 
   return {
     activeTab,
-    selectedTheme,
     showLogoutModal,
     showDeleteAccountModal,
     confirmLogout,
@@ -293,5 +295,9 @@ export const UserModal = () => {
     handleImageUpload,
     handleDeleteImage,
     resendEmailConfirmation,
+    // Theme handling
+    theme,
+    setTheme,
+    availableThemes,
   };
 };

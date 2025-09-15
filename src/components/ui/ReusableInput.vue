@@ -1,82 +1,138 @@
 <template>
-  <div>
-    <label v-if="label" :for="id" class="text-textblack100 font-medium">
-      {{ label }}
-    </label>
+  <div class="relative">
+    <input
+      :id="id"
+      :type="type"
+      :value="modelValue"
+      :placeholder="placeholder"
+      :disabled="disabled"
+      :required="required"
+      :autocomplete="autocomplete"
+      :maxlength="maxlength"
+      :minlength="minlength"
+      :pattern="pattern"
+      :readonly="readonly"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-dark-border100 rounded-md shadow-sm bg-white dark:bg-dark-background100 text-gray-900 dark:text-dark-textblack200 placeholder-gray-500 dark:placeholder-dark-textblack50 focus:outline-none focus:ring-1 focus:ring-accent200 dark:focus:ring-dark-accent200 focus:border-accent200 dark:focus:border-dark-accent200 disabled:bg-gray-100 dark:disabled:bg-dark-background200 disabled:text-gray-500 dark:disabled:text-dark-textblack50 disabled:cursor-not-allowed transition-colors duration-200"
+      :class="[
+        error
+          ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-500 dark:focus:border-red-400'
+          : '',
+        success
+          ? 'border-green-500 dark:border-green-400 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400'
+          : '',
+        inputClass,
+      ]"
+      @input="handleInput"
+      @blur="handleBlur"
+      @focus="handleFocus"
+      @keydown="handleKeydown"
+    />
 
-    <div class="relative flex justify-between items-center">
-      <input
-        :id="id"
-        :type="showPassword ? 'text' : type"
-        :value="modelValue"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        :required="required"
-        @input="onInput"
-        :class="[
-          'mt-1.5 mb-4 border rounded-lg shadow-sm py-3 pl-3 pr-7 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-inputColor100  focus:bg-inputColor200',
-          inputClasses,
-        ]"
-      />
-
-      <button
-        v-if="hasToggle"
-        type="button"
-        @click="togglePasswordVisibility"
-        class="w-min absolute right-1.5 top-1/2 transform -translate-y-1/2"
-        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+    <!-- Success Icon -->
+    <div
+      v-if="success"
+      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+    >
+      <svg
+        class="h-5 w-5 text-green-500 dark:text-green-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
       >
-        <EyeIcon v-if="showPassword" fillColor="textblack100" />
-        <EyeSlashIcon v-else fillColor="textblack100" />
-      </button>
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clip-rule="evenodd"
+        />
+      </svg>
     </div>
 
-    <!-- <div v-if="error" class="error-message">
-      {{ error }}
-    </div> -->
+    <!-- Error Icon -->
+    <div
+      v-if="error"
+      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none"
+    >
+      <svg
+        class="h-5 w-5 text-red-500 dark:text-red-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+          clip-rule="evenodd"
+        />
+      </svg>
+    </div>
   </div>
+
+  <!-- Error Message -->
+  <p
+    v-if="error && errorMessage"
+    class="mt-1 text-sm text-red-600 dark:text-red-400"
+  >
+    {{ errorMessage }}
+  </p>
+
+  <!-- Help Text -->
+  <p
+    v-if="helpText && !error"
+    class="mt-1 text-sm text-gray-500 dark:text-dark-textblack50"
+  >
+    {{ helpText }}
+  </p>
 </template>
 
 <script setup lang="ts">
-import EyeSlashIcon from "@/assets/icons/EyeSlashIcon.vue";
-import EyeIcon from "@/assets/icons/EyeIcon.vue";
-import { ref, computed } from "vue";
+interface Props {
+  id?: string;
+  modelValue?: string | number;
+  type?: "text" | "email" | "password" | "number" | "tel" | "url" | "search";
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  readonly?: boolean;
+  autocomplete?: string;
+  maxlength?: number;
+  minlength?: number;
+  pattern?: string;
+  error?: boolean;
+  success?: boolean;
+  errorMessage?: string;
+  helpText?: string;
+  inputClass?: string;
+}
 
-const props = defineProps({
-  modelValue: String,
-  label: String,
-  id: String,
-  name: String,
-  type: { type: String, default: "text" },
-  placeholder: String,
-  disabled: Boolean,
-  required: Boolean,
-  showPasswordToggle: { type: Boolean, default: false },
-  inputClasses: {
-    type: String,
-    default:
-      "min-w-[300px] xs:min-w-[360px] sm:min-w-[300px] md:min-w-[400px] lg:min-w-[450px] xl:min-w-[570px]",
-  },
+const props = withDefaults(defineProps<Props>(), {
+  type: "text",
+  disabled: false,
+  required: false,
+  readonly: false,
+  error: false,
+  success: false,
 });
 
-const emits = defineEmits(["update:modelValue"]);
+const emit = defineEmits<{
+  "update:modelValue": [value: string | number];
+  blur: [event: FocusEvent];
+  focus: [event: FocusEvent];
+  keydown: [event: KeyboardEvent];
+}>();
 
-const localShowPassword = ref(false);
-
-const hasToggle = computed(() => {
-  return props.type === "password" && props.showPasswordToggle;
-});
-
-const showPassword = computed(() => {
-  return hasToggle.value ? localShowPassword.value : false;
-});
-
-const togglePasswordVisibility = () => {
-  localShowPassword.value = !localShowPassword.value;
+const handleInput = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const value = props.type === "number" ? Number(target.value) : target.value;
+  emit("update:modelValue", value);
 };
 
-const onInput = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  emits("update:modelValue", target.value);
+const handleBlur = (event: FocusEvent) => {
+  emit("blur", event);
+};
+
+const handleFocus = (event: FocusEvent) => {
+  emit("focus", event);
+};
+
+const handleKeydown = (event: KeyboardEvent) => {
+  emit("keydown", event);
 };
 </script>

@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./src/**/*.{html,js,ts,jsx,tsx,vue}"],
+  darkMode: "class", // Enable class-based dark mode
 
   theme: {
     screens: {
@@ -12,6 +13,7 @@ export default {
     },
     extend: {
       colors: {
+        // Light theme colors
         background100: "#fcfcfc",
         background200: "#fbf9f5",
         text: "#717171",
@@ -32,7 +34,32 @@ export default {
         border100: "#e0e0e0",
         border200: "#c3c3c3",
         border300: "#272727",
-        skeleton: "#c7c9cc ",
+        skeleton: "#c7c9cc",
+
+        // Dark theme colors
+        dark: {
+          background100: "#121212",
+          background200: "#1a1a1a",
+          text: "#e0e0e0",
+          textblack50: "#b0b0b0",
+          textblack100: "#d0d0d0",
+          textblack200: "#f0f0f0",
+          textblack300: "#ffffff",
+          buttonLightcolor: "#2a2a2a",
+          inputColor100: "#2a2a2a",
+          inputColor200: "#333333",
+          accent10: "#4a6b66",
+          accent30: "#5a7b76",
+          accent50: "#6a8b86",
+          accent100: "#7a9b96",
+          accent200: "#8aaba6",
+          accent300: "#9abbb6",
+          highlight: "#FFB400",
+          border100: "#333333",
+          border200: "#404040",
+          border300: "#666666",
+          skeleton: "#4a4a4a",
+        },
       },
     },
   },

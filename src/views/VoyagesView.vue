@@ -1,17 +1,21 @@
 <template>
-  <main>
+  <main
+    class="min-h-screen bg-background100 dark:bg-dark-background100 transition-colors"
+  >
     <header
-      class="flex justify-between items-center sticky top-0 z-50 w-full bg-white border-b transition-shadow px-2 py-2"
-      :class="{ 'shadow-md': scrolled }"
+      class="flex justify-between items-center sticky top-0 z-50 w-full bg-white dark:bg-dark-background100 border-b border-gray-200 dark:border-dark-border100 transition-shadow px-2 py-2"
+      :class="{ 'shadow-md dark:shadow-xl': scrolled }"
     >
       <div class="flex items-center">
         <router-link to="/" class="flex items-center justify-center">
           <Logo />
         </router-link>
-        <h3 class="text-2xl text-textblack100">voyages</h3>
+        <h3 class="text-2xl text-textblack100 dark:text-dark-textblack200">
+          voyages
+        </h3>
       </div>
       <div
-        class="flex justify-center items-center uppercase rounded-full outline outline-accent50 hover:outline-[#6fa198] outline-offset-2 w-7 h-7 cursor-pointer"
+        class="flex justify-center items-center uppercase rounded-full outline outline-accent50 dark:outline-dark-accent50 hover:outline-[#6fa198] dark:hover:outline-dark-accent100 outline-offset-2 w-7 h-7 cursor-pointer"
         @click="openProfileModal"
       >
         <UTooltip :text="userData?.name">
@@ -46,18 +50,20 @@
             alt="No voyages"
             class="w-full h-full"
           />
-          <h3 class="text-xl font-medium text-gray-900 mb-2">No voyages yet</h3>
-          <p class="text-gray-500 mb-6">
-            Start your travel journey by creating your first voyage. Document
-            your adventures and share them with others.
-          </p>
-          <button
-            @click="navigateToCreate"
-            class="px-6 py-2 bg-accent100 hover:bg-accent200 text-white rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+          <h3
+            class="text-xl font-medium text-gray-900 dark:text-dark-textblack200 mb-2"
           >
-            <AddIcon size="18" fillColor="#ffffff" />
-            Create First Voyage
-          </button>
+            No voyages yet
+          </h3>
+          <p class="text-gray-500 dark:text-dark-textblack50 mb-6">
+            Start documenting your adventures by creating your first voyage.
+          </p>
+          <router-link
+            to="/voyages/create"
+            class="inline-flex items-center px-4 py-2 bg-accent200 dark:bg-dark-accent200 text-white rounded-lg hover:bg-accent300 dark:hover:bg-dark-accent300 transition-colors"
+          >
+            Create Your First Voyage
+          </router-link>
         </div>
       </div>
 
@@ -68,7 +74,7 @@
         <article
           v-for="voyage in voyages"
           :key="voyage.id"
-          class="group relative rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 max-w-[500px] mx-auto"
+          class="group relative rounded-xl bg-white dark:bg-dark-background100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border border-gray-100 dark:border-dark-border100 max-w-[500px] mx-auto"
           @click="navigateToVoyage(voyage.id)"
         >
           <!-- Image with Favorite Button -->
@@ -85,7 +91,7 @@
             ></div>
             <button
               @click.stop="toggleFavorite(voyage.id)"
-              class="absolute top-3 right-3 bg-white/90 hover:bg-white rounded-full p-2 shadow-sm transition-all z-10"
+              class="absolute top-3 right-3 bg-white/90 dark:bg-dark-background100 hover:bg-white dark:hover:bg-dark-background100 rounded-full p-2 shadow-sm transition-all z-10"
               aria-label="Favorite"
             >
               <HeartIcon
@@ -103,7 +109,7 @@
             <!-- Title and Menu -->
             <div class="flex justify-between items-start gap-3 mb-2">
               <h3
-                class="text-lg sm:text-xl font-medium text-gray-900 line-clamp-1"
+                class="text-lg sm:text-xl font-medium text-gray-900 dark:text-dark-textblack200 line-clamp-1"
               >
                 {{ voyage.title }}
               </h3>
@@ -129,7 +135,7 @@
 
             <!-- Rating -->
             <div
-              class="flex items-center justify-between pt-3 border-t border-gray-100"
+              class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-dark-border100"
             >
               <Rating :rating="voyage.rating" size="md" class="flex-shrink-0" />
               <button
@@ -148,7 +154,7 @@
     <div
       v-if="voyages.length > 0"
       @click="toggleMenu"
-      class="flex justify-center items-center fixed right-4 bottom-5 z-30 bg-white rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
+      class="flex justify-center items-center fixed right-4 bottom-5 z-30 bg-white dark:bg-dark-background100 rounded-full shadow-lg w-12 h-12 p-2 sm:w-10 sm:h-10 cursor-pointer transition-transform duration-200 ease-in-out"
       :class="isMenuOpen ? 'rotate-45' : 'rotate-0'"
     >
       <AddIcon fillColor="#005b52" size="30" />
@@ -158,12 +164,12 @@
     <transition name="fab-menu">
       <div
         v-if="isMenuOpen"
-        class="fixed right-10 bottom-16 w-48 bg-white rounded-lg shadow-xl py-1 z-50"
+        class="fixed right-10 bottom-16 w-48 bg-white dark:bg-dark-background100 rounded-lg shadow-xl py-1 z-50"
       >
         <!-- Favorites Option -->
         <div
           @click="navigateToFavorites"
-          class="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center border-b"
+          class="px-4 py-2 hover:bg-gray-100 dark:hover:bg-dark-background200 cursor-pointer flex items-center border-b"
         >
           <HeartIcon class="mr-2" size="22" fillColor="#005b52" />
           <span class="text-textblack100">Favorites</span>
@@ -172,7 +178,7 @@
         <!-- Create Voyage Option -->
         <div
           @click="navigateToCreate"
-          class="px-4 py-3 hover:bg-gray-100 cursor-pointer flex items-center"
+          class="px-4 py-3 hover:bg-gray-100 dark:hover:bg-dark-background200 cursor-pointer flex items-center"
         >
           <AddIcon class="mr-2" size="22" fillColor="#005b52" />
           <span class="text-textblack100">Create Voyage</span>
