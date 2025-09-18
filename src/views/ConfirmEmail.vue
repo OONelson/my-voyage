@@ -171,7 +171,7 @@ const resendConfirmation = async () => {
 };
 
 const startCooldownTimer = () => {
-  resendCooldown.value = 30; // 30 seconds cooldown
+  resendCooldown.value = 30;
   const timer = setInterval(() => {
     resendCooldown.value -= 1;
     if (resendCooldown.value <= 0) {

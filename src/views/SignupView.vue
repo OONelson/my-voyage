@@ -33,7 +33,7 @@
             showPasswordToggle
             placeholder="Enter Password"
           />
-          <ReusableButton
+          <button
             type="button"
             id="togglePassword"
             @click="togglePasswordVisibility"
@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import ArrowBack from "@/assets/icons/ArrowBack.vue";
 import GoogleIcon from "@/assets/icons/GoogleIcon.vue";
 import Logo from "@/assets/icons/Logo.vue";
@@ -101,7 +101,7 @@ const {
   name,
   email,
   password,
-  checkAuth,
+  // checkAuth,
   handleSignup,
   loginWithGoogle,
 } = useAuth();
@@ -109,12 +109,4 @@ const {
 const togglePasswordVisibility = () => {
   showPassword.value = !showPassword.value;
 };
-
-onMounted(async () => {
-  try {
-    await checkAuth();
-  } catch (error) {
-    console.error("onMounted error ", error);
-  }
-});
 </script>
