@@ -6,19 +6,8 @@ import maplibregl, {
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { usePlanLimits } from "@/composables/usePlanLimits";
-
-type LocationSuggestion = {
-  display_name: string;
-  lat: string;
-  lon: string;
-  place_id?: string | number;
-};
-
-type SelectedLocation = {
-  display_name: string;
-  lat: number;
-  lon: number;
-} | null;
+import { debounce } from "@/utils/debounce";
+import type { LocationSuggestion, SelectedLocation } from "@/types/mapTypes";
 
 export const useMap = () => {
   const { limits } = usePlanLimits();
@@ -30,6 +19,7 @@ export const useMap = () => {
   const locationMarker = ref<Marker | null>(null);
   const locationSearch = ref("");
   const locationSuggestions = ref<LocationSuggestion[]>([]);
+  const isSearching = ref(false);
 
   // Multi-pin state
   const markers = ref<Marker[]>([]);
@@ -66,31 +56,75 @@ export const useMap = () => {
       throw error;
     }
   };
-  // Search for locations using Nominatim
+
+  // Debounced search function to avoid too many API calls
+  const debouncedSearchLocation = debounce(async () => {
+    await searchLocation();
+  }, 300);
+
+  // Search for locations using Photon (CORS-friendly alternative to Nominatim)
   const searchLocation = async () => {
-    if (locationSearch.value.length < 3) {
+    const query = locationSearch.value.trim();
+
+    if (query.length < 2) {
       locationSuggestions.value = [];
+      isSearching.value = false;
       return;
     }
 
+    isSearching.value = true;
+
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          locationSearch.value
-        )}&addressdetails=1&limit=5`
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(
+          query
+        )}&limit=8&lang=en`
       );
-      locationSuggestions.value =
-        (await response.json()) as LocationSuggestion[];
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Transform Photon response to match our expected format
+      locationSuggestions.value = (data.features || []).map((feature: any) => ({
+        display_name:
+          feature.properties.name ||
+          feature.properties.street ||
+          feature.properties.city ||
+          feature.properties.country ||
+          "Unknown location",
+        lat: feature.geometry.coordinates[1],
+        lon: feature.geometry.coordinates[0],
+        osm_id: feature.properties.osm_id,
+        osm_type: feature.properties.osm_type,
+        place_id: feature.properties.osm_id, // Using OSM ID as place_id
+      }));
     } catch (error) {
       console.error("Location search error:", error);
       locationSuggestions.value = [];
+
+      // Fallback to local suggestions if API fails
+      if (query.length > 2) {
+        locationSuggestions.value = [
+          {
+            display_name: `Search for "${query}"`,
+            lat: 0,
+            lon: 0,
+            place_id: "fallback",
+          },
+        ];
+      }
+    } finally {
+      isSearching.value = false;
     }
   };
 
   // Handle location selection from search results
   const selectSuggestion = (suggestion: LocationSuggestion) => {
-    const lat = parseFloat(suggestion.lat);
-    const lon = parseFloat(suggestion.lon);
+    const lat = suggestion.lat;
+    const lon = suggestion.lon;
 
     selectedLocation.value = {
       display_name: suggestion.display_name,
@@ -98,33 +132,57 @@ export const useMap = () => {
       lon,
     };
 
-    flyTo([lon, lat], 12);
+    flyTo([lon, lat], 14);
     updateMarker([lon, lat], suggestion.display_name);
     clearSuggestions();
+    locationSearch.value = suggestion.display_name; // Fill input with selected location
   };
 
   // Handle map click to select location
   const handleMapClick = async (lngLat: { lng: number; lat: number }) => {
     try {
+      // Use Photon for reverse geocoding
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lngLat.lat}&lon=${lngLat.lng}`
+        `https://photon.komoot.io/reverse?lat=${lngLat.lat}&lon=${lngLat.lng}&lang=en`
       );
-      const data = (await response.json()) as { display_name: string };
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const feature = data.features?.[0];
+
+      if (feature) {
+        const displayName =
+          feature.properties.name ||
+          feature.properties.street ||
+          feature.properties.city ||
+          feature.properties.country ||
+          `${lngLat.lat.toFixed(4)}, ${lngLat.lng.toFixed(4)}`;
+
+        selectedLocation.value = {
+          display_name: displayName,
+          lat: lngLat.lat,
+          lon: lngLat.lng,
+        };
+
+        updateMarker([lngLat.lng, lngLat.lat], displayName);
+      }
+    } catch (error) {
+      console.error("Error reverse geocoding:", error);
+      // Fallback to coordinates if reverse geocoding fails
+      const displayName = `${lngLat.lat.toFixed(4)}, ${lngLat.lng.toFixed(4)}`;
       selectedLocation.value = {
-        display_name: data.display_name,
+        display_name: displayName,
         lat: lngLat.lat,
         lon: lngLat.lng,
       };
-
-      updateMarker([lngLat.lng, lngLat.lat], data.display_name);
-    } catch (error) {
-      console.error("Error reverse geocoding:", error);
+      updateMarker([lngLat.lng, lngLat.lat], displayName);
     }
   };
 
   // Add a marker to the map
-  // Enhanced marker implementation
   const addMarker = (
     lngLat: LngLatLike,
     options?: {
@@ -151,7 +209,6 @@ export const useMap = () => {
     </div>
   `;
 
-    // Create marker with custom element
     const marker = new maplibregl.Marker({
       element: el,
       anchor: "bottom",
@@ -160,7 +217,6 @@ export const useMap = () => {
       .setLngLat(lngLat)
       .addTo(map.value);
 
-    // Add stable popup
     if (options?.popup) {
       const popup = new maplibregl.Popup({
         offset: [0, -30],
@@ -171,11 +227,9 @@ export const useMap = () => {
 
       marker.setPopup(popup);
 
-      // Custom click handler to prevent marker movement
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         if (!marker.getPopup().isOpen()) {
-          // Close other popups first
           closeAllPopups();
         }
         marker.togglePopup();
@@ -191,7 +245,7 @@ export const useMap = () => {
     }
     locationMarker.value = addMarker(coordinates, {
       color: "#006E63",
-      title: title[0], // Show first letter as label
+      title: title[0],
       popup: `
       <div class="marker-popup-content">
         <h3 class="font-medium text-base">${title}</h3>
@@ -241,17 +295,19 @@ export const useMap = () => {
         console.error("Error getting location:", error);
         alert("Unable to retrieve your location");
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
   // Clear selected location
   const clearLocation = () => {
     selectedLocation.value = null;
+    locationSearch.value = "";
     if (locationMarker.value) {
       locationMarker.value.remove();
       locationMarker.value = null;
     }
+    clearSuggestions();
   };
 
   // Clear search suggestions
@@ -318,9 +374,10 @@ export const useMap = () => {
     selectedLocation,
     locationSearch,
     locationSuggestions,
+    isSearching,
 
     initMap,
-    searchLocation,
+    searchLocation: debouncedSearchLocation, // Use debounced version
     selectSuggestion,
     useCurrentLocation,
     clearLocation,
@@ -341,6 +398,7 @@ export const useMap = () => {
       lon: number;
     }) => {
       selectedLocation.value = locationData;
+      locationSearch.value = locationData.display_name;
       flyTo([locationData.lon, locationData.lat], 12);
       updateMarker(
         [locationData.lon, locationData.lat],

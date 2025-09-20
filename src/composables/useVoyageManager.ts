@@ -199,41 +199,23 @@ export const useVoyageManager = (): VoyageManager => {
         throw new Error("Voyage data is null or undefined");
       }
 
-      // Enhanced validation
       if (!newVoyageData.title?.trim()) {
         throw new Error("Please enter a title for your voyage");
       }
 
-      // if (!newVoyageData.location?.trim()) {
-      //   throw new Error("Please select a location for your voyage");
-      // }
+      if (!newVoyageData.location?.trim()) {
+        throw new Error("Please select a location for your voyage");
+      }
 
       if (!newVoyageData.start_date || !newVoyageData.end_date) {
         throw new Error("Please select start and end dates for your voyage");
       }
 
-      const voyageData: FormDataType = {
-        title: newVoyageData.title.trim(),
-        image_urls: newVoyageData.image_urls || [],
-        notes: newVoyageData.notes || "",
-        location: newVoyageData.location.trim(),
-        start_date: newVoyageData.start_date,
-        end_date: newVoyageData.end_date,
-        rating: newVoyageData.rating || 0,
-        pins: newVoyageData.pins || [],
-        latitude: newVoyageData.latitude || null,
-        longitude: newVoyageData.longitude || null,
-      };
-
-      console.log("Processed voyage data:", voyageData);
-
-      // Pass the data directly without complex merging
       const created = await createVoyage(newVoyageData);
 
       if (created) {
         console.log("created", created);
         voyages.value.unshift(created);
-        // Reset form data
         formData.value = {
           title: "",
           image_urls: [],

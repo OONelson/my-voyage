@@ -185,6 +185,10 @@
                   placeholder="Search for a city or address"
                   class="w-full p-2 border rounded focus:ring-2 focus:ring-accent50 focus:border-transparent"
                 />
+
+                <div v-if="isSearching" class="absolute right-3 top-3">
+                  <Spinner />
+                </div>
                 <ul
                   v-if="locationSuggestions.length > 0"
                   class="absolute z-20 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto"
@@ -337,6 +341,7 @@ import EditVoyageSkeleton from "@/components/ui/EditVoyageSkeleton.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
+import MapView from "@/components/MapView.vue";
 // imports from icons
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
@@ -344,12 +349,13 @@ import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import CropIcon from "@/assets/icons/CropIcon.vue";
 import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
-// imports from composables and functions
+// imports from composables/functions/types
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
-import { genUtils } from "@/utils/genUtils";
 import { usePlanLimits } from "@/composables/usePlanLimits";
+import { genUtils } from "@/utils/genUtils";
+import { MapSuggestion } from "@/types/mapTypes";
 
 const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
   useVoyageManager();
@@ -398,8 +404,7 @@ const {
   searchLocation,
   selectSuggestion,
   useCurrentLocation,
-  // clearLocation,
-  // new pins api
+  isSearching,
   pins,
   addPin,
   removePinAt,
@@ -413,13 +418,6 @@ const pinLimitDisplay = computed(() =>
     ? limits.value.maxPinnedLocations
     : "∞"
 );
-
-type MapSuggestion = {
-  display_name: string;
-  lat: string | number;
-  lon: string | number;
-  place_id?: string | number;
-};
 
 const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
   selectSuggestion(suggestion as any);

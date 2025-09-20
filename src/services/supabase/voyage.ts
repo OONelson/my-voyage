@@ -49,17 +49,35 @@ export const createVoyage = async (
 
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
+    if (authError) throw authError;
     if (!user) {
       throw new Error("User must be authenticated to create a voyage");
     }
 
-    // Prepare data with user ID
+    const formatDateForPostgres = (dateString: string) => {
+      return new Date(dateString).toISOString().split("T")[0];
+    };
+
+    // Prepare data with proper formatting
     const voyageData = {
-      ...voyage,
+      title: voyage.title,
+      image_urls: voyage.image_urls || [],
+      notes: voyage.notes || "",
+      location: voyage.location,
+      start_date: formatDateForPostgres(voyage.start_date),
+      end_date: formatDateForPostgres(voyage.end_date),
+      rating: voyage.rating || 0,
+      pins: voyage.pins || [],
+      latitude: voyage.latitude,
+      longitude: voyage.longitude,
       user_id: user.id,
       created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
+
+    console.log("Sending data to Supabase:", voyageData);
 
     const { data, error: supabaseError } = await supabase
       .from("voyages")
