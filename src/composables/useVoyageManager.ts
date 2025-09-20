@@ -59,10 +59,7 @@ interface VoyageManager {
   handleDeleteVoyage: (voyageId: string) => Promise<void>;
   handleUpdateVoyage: (
     id: string,
-    updates: Partial<FormDataType> & {
-      latitude?: number | null;
-      longitude?: number | null;
-    }
+    data: FormDataType
   ) => Promise<VoyageTypeInfo | null>;
 }
 
@@ -92,6 +89,9 @@ export const useVoyageManager = (): VoyageManager => {
     start_date: "",
     end_date: "",
     rating: 0,
+    pins: [],
+    latitude: null,
+    longitude: null,
   });
 
   const { limits } = usePlanLimits();
@@ -193,17 +193,45 @@ export const useVoyageManager = (): VoyageManager => {
     try {
       isLoading.value = true;
       error.value = null;
+      console.log("Creating voyage with data:", newVoyageData);
 
-      // Simplified validation - just check title
+      if (!newVoyageData) {
+        throw new Error("Voyage data is null or undefined");
+      }
+
+      // Enhanced validation
       if (!newVoyageData.title?.trim()) {
         throw new Error("Please enter a title for your voyage");
       }
 
+      // if (!newVoyageData.location?.trim()) {
+      //   throw new Error("Please select a location for your voyage");
+      // }
+
+      if (!newVoyageData.start_date || !newVoyageData.end_date) {
+        throw new Error("Please select start and end dates for your voyage");
+      }
+
+      const voyageData: FormDataType = {
+        title: newVoyageData.title.trim(),
+        image_urls: newVoyageData.image_urls || [],
+        notes: newVoyageData.notes || "",
+        location: newVoyageData.location.trim(),
+        start_date: newVoyageData.start_date,
+        end_date: newVoyageData.end_date,
+        rating: newVoyageData.rating || 0,
+        pins: newVoyageData.pins || [],
+        latitude: newVoyageData.latitude || null,
+        longitude: newVoyageData.longitude || null,
+      };
+
+      console.log("Processed voyage data:", voyageData);
+
       // Pass the data directly without complex merging
       const created = await createVoyage(newVoyageData);
 
-      console.log("created", created);
       if (created) {
+        console.log("created", created);
         voyages.value.unshift(created);
         // Reset form data
         formData.value = {
@@ -214,6 +242,9 @@ export const useVoyageManager = (): VoyageManager => {
           start_date: "",
           end_date: "",
           rating: 0,
+          pins: [],
+          latitude: null,
+          longitude: null,
         };
 
         navigateToVoyage(created.id);
@@ -227,9 +258,9 @@ export const useVoyageManager = (): VoyageManager => {
         }
 
         return created;
+      } else {
+        throw new Error("Failed to create voyage");
       }
-
-      return null;
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to create voyage";
@@ -290,17 +321,14 @@ export const useVoyageManager = (): VoyageManager => {
 
   const handleUpdateVoyage = async (
     id: string,
-    updates: Partial<FormDataType> & {
-      latitude?: number | null;
-      longitude?: number | null;
-    }
+    data: FormDataType
   ): Promise<VoyageTypeInfo | null> => {
     try {
       isLoading.value = true;
       error.value = null;
 
-      const updated = await updateVoyage(id, updates);
-      if (updated) {
+      const updated = await updateVoyage(id, data);
+      if (updated && typeof updated === "object") {
         // update local list cache
         const idx = voyages.value.findIndex((v) => v.id === id);
         if (idx !== -1) {
@@ -318,7 +346,7 @@ export const useVoyageManager = (): VoyageManager => {
           console.error("Error adding toast:", err);
         }
 
-        return updated;
+        return updated as VoyageTypeInfo;
       }
       return null;
     } catch (err) {

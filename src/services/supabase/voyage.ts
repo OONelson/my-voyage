@@ -76,50 +76,25 @@ export const createVoyage = async (
   }
 };
 
-export const updateVoyage = async (
-  id: string,
-  updates: Partial<FormDataType> & {
-    latitude?: number | null;
-    longitude?: number | null;
-  }
-): Promise<VoyageTypeInfo | null> => {
-  if (!id) return null;
-  // Map FormDataType fields to DB columns
-  const dbUpdates: Record<string, unknown> = {};
-  if (typeof updates.title !== "undefined") dbUpdates.title = updates.title;
-  if (typeof updates.location !== "undefined")
-    dbUpdates.location = updates.location;
-  if (typeof updates.notes !== "undefined") dbUpdates.notes = updates.notes;
-  if (typeof updates.rating !== "undefined") dbUpdates.rating = updates.rating;
-  if (typeof updates.start_date !== "undefined")
-    dbUpdates.start_date = updates.start_date;
-  if (typeof updates.end_date !== "undefined")
-    dbUpdates.end_date = updates.end_date;
-  if (typeof updates.image_urls !== "undefined")
-    dbUpdates.image_url = updates.image_urls?.[0] ?? null;
-  if (typeof updates.latitude !== "undefined")
-    dbUpdates.latitude = updates.latitude;
-  if (typeof updates.longitude !== "undefined")
-    dbUpdates.longitude = updates.longitude;
-
+export const updateVoyage = async (id: string, data: FormDataType) => {
   try {
-    const { data, error: supabaseError } = await supabase
+    const { error: supabaseError } = await supabase
       .from("voyages")
-      .update(dbUpdates)
+      .update(data)
       .eq("id", id)
       .select()
       .single();
 
     if (supabaseError) throw supabaseError;
 
-    return data;
+    return true;
   } catch (err) {
     console.error("Error updating voyage:", err);
     return null;
   }
 };
 
-export const deleteVoyage = async (id: string | null): Promise<void> => {
+export const deleteVoyage = async (id: string): Promise<void> => {
   if (!id) return;
 
   const { error: supabaseError } = await supabase

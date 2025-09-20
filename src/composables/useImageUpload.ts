@@ -63,7 +63,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const isResizing = ref(false);
   const resizeHandle = ref("");
   const rotation = ref(0);
-  const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"]; // keep API the same
+  const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"];
 
   const openFileInput = () => {
     if (!isImgLoading.value) {
