@@ -1,5 +1,6 @@
 import { supabase } from "@/config/supabase";
 import type { AuthUser } from "@/types/user";
+import { supabaseApi } from "@/config/axios";
 
 export const signUpWithEmail = async (
   email: string,
@@ -7,6 +8,14 @@ export const signUpWithEmail = async (
   name: string
 ): Promise<{ user: AuthUser | null; error: Error | null }> => {
   try {
+    const response = await supabaseApi.post("/auth/v1/signup", {
+      email,
+      password,
+      options: {
+        data: { name },
+      },
+    });
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,

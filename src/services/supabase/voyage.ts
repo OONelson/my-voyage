@@ -1,16 +1,24 @@
 import { supabase } from "@/config/supabase";
+import { supabaseApi } from "@/config/axios";
 import type { FormDataType } from "@/types/formData";
 import type { VoyageTypeInfo, Rating } from "@/types/voyage";
 
 export const fetchVoyages = async (): Promise<VoyageTypeInfo[]> => {
-  const { data, error: supabaseError } = await supabase
-    .from("voyages")
-    .select("*")
-    .order("created_at", { ascending: true });
-
-  if (supabaseError) throw supabaseError;
-
-  return data || [];
+  try {
+    const response = await supabaseApi.get("/voyages", {
+      params: {
+        select: "*",
+        order: "created_at.desc",
+      },
+    });
+    return response.data || [];
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch voyages"
+    );
+  }
 };
 
 export const fetchVoyageById = async (
@@ -19,18 +27,19 @@ export const fetchVoyageById = async (
   if (!id) return null;
 
   try {
-    const { data, error: supabaseError } = await supabase
-      .from("voyages")
-      .select("*")
-      .eq("id", id)
-      .single();
+    const response = await supabaseApi.get(`voyages`, {
+      params: {
+        id: `eq.${id}`,
+        select: "*",
+      },
+    });
 
-    if (supabaseError) throw supabaseError;
-
-    return data;
-  } catch (err) {
-    console.error("Error fetching voyage:", err);
-    return null;
+    return response.data?.[0] || null;
+  } catch (error: any) {
+    console.error("Error fetching voyage:", error);
+    throw new Error(
+      error.response?.data?.message || error.message || "Failed to fetch voyage"
+    );
   }
 };
 
@@ -40,7 +49,14 @@ export const createVoyage = async (
   if (!voyage) return null;
 
   try {
-    const requiredFields = ["title", "location", "start_date", "end_date"];
+    const requiredFields = [
+      "title",
+      "location",
+      "start_date",
+      "end_date",
+      "notes",
+    ];
+
     for (const field of requiredFields) {
       if (!voyage[field as keyof FormDataType]) {
         throw new Error(`Missing required field: ${field}`);
@@ -60,7 +76,6 @@ export const createVoyage = async (
       return new Date(dateString).toISOString().split("T")[0];
     };
 
-    // Prepare data with proper formatting
     const voyageData = {
       title: voyage.title,
       image_urls: voyage.image_urls || [],
@@ -79,48 +94,71 @@ export const createVoyage = async (
 
     console.log("Sending data to Supabase:", voyageData);
 
-    const { data, error: supabaseError } = await supabase
-      .from("voyages")
-      .insert([voyageData])
-      .select()
-      .single();
+    const response = await supabaseApi.post("/voyages", voyageData, {
+      params: {
+        select: "*",
+      },
+    });
 
-    if (supabaseError) throw supabaseError;
-
-    return data;
-  } catch (err) {
-    console.error("Error creating voyage:", err);
-    return null;
+    return response.data?.[0] || null;
+  } catch (error: any) {
+    console.error("Error creating voyage:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to create voyage"
+    );
   }
 };
 
-export const updateVoyage = async (id: string, data: FormDataType) => {
+export const updateVoyage = async (
+  id: string,
+  data: FormDataType
+): Promise<VoyageTypeInfo> => {
   try {
-    const { error: supabaseError } = await supabase
-      .from("voyages")
-      .update(data)
-      .eq("id", id)
-      .select()
-      .single();
+    const updateData = {
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (supabaseError) throw supabaseError;
+    const response = await supabaseApi.patch(`/voyages`, updateData, {
+      params: {
+        id: `eq.${id}`,
+        select: "*",
+      },
+    });
 
-    return true;
-  } catch (err) {
-    console.error("Error updating voyage:", err);
-    return null;
+    if (!response.data?.[0]) {
+      throw new Error("Voyage not found");
+    }
+
+    return response.data[0];
+  } catch (error: any) {
+    console.error("Error updating voyage:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to update voyage"
+    );
   }
 };
 
 export const deleteVoyage = async (id: string): Promise<void> => {
   if (!id) return;
 
-  const { error: supabaseError } = await supabase
-    .from("voyages")
-    .delete()
-    .eq("id", id);
-
-  if (supabaseError) throw supabaseError;
+  try {
+    await supabaseApi.delete(`/voyages`, {
+      params: {
+        id: `eq.${id}`,
+      },
+    });
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to delete voyage"
+    );
+  }
 };
 
 export const searchVoyages = async (
@@ -128,19 +166,21 @@ export const searchVoyages = async (
   query: string
 ): Promise<VoyageTypeInfo[]> => {
   try {
-    const { data, error: supabaseError } = await supabase
-      .from("voyages")
-      .select("*")
-      .eq("user_id", userId)
-      .or(`title.ilike.%${query}%,location.ilike.%${query}%`)
-      .order("created_at", { ascending: true });
-
-    if (supabaseError) throw supabaseError;
-
-    return data || [];
-  } catch (err) {
-    console.error("Error searching voyages:", err);
-    return [];
+    const response = await supabaseApi.get("/voyages", {
+      params: {
+        user_id: `eq.${userId}`,
+        or: `(title.ilike.%${query}%,location.ilike.%${query}%)`,
+        order: "created_at.desc",
+      },
+    });
+    return response.data || [];
+  } catch (error: any) {
+    console.error("Error searching voyages:", error);
+    throw new Error(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to search voyages"
+    );
   }
 };
 
@@ -149,18 +189,21 @@ export const filterByRating = async (
   rating: Rating
 ): Promise<VoyageTypeInfo[]> => {
   try {
-    const { data, error: supabaseError } = await supabase
-      .from("voyages")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("rating", rating)
-      .order("created_at", { ascending: false });
+    const response = await supabaseApi.get("/voyages", {
+      params: {
+        user_id: `eq.${userId}`,
+        rating: `eq.${rating}`,
+        order: "created_at.desc",
+      },
+    });
 
-    if (supabaseError) throw supabaseError;
-
-    return data || [];
-  } catch (err) {
-    console.error("Error filtering voyages:", err);
-    return [];
+    return response.data || [];
+  } catch (error: any) {
+    console.error("Error filtering voyages:", error);
+    throw new Error(
+      error.response?.data?.mesage ||
+        error.message ||
+        "Failed to filter voyages"
+    );
   }
 };

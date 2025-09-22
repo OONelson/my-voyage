@@ -1,6 +1,8 @@
 import { computed, nextTick, ref, type ComputedRef, type Ref } from "vue";
 import { type FormDataType } from "@/types/formData";
 import { usePlanLimits } from "@/composables/usePlanLimits";
+import { supabase } from "@/config/supabase";
+import { storageApi } from "@/config/axios";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;
@@ -12,6 +14,7 @@ interface ImageActions {
   fileInput: Ref<HTMLInputElement | null>;
   cropBox: Ref<HTMLElement | null>;
   isImgLoading: Ref<boolean>;
+  isUploading: Ref<boolean>;
   rotate: (degrees: number) => void;
   cropImage: () => void;
   croppedImage: Ref<string>;
@@ -27,6 +30,7 @@ interface ImageActions {
   startDrag: (e: MouseEvent) => void;
   startResize: (e: MouseEvent, handle: string) => void;
   deleteSelectedImage: () => void;
+  uploadImagesToSupabase: () => Promise<string[]>;
   hasImage: ComputedRef<boolean>;
   showActionButtons: ComputedRef<boolean | string>;
   showOriginalImage: ComputedRef<boolean | string>;
@@ -42,10 +46,12 @@ interface ImageActions {
   selectImage: (index: number) => void;
   removeImageAt: (index: number) => void;
 }
+
 export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const { limits } = usePlanLimits();
 
   const isImgLoading = ref<boolean>(false);
+  const isUploading = ref<boolean>(false);
   const dragOver = ref<boolean>(false);
   const fileInput = ref<HTMLInputElement | null>(null);
   const wrapper = ref<HTMLElement | null>(null);
@@ -65,15 +71,18 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const rotation = ref(0);
   const handles = ["n", "e", "s", "w", "ne", "nw", "se", "sw"];
 
+  // Temporary storage for base64 images before upload
+  const tempImages = ref<{ base64: string; file: File | null }[]>([]);
+
   const openFileInput = () => {
-    if (!isImgLoading.value) {
+    if (!isImgLoading.value && !isUploading.value) {
       fileInput.value?.click();
     }
   };
 
   const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
-    if (!isImgLoading.value) {
+    if (!isImgLoading.value && !isUploading.value) {
       dragOver.value = true;
     }
   };
@@ -90,7 +99,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const handleDrop = (e: DragEvent) => {
     dragOver.value = false;
 
-    if (isImgLoading.value) return;
+    if (isImgLoading.value || isUploading.value) return;
 
     const files = e.dataTransfer?.files;
     if (files && files.length > 0 && files[0].type.startsWith("image/")) {
@@ -101,7 +110,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
 
   const handleImageUpload = (e: Event) => {
     const input = (e.target as HTMLInputElement).files?.[0];
-    if (input && !isImgLoading.value) {
+    if (input && !isImgLoading.value && !isUploading.value) {
       if (!canAddMoreImages.value) return;
       processImage(input);
       (e.target as HTMLInputElement).value = "";
@@ -123,9 +132,19 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
         if (!Array.isArray(formData.value.image_urls)) {
           formData.value.image_urls = [];
         }
+
+        const base64Data = e.target.result as string;
+
+        // Store both base64 and file for later upload
+        tempImages.value.push({
+          base64: base64Data,
+          file: file,
+        });
+
+        // Use base64 for preview
         formData.value = {
           ...formData.value,
-          image_urls: [...formData.value.image_urls, e.target.result as string],
+          image_urls: [...formData.value.image_urls, base64Data],
         };
         activeIndex.value = formData.value.image_urls.length - 1;
         isImgLoading.value = false;
@@ -145,6 +164,83 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     reader.readAsDataURL(file);
   };
 
+  // Upload images to Supabase Storage
+  const uploadImagesToSupabase = async (): Promise<string[]> => {
+    if (tempImages.value.length === 0) {
+      return formData.value.image_urls; // Return existing URLs if no new images
+    }
+
+    isUploading.value = true;
+    const uploadedUrls: string[] = [];
+
+    try {
+      // Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("User must be authenticated to upload images");
+
+      // Create user folder if it doesn't exist
+      const userFolder = `voyages/${user.id}`;
+
+      for (let i = 0; i < tempImages.value.length; i++) {
+        const tempImage = tempImages.value[i];
+
+        if (!tempImage.file) {
+          // If no file object (shouldn't happen), skip
+          continue;
+        }
+
+        // Generate unique filename
+        const timestamp = new Date().getTime();
+        const fileExtension = tempImage.file.name.split(".").pop() || "jpg";
+        const fileName = `voyage-${timestamp}-${i}.${fileExtension}`;
+        const filePath = `${userFolder}/${fileName}`;
+
+        // Convert base64 to blob for upload
+        const response = await fetch(tempImage.base64);
+        const blob = await response.blob();
+
+        // Upload to Supabase Storage
+        const formData = new FormData();
+        formData.append("file", blob, fileName);
+
+        const uploadResponse = await storageApi.post(
+          `/object/voyage-images/${filePath}`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
+        if (uploadResponse.status !== 200) {
+          throw new Error(
+            `Upload failed with status: ${uploadResponse.status}`
+          );
+        }
+
+        // Get public URL
+        const publicUrl = `${
+          import.meta.env.VITE_SUPABASE_URL
+        }/storage/v1/object/public/voyage-images/${filePath}`;
+        uploadedUrls.push(publicUrl);
+      }
+
+      tempImages.value = [];
+      return uploadedUrls;
+
+    } catch (error) {
+      console.error("Error uploading images to Supabase:", error);
+      throw error;
+    } finally {
+      isUploading.value = false;
+    }
+  };
+
   const deleteSelectedImage = () => {
     if (!Array.isArray(formData.value.image_urls)) {
       formData.value.image_urls = [];
@@ -155,6 +251,12 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       croppedImage.value = "";
       return;
     }
+
+    // Also remove from temp images
+    if (tempImages.value[activeIndex.value]) {
+      tempImages.value.splice(activeIndex.value, 1);
+    }
+
     formData.value.image_urls.splice(activeIndex.value, 1);
     if (activeIndex.value >= formData.value.image_urls.length) {
       activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
@@ -175,12 +277,19 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const removeImageAt = (index: number) => {
     if (!Array.isArray(formData.value.image_urls)) return;
     if (index < 0 || index >= formData.value.image_urls.length) return;
+
+    // Remove from temp images as well
+    if (tempImages.value[index]) {
+      tempImages.value.splice(index, 1);
+    }
+
     formData.value.image_urls.splice(index, 1);
     if (activeIndex.value >= formData.value.image_urls.length) {
       activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
     }
   };
 
+  // ... rest of the existing crop functionality remains the same
   const imageStyle = computed(() => ({
     transform: `rotate(${rotation.value}deg)`,
   }));
@@ -192,11 +301,9 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     height: `${cropSize.value.height}px`,
   }));
 
-  // Initialize cropper when image loads
   const initCropper = () => {
     if (!wrapper.value || !image.value) return;
 
-    // Center crop box
     cropPosition.value = {
       x: (wrapper.value.offsetWidth - cropSize.value.width) / 2,
       y: (wrapper.value.offsetHeight - cropSize.value.height) / 2,
@@ -229,7 +336,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     window.addEventListener("mouseup", stopDrag);
   };
 
-  // Resize crop box
   const startResize = (e: MouseEvent, handle: string) => {
     isResizing.value = true;
     resizeHandle.value = handle;
@@ -249,7 +355,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       const newSize = { ...cropSize.value };
       const newPos = { ...cropPosition.value };
 
-      // Handle different resize handles
       if (handle.includes("e")) {
         newSize.width = startWidth + deltaX;
       }
@@ -265,7 +370,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
         newPos.y = startTop + deltaY;
       }
 
-      // Apply minimum size
       if (newSize.width > 20 && newSize.height > 20) {
         cropSize.value = newSize;
         cropPosition.value = newPos;
@@ -282,7 +386,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     window.addEventListener("mouseup", stopResize);
   };
 
-  // Perform the crop
   const cropImage = () => {
     if (!image.value || !wrapper.value) return;
 
@@ -290,16 +393,13 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set canvas size to crop size
     canvas.width = cropSize.value.width;
     canvas.height = cropSize.value.height;
 
-    // Calculate source coordinates
     const img = image.value;
     const scaleX = img.naturalWidth / img.width;
     const scaleY = img.naturalHeight / img.height;
 
-    // Draw cropped portion
     ctx.drawImage(
       img,
       cropPosition.value.x * scaleX,
@@ -312,25 +412,30 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       cropSize.value.height
     );
 
-    // Save result back into current active image slot
     const dataUrl = canvas.toDataURL("image/jpeg");
     croppedImage.value = dataUrl;
+
+    // Update both the preview and temp storage
     if (
       Array.isArray(formData.value.image_urls) &&
       formData.value.image_urls.length > 0
     ) {
       formData.value.image_urls[activeIndex.value] = dataUrl;
+
+      // Update temp image with cropped version
+      if (tempImages.value[activeIndex.value]) {
+        tempImages.value[activeIndex.value].base64 = dataUrl;
+      }
     }
   };
 
-  // Rotate image
   const rotate = (degrees: number = 90) => {
     rotation.value = (rotation.value + degrees) % 360;
   };
 
   const hasImage = computed(() => (formData.value.image_urls?.length || 0) > 0);
   const showActionButtons = computed(
-    () => hasImage.value && !isImgLoading.value
+    () => hasImage.value && !isImgLoading.value && !isUploading.value
   );
   const showOriginalImage = computed(
     () => hasImage.value && !croppedImage.value && !isImgLoading.value
@@ -365,6 +470,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     handleDragOver,
     handleDragLeave,
     deleteSelectedImage,
+    uploadImagesToSupabase,
     handles,
     imageStyle,
     cropBoxStyle,
@@ -373,6 +479,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     dragOver,
     fileInput,
     isImgLoading,
+    isUploading,
     hasImage,
     showActionButtons,
     showOriginalImage,

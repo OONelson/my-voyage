@@ -314,10 +314,10 @@ export const useVoyageManager = (): VoyageManager => {
         // update local list cache
         const idx = voyages.value.findIndex((v) => v.id === id);
         if (idx !== -1) {
-          voyages.value[idx] = {
-            ...voyages.value[idx],
-            ...updated,
-          } as VoyageTypeInfo;
+          voyages.value[idx] =
+            // ...voyages.value[idx],
+            updated;
+          //  as VoyageTypeInfo;
         }
 
         try {

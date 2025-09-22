@@ -359,7 +359,7 @@ import { MapSuggestion } from "@/types/mapTypes";
 
 const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
   useVoyageManager();
-const onSubmit = () => handleCreateVoyage(formData.value);
+// const onSubmit = () => handleCreateVoyage(formData.value);
 
 const { isSubmitting, formatDateForInput } = genUtils();
 const {
@@ -391,6 +391,7 @@ const {
   showEmptyState,
   activeIndex,
   canAddMoreImages,
+  uploadImagesToSupabase,
   selectImage,
   removeImageAt,
 } = useImageUpload(formData);
@@ -409,6 +410,25 @@ const {
   addPin,
   removePinAt,
 } = useMap();
+
+const onSubmit = async () => {
+  try {
+    // First upload images to Supabase Storage
+    const uploadedImageUrls = await uploadImagesToSupabase();
+
+    // Update formData with the actual Supabase URLs
+    const voyageData = {
+      ...formData.value,
+      image_urls: uploadedImageUrls,
+    };
+
+    // Then create the voyage with the proper URLs
+    await handleCreateVoyage(voyageData);
+  } catch (error) {
+    console.error("Error creating voyage:", error);
+    // Handle error (show toast, etc.)
+  }
+};
 
 const reachedPinLimit = computed(
   () => pins.value.length >= limits.value.maxPinnedLocations
