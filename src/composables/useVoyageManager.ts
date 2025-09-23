@@ -1,7 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, type Ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { VoyageTypeInfo } from "@/types/voyage";
-import { usePlanLimits } from "@/composables/usePlanLimits";
+import { usePremium } from "@/composables/usePremium";
 import {
   createVoyage,
   deleteVoyage,
@@ -94,7 +94,7 @@ export const useVoyageManager = (): VoyageManager => {
     longitude: null,
   });
 
-  const { limits } = usePlanLimits();
+  const { limits } = usePremium();
 
   const voyageId = computed(() => {
     try {
@@ -115,7 +115,7 @@ export const useVoyageManager = (): VoyageManager => {
 
   // Navigations
   const navigateToCreate = () => {
-    if (voyages.value.length >= limits.value.maxVoyageEntries) {
+    if (voyages.value.length >= limits.maxVoyageEntries) {
       router.push("/pricing");
       isMenuOpen.value = false;
       return;

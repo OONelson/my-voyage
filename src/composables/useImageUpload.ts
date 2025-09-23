@@ -1,8 +1,8 @@
 import { computed, nextTick, ref, type ComputedRef, type Ref } from "vue";
 import { type FormDataType } from "@/types/formData";
-import { usePlanLimits } from "@/composables/usePlanLimits";
 import { supabase } from "@/config/supabase";
 import { storageApi } from "@/config/axios";
+import { usePremium } from "@/composables/usePremium";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;
@@ -31,6 +31,8 @@ interface ImageActions {
   startResize: (e: MouseEvent, handle: string) => void;
   deleteSelectedImage: () => void;
   uploadImagesToSupabase: () => Promise<string[]>;
+  isPremium: ComputedRef<boolean>;
+  maxImagesPerEntry: ComputedRef<number>;
   hasImage: ComputedRef<boolean>;
   showActionButtons: ComputedRef<boolean | string>;
   showOriginalImage: ComputedRef<boolean | string>;
@@ -45,10 +47,13 @@ interface ImageActions {
   canAddMoreImages: ComputedRef<boolean>;
   selectImage: (index: number) => void;
   removeImageAt: (index: number) => void;
+  tempImages: Ref<{ base64: string; file: File | null }[]>;
 }
 
 export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
-  const { limits } = usePlanLimits();
+  const { limits, isPremium, loadUserPlan } = usePremium();
+
+  loadUserPlan();
 
   const isImgLoading = ref<boolean>(false);
   const isUploading = ref<boolean>(false);
@@ -74,6 +79,12 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   // Temporary storage for base64 images before upload
   const tempImages = ref<{ base64: string; file: File | null }[]>([]);
 
+  // premium features
+  const maxImagesPerEntry = computed(() => limits.maxImagesPerEntry);
+  const canAddMoreImages = computed(() => {
+    return formData.value.image_urls.length < maxImagesPerEntry.value;
+  });
+
   const openFileInput = () => {
     if (!isImgLoading.value && !isUploading.value) {
       fileInput.value?.click();
@@ -92,29 +103,61 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     dragOver.value = false;
   };
 
-  const canAddMoreImages = computed(() => {
-    return formData.value.image_urls.length < limits.value.maxImagesPerEntry;
-  });
-
   const handleDrop = (e: DragEvent) => {
     dragOver.value = false;
-
     if (isImgLoading.value || isUploading.value) return;
 
     const files = e.dataTransfer?.files;
-    if (files && files.length > 0 && files[0].type.startsWith("image/")) {
-      if (!canAddMoreImages.value) return;
-      processImage(files[0]);
+    if (!files || files.length === 0) return;
+
+    const imageFiles = Array.from(files).filter((file) =>
+      file.type.startsWith("image/")
+    );
+
+    if (imageFiles.length === 0) return;
+
+    // Apply premium limits
+    const filesToProcess = isPremium ? imageFiles : [imageFiles[0]];
+    const totalAfterAdd =
+      formData.value.image_urls.length + filesToProcess.length;
+
+    if (totalAfterAdd > maxImagesPerEntry.value) {
+      const allowedNewFiles =
+        maxImagesPerEntry.value - formData.value.image_urls.length;
+      if (allowedNewFiles <= 0) return;
+      filesToProcess.splice(allowedNewFiles);
     }
+
+    filesToProcess.forEach((file) => {
+      processImage(file);
+    });
   };
 
   const handleImageUpload = (e: Event) => {
-    const input = (e.target as HTMLInputElement).files?.[0];
-    if (input && !isImgLoading.value && !isUploading.value) {
-      if (!canAddMoreImages.value) return;
-      processImage(input);
-      (e.target as HTMLInputElement).value = "";
+    const input = (e.target as HTMLInputElement).files;
+    if (!input || input.length === 0) return;
+
+    if (isImgLoading.value || isUploading.value) return;
+    const files = Array.from(input);
+    const filesToProcess = isPremium ? files : [files[0]];
+
+    const totalAfterAdd =
+      formData.value.image_urls.length + filesToProcess.length;
+    if (totalAfterAdd > maxImagesPerEntry.value) {
+      const allowedNewFiles =
+        maxImagesPerEntry.value - formData.value.image_urls.length;
+      if (allowedNewFiles <= 0) return;
+
+      // Only process the allowed number of files
+      filesToProcess.splice(allowedNewFiles);
     }
+
+    // Process each file
+    filesToProcess.forEach((file) => {
+      processImage(file);
+    });
+
+    (e.target as HTMLInputElement).value = "";
   };
 
   const processImage = (file: File) => {
@@ -122,6 +165,12 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       console.error("Selected file is not an image");
       return;
     }
+
+    if (!canAddMoreImages.value) {
+      console.warn("Cannot add more images - limit reached");
+      return;
+    }
+
     isImgLoading.value = true;
     croppedImage.value = "";
 
@@ -146,6 +195,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
           ...formData.value,
           image_urls: [...formData.value.image_urls, base64Data],
         };
+
         activeIndex.value = formData.value.image_urls.length - 1;
         isImgLoading.value = false;
 
@@ -156,6 +206,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
         });
       }
     };
+
     reader.onerror = () => {
       isImgLoading.value = false;
       console.error("Error reading file");
@@ -166,15 +217,19 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
 
   // Upload images to Supabase Storage
   const uploadImagesToSupabase = async (): Promise<string[]> => {
+    // Filter out already uploaded URLs (from editing existing voyages)
+    const existingUrls = formData.value.image_urls.filter(
+      (url) => url.startsWith("http") && url.includes("supabase.co")
+    );
+
     if (tempImages.value.length === 0) {
-      return formData.value.image_urls; // Return existing URLs if no new images
+      return existingUrls;
     }
 
     isUploading.value = true;
-    const uploadedUrls: string[] = [];
+    const uploadedUrls: string[] = [...existingUrls];
 
     try {
-      // Get current user
       const {
         data: { user },
         error: userError,
@@ -182,72 +237,124 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       if (userError) throw userError;
       if (!user) throw new Error("User must be authenticated to upload images");
 
-      // Create user folder if it doesn't exist
       const userFolder = `voyages/${user.id}`;
 
-      for (let i = 0; i < tempImages.value.length; i++) {
-        const tempImage = tempImages.value[i];
+      // Upload all images in parallel for better performance
+      const uploadPromises = tempImages.value.map(async (tempImage, index) => {
+        if (!tempImage.file) return null;
 
-        if (!tempImage.file) {
-          // If no file object (shouldn't happen), skip
-          continue;
-        }
-
-        // Generate unique filename
-        const timestamp = new Date().getTime();
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(2, 8);
         const fileExtension = tempImage.file.name.split(".").pop() || "jpg";
-        const fileName = `voyage-${timestamp}-${i}.${fileExtension}`;
+        const fileName = `voyage-${timestamp}-${randomString}-${index}.${fileExtension}`;
         const filePath = `${userFolder}/${fileName}`;
 
-        // Convert base64 to blob for upload
-        const response = await fetch(tempImage.base64);
-        const blob = await response.blob();
-
-        // Upload to Supabase Storage
-        const formData = new FormData();
-        formData.append("file", blob, fileName);
-
-        const uploadResponse = await storageApi.post(
-          `/object/voyage-images/${filePath}`,
-          formData,
+        console.log(
+          `Uploading image ${index + 1}/${tempImages.value.length}:`,
           {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
+            filePath,
+            size: tempImage.file.size,
+            type: tempImage.file.type,
           }
         );
 
-        if (uploadResponse.status !== 200) {
-          throw new Error(
-            `Upload failed with status: ${uploadResponse.status}`
+        try {
+          // Convert base64 to blob
+          const response = await fetch(tempImage.base64);
+          const blob = await response.blob();
+
+          // Try Supabase client first (more reliable)
+          const { data, error } = await supabase.storage
+            .from("voyage-images")
+            .upload(filePath, blob, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (error) {
+            console.warn(`Supabase client upload failed, trying Axios:`, error);
+
+            // Fallback to Axios
+            const formData = new FormData();
+            formData.append("file", blob, fileName);
+
+            const uploadResponse = await storageApi.post(
+              `/object/voyage-images/${filePath}`,
+              formData
+            );
+
+            if (
+              uploadResponse.status !== 200 &&
+              uploadResponse.status !== 201
+            ) {
+              throw new Error(
+                `Upload failed with status: ${uploadResponse.status}`
+              );
+            }
+          }
+
+          // Construct public URL
+          const publicUrl = `${
+            import.meta.env.VITE_SUPABASE_URL
+          }/storage/v1/object/public/voyage-images/${filePath}`;
+          console.log(
+            `✅ Image ${index + 1} uploaded successfully:`,
+            publicUrl
           );
+          return publicUrl;
+        } catch (error) {
+          console.error(`❌ Failed to upload image ${index + 1}:`, error);
+          return null;
         }
+      });
 
-        // Get public URL
-        const publicUrl = `${
-          import.meta.env.VITE_SUPABASE_URL
-        }/storage/v1/object/public/voyage-images/${filePath}`;
-        uploadedUrls.push(publicUrl);
-      }
+      // Wait for all uploads to complete
+      const results = await Promise.all(uploadPromises);
 
+      // Filter out failed uploads and add to uploaded URLs
+      const successfulUploads = results.filter(
+        (url) => url !== null
+      ) as string[];
+      uploadedUrls.push(...successfulUploads);
+
+      // Clear temp images after successful upload
       tempImages.value = [];
-      return uploadedUrls;
 
-    } catch (error) {
+      console.log(
+        `🎉 Upload completed: ${successfulUploads.length}/${tempImages.value.length} images uploaded`
+      );
+      return uploadedUrls;
+    } catch (error: any) {
       console.error("Error uploading images to Supabase:", error);
-      throw error;
+
+      if (
+        error.message.includes("bucket") ||
+        error.message.includes("not found")
+      ) {
+        throw new Error(
+          'Storage bucket not found. Please check if the "voyage-images" bucket exists in your Supabase project.'
+        );
+      } else if (error.message.includes("JWT")) {
+        throw new Error(
+          "Authentication error. Please make sure you are logged in."
+        );
+      } else if (error.message.includes("storage")) {
+        throw new Error("Storage service error. Please try again later.");
+      } else {
+        throw new Error(`Failed to upload images: ${error.message}`);
+      }
     } finally {
       isUploading.value = false;
     }
   };
 
+  // Update the delete function to handle multiple images properly
   const deleteSelectedImage = () => {
-    if (!Array.isArray(formData.value.image_urls)) {
+    if (
+      !Array.isArray(formData.value.image_urls) ||
+      formData.value.image_urls.length === 0
+    ) {
       formData.value.image_urls = [];
-      croppedImage.value = "";
-      return;
-    }
-    if (formData.value.image_urls.length === 0) {
       croppedImage.value = "";
       return;
     }
@@ -258,20 +365,13 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     }
 
     formData.value.image_urls.splice(activeIndex.value, 1);
+
+    // Adjust active index if needed
     if (activeIndex.value >= formData.value.image_urls.length) {
       activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
     }
-    croppedImage.value = "";
-  };
 
-  const selectImage = (index: number) => {
-    if (index >= 0 && index < formData.value.image_urls.length) {
-      activeIndex.value = index;
-      croppedImage.value = "";
-      nextTick(() => {
-        if (image.value) initCropper();
-      });
-    }
+    croppedImage.value = "";
   };
 
   const removeImageAt = (index: number) => {
@@ -284,12 +384,15 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     }
 
     formData.value.image_urls.splice(index, 1);
+
+    // Adjust active index if needed
     if (activeIndex.value >= formData.value.image_urls.length) {
       activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
     }
   };
 
-  // ... rest of the existing crop functionality remains the same
+  // Add a function to handle multiple file drops
+
   const imageStyle = computed(() => ({
     transform: `rotate(${rotation.value}deg)`,
   }));
@@ -458,6 +561,18 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     ],
   };
 
+  // Function to select an image by index
+  const selectImage = (index: number) => {
+    if (
+      Array.isArray(formData.value.image_urls) &&
+      index >= 0 &&
+      index < formData.value.image_urls.length
+    ) {
+      activeIndex.value = index;
+      croppedImage.value = "";
+    }
+  };
+
   return {
     rotate,
     initCropper,
@@ -491,5 +606,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     canAddMoreImages,
     selectImage,
     removeImageAt,
+    tempImages,
   };
 };

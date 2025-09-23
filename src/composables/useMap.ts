@@ -5,12 +5,12 @@ import maplibregl, {
   type LngLatLike,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { usePlanLimits } from "@/composables/usePlanLimits";
+import { usePremium } from "@/composables/usePremium";
 import { debounce } from "@/utils/debounce";
 import type { LocationSuggestion, SelectedLocation } from "@/types/mapTypes";
 
 export const useMap = () => {
-  const { limits } = usePlanLimits();
+  const { limits } = usePremium();
 
   const map = ref<Map>();
   const mapContainer = ref<HTMLDivElement>();

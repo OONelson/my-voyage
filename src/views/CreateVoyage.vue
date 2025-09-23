@@ -15,6 +15,17 @@
       <form @submit.prevent="onSubmit" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
+          <div v-if="isPremium" class="premium-badge">
+            <i class="fas fa-crown"></i>
+            Premium User - Up to {{ maxImagesPerEntry }} images per voyage
+          </div>
+          <div v-else class="free-tier-info">
+            Free Tier - {{ formData.image_urls.length }}/{{ maxImagesPerEntry }}
+            images used
+            <button @click="upgradeToPremium" class="upgrade-btn underline">
+              Upgrade for more images
+            </button>
+          </div>
           <input
             type="file"
             ref="fileInput"
@@ -331,7 +342,8 @@
 
 <script setup lang="ts">
 // imports from vue
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 // imports from PrimeVue
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
@@ -353,13 +365,14 @@ import RotateLeft from "@/assets/icons/RotateLeft.vue";
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
-import { usePlanLimits } from "@/composables/usePlanLimits";
+import { usePremium } from "@/composables/usePremium";
 import { genUtils } from "@/utils/genUtils";
 import { MapSuggestion } from "@/types/mapTypes";
+import { setupStorageBucket } from "@/utils/storageSetup";
+const router = useRouter();
 
 const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
   useVoyageManager();
-// const onSubmit = () => handleCreateVoyage(formData.value);
 
 const { isSubmitting, formatDateForInput } = genUtils();
 const {
@@ -394,9 +407,12 @@ const {
   uploadImagesToSupabase,
   selectImage,
   removeImageAt,
+  tempImages,
+  isPremium,
+  maxImagesPerEntry,
 } = useImageUpload(formData);
 
-const { limits } = usePlanLimits();
+const { limits } = usePremium();
 
 const {
   selectedLocation,
@@ -411,32 +427,47 @@ const {
   removePinAt,
 } = useMap();
 
+onMounted(async () => {
+  const isStorageReady = await setupStorageBucket();
+  if (!isStorageReady) {
+    // const { useToast } = await import("@/composables/useToast");
+    // const { addToast } = useToast();
+    // addToast('Please create "voyage-images" bucket in Supabase Storage', {
+    //   type: "warning",
+    // });
+  }
+
+  // handleFetchVoyages();
+});
+
 const onSubmit = async () => {
   try {
-    // First upload images to Supabase Storage
     const uploadedImageUrls = await uploadImagesToSupabase();
 
-    // Update formData with the actual Supabase URLs
+    if (uploadedImageUrls.length === 0 && tempImages.value.length > 0) {
+      throw new Error("Image upload failed. Please try again.");
+    }
+
     const voyageData = {
       ...formData.value,
       image_urls: uploadedImageUrls,
     };
 
-    // Then create the voyage with the proper URLs
     await handleCreateVoyage(voyageData);
   } catch (error) {
     console.error("Error creating voyage:", error);
-    // Handle error (show toast, etc.)
   }
 };
 
+const upgradeToPremium = () => {
+  router.push("/pricing");
+};
+
 const reachedPinLimit = computed(
-  () => pins.value.length >= limits.value.maxPinnedLocations
+  () => pins.value.length >= limits.maxPinnedLocations
 );
 const pinLimitDisplay = computed(() =>
-  Number.isFinite(limits.value.maxPinnedLocations)
-    ? limits.value.maxPinnedLocations
-    : "∞"
+  Number.isFinite(limits.maxPinnedLocations) ? limits.maxPinnedLocations : "∞"
 );
 
 const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
