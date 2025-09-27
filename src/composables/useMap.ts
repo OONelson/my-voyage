@@ -1,4 +1,4 @@
-import { ref, onUnmounted } from "vue";
+import { ref, onUnmounted, computed } from "vue";
 import maplibregl, {
   type Map,
   type Marker,
@@ -10,7 +10,10 @@ import { debounce } from "@/utils/debounce";
 import type { LocationSuggestion, SelectedLocation } from "@/types/mapTypes";
 
 export const useMap = () => {
-  const { limits } = usePremium();
+  const { limits } = usePremium(); // limits should be a computed ref
+
+  // Defensive default for maxPinnedLocations
+  const maxPinnedLocations = computed(() => limits.maxPinnedLocations ?? 3);
 
   const map = ref<Map>();
   const mapContainer = ref<HTMLDivElement>();
@@ -328,7 +331,7 @@ export const useMap = () => {
 
   // Pin management
   const addPin = (pin: { display_name: string; lat: number; lon: number }) => {
-    if (pins.value.length >= limits.value.maxPinnedLocations) return false;
+    if (pins.value.length >= maxPinnedLocations.value) return false;
     pins.value.push(pin);
     const marker = addMarker([pin.lon, pin.lat], {
       color: "#0ea5e9",
@@ -411,5 +414,6 @@ export const useMap = () => {
     addPin,
     removePinAt,
     clearPins,
+    maxPinnedLocations, // Export for UI
   };
 };

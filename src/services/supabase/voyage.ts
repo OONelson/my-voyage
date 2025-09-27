@@ -4,17 +4,38 @@ import type { FormDataType } from "@/types/formData";
 import type { VoyageTypeInfo, Rating } from "@/types/voyage";
 
 export const fetchVoyages = async (): Promise<VoyageTypeInfo[]> => {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error("Authentication error" + sessionError.message);
+  }
+
+  if (!session) {
+    throw new Error("User must be authenticated to fetch voyages");
+  }
+
   try {
     const response = await supabaseApi.get("/voyages", {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apiKey: import.meta.env.VITE_SUPABASE_KEY,
+        "Content-Type": "application/json",
+      },
       params: {
         select: "*",
         order: "created_at.desc",
       },
     });
+
     return response.data || [];
   } catch (error: any) {
+    console.error("Error fetching voyages:", error);
     throw new Error(
       error.response?.data?.message ||
+        error.response?.data?.error ||
         error.message ||
         "Failed to fetch voyages"
     );
@@ -49,6 +70,8 @@ export const createVoyage = async (
   if (!voyage) return null;
 
   try {
+    console.log("Starting voyage creation with data:", voyage);
+
     const requiredFields = [
       "title",
       "location",
@@ -64,13 +87,20 @@ export const createVoyage = async (
     }
 
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError) throw authError;
-    if (!user) {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.error("Session error:", sessionError);
+      throw new Error("Authentication failed: " + sessionError.message);
+    }
+
+    if (!session) {
       throw new Error("User must be authenticated to create a voyage");
     }
+
+    console.log("User authenticated:", session.user.id);
 
     const formatDateForPostgres = (dateString: string) => {
       return new Date(dateString).toISOString().split("T")[0];
@@ -84,27 +114,47 @@ export const createVoyage = async (
       start_date: formatDateForPostgres(voyage.start_date),
       end_date: formatDateForPostgres(voyage.end_date),
       rating: voyage.rating || 0,
-      pins: voyage.pins || [],
       latitude: voyage.latitude,
       longitude: voyage.longitude,
-      user_id: user.id,
+      user_id: session.user.id,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     };
 
     console.log("Sending data to Supabase:", voyageData);
 
     const response = await supabaseApi.post("/voyages", voyageData, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_KEY,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
       params: {
         select: "*",
       },
     });
+    console.log("Supabase API response:", response);
 
-    return response.data?.[0] || null;
+    if (response.status >= 400) {
+      console.error("API Error Response:", response.data);
+      throw new Error(
+        `API Error: ${response.status} - ${JSON.stringify(response.data)}`
+      );
+    }
+
+    return response.data;
   } catch (error: any) {
-    console.error("Error creating voyage:", error);
+    console.error("Error creating voyage:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      code: error.code,
+      stack: error.stack,
+    });
+
     throw new Error(
       error.response?.data?.message ||
+        error.response?.data?.error ||
         error.message ||
         "Failed to create voyage"
     );

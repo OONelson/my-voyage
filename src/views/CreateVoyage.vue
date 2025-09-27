@@ -371,8 +371,14 @@ import { MapSuggestion } from "@/types/mapTypes";
 import { setupStorageBucket } from "@/utils/storageSetup";
 const router = useRouter();
 
-const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
-  useVoyageManager();
+const {
+  isLoading,
+  navigateToVoyages,
+  handleCreateVoyage,
+  handleUpdateVoyage,
+  formData,
+  navigateToVoyage,
+} = useVoyageManager();
 
 const { isSubmitting, formatDateForInput } = genUtils();
 const {
@@ -442,18 +448,34 @@ onMounted(async () => {
 
 const onSubmit = async () => {
   try {
-    const uploadedImageUrls = await uploadImagesToSupabase();
-
-    if (uploadedImageUrls.length === 0 && tempImages.value.length > 0) {
-      throw new Error("Image upload failed. Please try again.");
-    }
-
-    const voyageData = {
+    // First, try to create the voyage without images
+    const voyageDataWithoutImages = {
       ...formData.value,
-      image_urls: uploadedImageUrls,
+      image_urls: [], // Start with empty array
     };
 
-    await handleCreateVoyage(voyageData);
+    // Attempt to create the voyage first
+    const createdVoyage = await handleCreateVoyage(voyageDataWithoutImages);
+
+    if (!createdVoyage || !createdVoyage.id) {
+      throw new Error("Failed to create voyage - no voyage ID returned");
+    }
+
+    // Only upload images if voyage creation was successful
+    if (tempImages.value.length > 0) {
+      const uploadedImageUrls = await uploadImagesToSupabase(createdVoyage.id);
+
+      if (uploadedImageUrls.length > 0) {
+        // Update the voyage with the image URLs
+        await handleUpdateVoyage(createdVoyage.id, {
+          ...formData.value,
+          image_urls: uploadedImageUrls,
+        });
+      }
+    }
+
+    // Navigate to the new voyage
+    navigateToVoyage(createdVoyage.id);
   } catch (error) {
     console.error("Error creating voyage:", error);
   }
@@ -545,6 +567,8 @@ const handleClasses: Record<HandleKey, string> = {
   left: "left-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
   right: "right-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
 };
+
+/* Removed duplicate declaration of pins, addPin, removePinAt, maxPinnedLocations */
 </script>
 
 <style scoped>
