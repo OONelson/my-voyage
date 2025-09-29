@@ -3,7 +3,6 @@ import { type FormDataType } from "@/types/formData";
 import { supabase } from "@/config/supabase";
 import { storageApi } from "@/config/axios";
 import { usePremium } from "@/composables/usePremium";
-import { useAuth } from "@/composables/useAuth";
 
 interface ImageActions {
   handleDrop: (e: DragEvent) => void;
@@ -31,7 +30,7 @@ interface ImageActions {
   startDrag: (e: MouseEvent) => void;
   startResize: (e: MouseEvent, handle: string) => void;
   deleteSelectedImage: () => void;
-  uploadImagesToSupabase: (voyageId: string) => Promise<string[]>;
+  uploadImagesToSupabase: () => Promise<string[]>;
   isPremium: ComputedRef<boolean>;
   maxImagesPerEntry: ComputedRef<number>;
   hasImage: ComputedRef<boolean>;
@@ -53,7 +52,6 @@ interface ImageActions {
 
 export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   const { limits, isPremium, loadUserPlan } = usePremium();
-  const { user } = useAuth();
 
   loadUserPlan();
 
@@ -218,17 +216,10 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
   };
 
   // Upload images to Supabase Storage
-  const uploadImagesToSupabase = async (
-    voyageId: string
-  ): Promise<string[]> => {
-    if (!voyageId) {
-      throw new Error("Voyage ID is required for image upload");
-    }
-
-    const uploadedUrls: string[] = [];
-
+  const uploadImagesToSupabase = async (): Promise<string[]> => {
+    // Filter out already uploaded URLs (from editing existing voyages)
     const existingUrls = formData.value.image_urls.filter(
-      (url: string) => url.startsWith("http") && url.includes("supabase.co")
+      (url) => url.startsWith("http") && url.includes("supabase.co")
     );
 
     if (tempImages.value.length === 0) {
@@ -236,6 +227,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     }
 
     isUploading.value = true;
+    const uploadedUrls: string[] = [...existingUrls];
 
     try {
       const {
@@ -246,7 +238,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       if (!user) throw new Error("User must be authenticated to upload images");
 
       const userFolder = `voyages/${user.id}`;
-      const voyageFolder = `${userFolder}/voyage-${voyageId}`;
 
       // Upload all images in parallel for better performance
       const uploadPromises = tempImages.value.map(async (tempImage, index) => {
@@ -256,7 +247,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
         const randomString = Math.random().toString(36).substring(2, 8);
         const fileExtension = tempImage.file.name.split(".").pop() || "jpg";
         const fileName = `voyage-${timestamp}-${randomString}-${index}.${fileExtension}`;
-        const filePath = `${voyageFolder}/${fileName}`;
+        const filePath = `${userFolder}/${fileName}`;
 
         console.log(
           `Uploading image ${index + 1}/${tempImages.value.length}:`,
@@ -324,7 +315,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       const successfulUploads = results.filter(
         (url) => url !== null
       ) as string[];
-      uploadedUrls.push(...existingUrls, ...successfulUploads);
+      uploadedUrls.push(...successfulUploads);
 
       // Clear temp images after successful upload
       tempImages.value = [];
@@ -335,15 +326,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       return uploadedUrls;
     } catch (error: any) {
       console.error("Error uploading images to Supabase:", error);
-
-      // Clean up any partially uploaded images
-      if (uploadedUrls.length > existingUrls.length) {
-        await deleteUploadedImages(
-          uploadedUrls.filter((url) => !existingUrls.includes(url)),
-          voyageId,
-          user.value?.id ?? ""
-        );
-      }
 
       if (
         error.message.includes("bucket") ||
@@ -366,42 +348,30 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     }
   };
 
-  const deleteUploadedImages = async (
-    imageUrls: string[],
-    voyageId: string,
-    userId: string
-  ) => {
-    try {
-      if (!imageUrls.length) return;
-
-      const filePaths = imageUrls
-        .map((url) => {
-          // Extract file path from URL
-          const urlParts = url.split("/");
-          const publicIndex = urlParts.indexOf("public");
-          if (publicIndex === -1) return null;
-
-          const filePath = urlParts.slice(publicIndex + 1).join("/");
-          return filePath;
-        })
-        .filter(Boolean) as string[];
-
-      if (filePaths.length === 0) return;
-
-      console.log("Cleaning up orphaned images:", filePaths);
-
-      const { error } = await supabase.storage
-        .from("voyage-images")
-        .remove(filePaths);
-
-      if (error) {
-        console.error("Error cleaning up images:", error);
-      } else {
-        console.log("✅ Successfully cleaned up orphaned images");
-      }
-    } catch (cleanupError) {
-      console.error("Error in image cleanup:", cleanupError);
+  // Update the delete function to handle multiple images properly
+  const deleteSelectedImage = () => {
+    if (
+      !Array.isArray(formData.value.image_urls) ||
+      formData.value.image_urls.length === 0
+    ) {
+      formData.value.image_urls = [];
+      croppedImage.value = "";
+      return;
     }
+
+    // Also remove from temp images
+    if (tempImages.value[activeIndex.value]) {
+      tempImages.value.splice(activeIndex.value, 1);
+    }
+
+    formData.value.image_urls.splice(activeIndex.value, 1);
+
+    // Adjust active index if needed
+    if (activeIndex.value >= formData.value.image_urls.length) {
+      activeIndex.value = Math.max(0, formData.value.image_urls.length - 1);
+    }
+
+    croppedImage.value = "";
   };
 
   const removeImageAt = (index: number) => {
@@ -601,11 +571,6 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
       activeIndex.value = index;
       croppedImage.value = "";
     }
-  };
-
-  // Function to delete the currently selected image
-  const deleteSelectedImage = () => {
-    removeImageAt(activeIndex.value);
   };
 
   return {

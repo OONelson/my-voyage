@@ -43,19 +43,40 @@ export const fetchVoyages = async (): Promise<VoyageTypeInfo[]> => {
 };
 
 export const fetchVoyageById = async (
-  id: string | null
+  id: string
 ): Promise<VoyageTypeInfo | null> => {
   if (!id) return null;
 
   try {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
+    if (sessionError) {
+      console.log("error", sessionError.message);
+
+      throw new Error("Authentication error" + sessionError.message);
+    }
+
+    if (!session) {
+      console.log("error");
+
+      throw new Error("User must be authenticated to fetch voyages");
+    }
     const response = await supabaseApi.get(`voyages`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        apiKey: import.meta.env.VITE_SUPABASE_KEY,
+        "Content-Type": "application/json",
+      },
       params: {
         id: `eq.${id}`,
         select: "*",
       },
     });
 
-    return response.data?.[0] || null;
+    return response.data?.[0];
   } catch (error: any) {
     console.error("Error fetching voyage:", error);
     throw new Error(

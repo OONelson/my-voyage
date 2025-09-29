@@ -1,6 +1,6 @@
 <template>
   <main
-    class="min-h-screen bg-background100 dark:bg-dark-background100 transition-colors"
+    class="h-full pb-5 bg-background100 dark:bg-dark-background100 transition-colors"
   >
     <header
       class="flex justify-between items-center sticky top-0 z-50 w-full bg-white dark:bg-dark-background100 border-b border-gray-200 dark:border-dark-border100 transition-shadow px-2 py-2"
@@ -78,21 +78,23 @@
           @click="navigateToVoyage(voyage.id)"
         >
           <!-- Image with Favorite Button -->
-          <div class="relative aspect-[4/3]">
-            <img
-              v-if="voyage.image_urls"
-              :src="voyage.image_urls[0]"
-              :alt="voyage.title"
-              loading="lazy"
-              class="w-full h-full object-cover transition-transform duration-300 md:group-hover:scale-105"
-            />
+          <div class="relative aspect-[4/3] p-2">
+            <div class="w-full h-full rounded-lg overflow-hidden">
+              <img
+                v-if="voyage.image_urls"
+                :src="getFirstImageUrl(voyage.image_urls)"
+                :alt="voyage.title"
+                loading="lazy"
+                class="w-full h-full object-cover transition-transform duration-300 md:group-hover:scale-105 rounded-lg"
+              />
+              />
+            </div>
             <div
-              class="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"
+              class="absolute inset-2 bg-gradient-to-t from-black/10 to-transparent rounded-lg"
             ></div>
             <button
               @click.stop="toggleFavorite(voyage.id)"
-              class="absolute top-3 right-3 bg-white/90 dark:bg-dark-background100 hover:bg-white dark:hover:bg-dark-background100 rounded-full p-2 shadow-sm transition-all z-10"
-              aria-label="Favorite"
+              class="absolute top-5 right-5 bg-white/90 dark:bg-dark-background100 hover:bg-white dark:hover:bg-dark-background100 rounded-full p-2 shadow-sm transition-all z-10"
             >
               <HeartIcon
                 size="20"
@@ -230,6 +232,22 @@ const toggleFavorite = (id: string) => {
     favorites.value.splice(index, 1);
   } else {
     favorites.value.push(id);
+  }
+};
+
+const getFirstImageUrl = (imageUrls: any): string | null => {
+  try {
+    if (Array.isArray(imageUrls)) {
+      return imageUrls[0] || null;
+    } else if (typeof imageUrls === "string") {
+      // If it's a stringified array, parse it
+      const parsed = JSON.parse(imageUrls);
+      return Array.isArray(parsed) ? parsed[0] : null;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error parsing image URLs:", error);
+    return null;
   }
 };
 </script>

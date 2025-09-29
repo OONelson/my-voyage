@@ -22,6 +22,7 @@
           <div v-else class="free-tier-info">
             Free Tier - {{ formData.image_urls.length }}/{{ maxImagesPerEntry }}
             images used
+
             <button @click="upgradeToPremium" class="upgrade-btn underline">
               Upgrade for more images
             </button>
@@ -343,7 +344,6 @@
 <script setup lang="ts">
 // imports from vue
 import { computed, onMounted, ref, watch } from "vue";
-import { useRouter } from "vue-router";
 // imports from PrimeVue
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
@@ -369,18 +369,11 @@ import { usePremium } from "@/composables/usePremium";
 import { genUtils } from "@/utils/genUtils";
 import { MapSuggestion } from "@/types/mapTypes";
 import { setupStorageBucket } from "@/utils/storageSetup";
-const router = useRouter();
 
-const {
-  isLoading,
-  navigateToVoyages,
-  handleCreateVoyage,
-  handleUpdateVoyage,
-  formData,
-  navigateToVoyage,
-} = useVoyageManager();
+const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
+  useVoyageManager();
 
-const { isSubmitting, formatDateForInput } = genUtils();
+const { isSubmitting, formatDateForInput, upgradeToPremium } = genUtils();
 const {
   rotate,
   initCropper,
@@ -393,6 +386,9 @@ const {
   handleDragOver,
   handleDragLeave,
   deleteSelectedImage,
+  uploadImagesToSupabase,
+  selectImage,
+  removeImageAt,
   modules,
   handles,
   imageStyle,
@@ -410,9 +406,6 @@ const {
   showEmptyState,
   activeIndex,
   canAddMoreImages,
-  uploadImagesToSupabase,
-  selectImage,
-  removeImageAt,
   tempImages,
   isPremium,
   maxImagesPerEntry,
@@ -424,11 +417,11 @@ const {
   selectedLocation,
   locationSearch,
   locationSuggestions,
+  isSearching,
+  pins,
   searchLocation,
   selectSuggestion,
   useCurrentLocation,
-  isSearching,
-  pins,
   addPin,
   removePinAt,
 } = useMap();
@@ -448,41 +441,24 @@ onMounted(async () => {
 
 const onSubmit = async () => {
   try {
-    // First, try to create the voyage without images
-    const voyageDataWithoutImages = {
+    const uploadedImageUrls = await uploadImagesToSupabase();
+
+    if (uploadedImageUrls.length === 0 && tempImages.value.length > 0) {
+      throw new Error("Image upload failed. Please try again.");
+    }
+
+    const voyageData = {
       ...formData.value,
-      image_urls: [], // Start with empty array
+      image_urls: uploadedImageUrls,
     };
 
-    // Attempt to create the voyage first
-    const createdVoyage = await handleCreateVoyage(voyageDataWithoutImages);
-
-    if (!createdVoyage || !createdVoyage.id) {
-      throw new Error("Failed to create voyage - no voyage ID returned");
-    }
-
-    // Only upload images if voyage creation was successful
-    if (tempImages.value.length > 0) {
-      const uploadedImageUrls = await uploadImagesToSupabase(createdVoyage.id);
-
-      if (uploadedImageUrls.length > 0) {
-        // Update the voyage with the image URLs
-        await handleUpdateVoyage(createdVoyage.id, {
-          ...formData.value,
-          image_urls: uploadedImageUrls,
-        });
-      }
-    }
-
-    // Navigate to the new voyage
-    navigateToVoyage(createdVoyage.id);
+    // Then create the voyage with the proper URLs
+    await handleCreateVoyage(voyageData);
+    // navigateToVoyage(voyages.);
   } catch (error) {
     console.error("Error creating voyage:", error);
+    // Handle error (show toast, etc.)
   }
-};
-
-const upgradeToPremium = () => {
-  router.push("/pricing");
 };
 
 const reachedPinLimit = computed(

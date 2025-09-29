@@ -10,6 +10,7 @@ import {
   updateVoyage,
 } from "@/services/supabase/voyage";
 import type { FormDataType } from "@/types/formData";
+import { showToast } from "@/utils/showToast";
 // import type { LocationSuggestion } from "@/composables/useMap";
 
 type ModalSize = "sm" | "md" | "lg" | "xl";
@@ -35,7 +36,7 @@ interface VoyageManager {
   toggleMenu: () => void;
   navigateToCreate: () => void;
   navigateToFavorites: () => void;
-  navigateToVoyage: (id: string) => void;
+  navigateToVoyage: (voyageId: string) => void;
   navigateToVoyages: () => void;
 
   // Modals
@@ -49,23 +50,23 @@ interface VoyageManager {
   editVoyage: (voyageId: string) => void;
   confirmDeleteVoyage: (voyageId: string) => void;
   handleEdit: () => void;
-  handleDelete: () => void;
-  fetchVoyage: (voyageId: string) => Promise<VoyageTypeInfo | undefined>;
-  toggleFavorite: (voyageId: string) => void;
+  handleFetchVoyages: () => Promise<void>;
+  handleFetchSingleVoyage: (voyageId: string) => Promise<VoyageTypeInfo | null>;
   handleCreateVoyage: (
     newVoyageData: FormDataType
   ) => Promise<VoyageTypeInfo | null>;
-  handleFetchVoyages: () => Promise<void>;
   handleDeleteVoyage: (voyageId: string) => Promise<void>;
   handleUpdateVoyage: (
-    id: string,
+    voyageId: string,
     data: FormDataType
   ) => Promise<VoyageTypeInfo | null>;
+  toggleFavorite: (voyageId: string) => void;
 }
 
 export const useVoyageManager = (): VoyageManager => {
   const route = useRoute();
   const router = useRouter();
+  const { limits } = usePremium();
 
   // State
   const scrolled = ref(false);
@@ -94,8 +95,6 @@ export const useVoyageManager = (): VoyageManager => {
     longitude: null,
   });
 
-  const { limits } = usePremium();
-
   const voyageId = computed(() => {
     try {
       const idParam = route.params?.id;
@@ -119,9 +118,10 @@ export const useVoyageManager = (): VoyageManager => {
       router.push("/pricing");
       isMenuOpen.value = false;
       return;
+    } else {
+      router.push("/voyages/create");
+      isMenuOpen.value = false;
     }
-    router.push("/voyages/create");
-    isMenuOpen.value = false;
   };
 
   const navigateToFavorites = () => {
@@ -187,6 +187,30 @@ export const useVoyageManager = (): VoyageManager => {
     }
   };
 
+  const handleFetchSingleVoyage = async (
+    voyageId: string
+  ): Promise<VoyageTypeInfo | null> => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const foundVoyage = await fetchVoyageById(voyageId);
+      if (!foundVoyage) {
+        error.value = "Voyage not found";
+        return null;
+      }
+
+      voyage.value = foundVoyage;
+      return foundVoyage;
+    } catch (err) {
+      error.value =
+        err instanceof Error ? err.message : "Failed to load voyage";
+      console.error("Error fetching voyage:", err);
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const handleCreateVoyage = async (
     newVoyageData: FormDataType
   ): Promise<VoyageTypeInfo | null> => {
@@ -232,9 +256,7 @@ export const useVoyageManager = (): VoyageManager => {
         navigateToVoyage(created.id);
 
         try {
-          const { useToast } = await import("@/composables/useToast");
-          const { addToast } = useToast();
-          addToast("Voyage created successfully", { type: "success" });
+          showToast("Voyage created successfully", "success");
         } catch (err) {
           console.error("Error adding toast:", err);
         }
@@ -248,13 +270,7 @@ export const useVoyageManager = (): VoyageManager => {
         err instanceof Error ? err.message : "Failed to create voyage";
       error.value = message;
 
-      try {
-        const { useToast } = await import("@/composables/useToast");
-        const { addToast } = useToast();
-        addToast(message, { type: "error" });
-      } catch (err) {
-        console.error("Error adding toast:", err);
-      }
+      showToast(message, "error");
 
       return null;
     } finally {
@@ -262,6 +278,44 @@ export const useVoyageManager = (): VoyageManager => {
     }
   };
 
+  const handleUpdateVoyage = async (
+    voyageId: string,
+    data: FormDataType
+  ): Promise<VoyageTypeInfo | null> => {
+    try {
+      isLoading.value = true;
+      error.value = null;
+
+      const updated = await updateVoyage(voyageId, data);
+
+      if (updated && typeof updated === "object") {
+        // Update local cache
+        const idx = voyages.value.findIndex((v) => v.id === voyageId);
+        if (idx !== -1) {
+          voyages.value[idx] = updated;
+        }
+
+        if (voyage.value?.id === voyageId) {
+          voyage.value = updated;
+        }
+
+        showToast("Voyage updated", "success");
+        return updated as VoyageTypeInfo;
+      }
+      return null;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update voyage";
+      error.value = message;
+
+      showToast(message, "error");
+      return null;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  // navigation to the current voyage
   const editVoyage = (voyageId: string) => {
     navigateToEdit(voyageId);
   };
@@ -281,10 +335,15 @@ export const useVoyageManager = (): VoyageManager => {
       await deleteVoyage(voyageId);
       voyages.value = voyages.value.filter((voyage) => voyage.id !== voyageId);
 
+      showToast("Voyage deleted", "success");
       closeModal();
     } catch (err) {
-      error.value =
+      const message =
         err instanceof Error ? err.message : "Failed to delete voyage";
+
+      error.value = message;
+
+      showToast(message, "error");
     } finally {
       isLoading.value = false;
     }
@@ -293,59 +352,6 @@ export const useVoyageManager = (): VoyageManager => {
   const confirmDeleteVoyage = (voyageId: string) => {
     currentVoyageId.value = voyageId;
     openModal(voyageId, "sm");
-  };
-
-  const handleDelete = () => {
-    if (currentVoyageId.value) {
-      handleDeleteVoyage(currentVoyageId.value);
-    }
-  };
-
-  const handleUpdateVoyage = async (
-    id: string,
-    data: FormDataType
-  ): Promise<VoyageTypeInfo | null> => {
-    try {
-      isLoading.value = true;
-      error.value = null;
-
-      const updated = await updateVoyage(id, data);
-      if (updated && typeof updated === "object") {
-        // update local list cache
-        const idx = voyages.value.findIndex((v) => v.id === id);
-        if (idx !== -1) {
-          voyages.value[idx] =
-            // ...voyages.value[idx],
-            updated;
-          //  as VoyageTypeInfo;
-        }
-
-        try {
-          const { useToast } = await import("@/composables/useToast");
-          const { addToast } = useToast();
-          addToast("Voyage updated", { type: "success" });
-        } catch (err) {
-          console.error("Error adding toast:", err);
-        }
-
-        return updated as VoyageTypeInfo;
-      }
-      return null;
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to update voyage";
-      error.value = message;
-      try {
-        const { useToast } = await import("@/composables/useToast");
-        const { addToast } = useToast();
-        addToast(message, { type: "error" });
-      } catch (e) {
-        console.error("Error adding toast:", e);
-      }
-      return null;
-    } finally {
-      isLoading.value = false;
-    }
   };
 
   // Filter favorite voyages
@@ -367,29 +373,6 @@ export const useVoyageManager = (): VoyageManager => {
   };
 
   // Data Loading
-  const fetchVoyage = async (
-    voyageId: string
-  ): Promise<VoyageTypeInfo | undefined> => {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      const foundVoyage = await fetchVoyageById(voyageId);
-      if (!foundVoyage) {
-        error.value = "Voyage not found";
-        return undefined;
-      }
-
-      voyage.value = foundVoyage;
-      return foundVoyage;
-    } catch (err) {
-      error.value =
-        err instanceof Error ? err.message : "Failed to load voyage";
-      console.error("Error fetching voyage:", err);
-      return undefined;
-    } finally {
-      isLoading.value = false;
-    }
-  };
 
   // Lifecycle Hooks
   onMounted(async () => {
@@ -429,8 +412,7 @@ export const useVoyageManager = (): VoyageManager => {
     editVoyage,
     confirmDeleteVoyage,
     handleEdit,
-    handleDelete,
-    fetchVoyage,
+    handleFetchSingleVoyage,
     handleCreateVoyage,
     handleFetchVoyages,
     handleDeleteVoyage,

@@ -39,7 +39,7 @@
   <div v-else-if="error">
     <p>{{ error }}</p>
 
-    <button @click="fetchVoyage(voyageId)">Retry</button>
+    <button @click="handleFetchSingleVoyage(voyageId)">Retry</button>
   </div>
   <main
     v-else-if="voyage"
@@ -71,7 +71,7 @@
             <div class="absolute top-4 right-4">
               <button
                 class="bg-white/90 hover:bg-white rounded-full p-2 shadow-sm transition-all"
-                @click.stop="toggleFavorite"
+                @click.stop="handleToggleFavorite"
               >
                 <HeartIcon size="22" :filled="isFavorite" />
               </button>
@@ -109,7 +109,9 @@
             <div class="flex flex-wrap items-center gap-2 text-normal mb-3">
               <WhatTimeIcon size="26" />
               <span>Created:</span>
-              <span class="">{{ relativeCreatedAt(new Date(voyage.created_at)) }}</span>
+              <span class="">{{
+                relativeCreatedAt(new Date(voyage.created_at))
+              }}</span>
             </div>
 
             <!-- Rating -->
@@ -202,7 +204,7 @@ import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useUserProfile } from "@/composables/useUserProfile";
 import { useRoute } from "vue-router";
-import { ref, watch } from "vue";
+import { computed, onUnmounted, ref, watchEffect } from "vue";
 
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
@@ -214,23 +216,34 @@ const {
   voyageId,
   isLoading,
   error,
-  fetchVoyage,
+  handleFetchSingleVoyage,
   openProfileModal,
   closeProfileModal,
   openOptionsModal,
   handleEdit,
   handleDelete,
   closeModal,
+  toggleFavorite,
+  favorites,
 } = useVoyageManager();
 
 const { userData } = useUserProfile();
 const route = useRoute();
 
-const isFavorite = ref(false);
 const isShareModalOpen = ref<boolean>(false);
 
-const toggleFavorite = () => {
-  isFavorite.value = !isFavorite.value;
+const props = defineProps<{
+  id?: string;
+}>();
+
+const isFavorite = computed(() => {
+  return voyageId.value ? favorites.value.includes(voyageId.value) : false;
+});
+
+const handleToggleFavorite = () => {
+  if (voyageId.value) {
+    toggleFavorite(voyageId.value);
+  }
 };
 
 const openShareModal = () => {
@@ -239,24 +252,28 @@ const openShareModal = () => {
 
 const loadVoyageData = async () => {
   try {
-    const voyageId = route.params.id?.toString();
+    const voyageId = props.id || route.params.id?.toString();
     if (!voyageId) return;
 
-    await fetchVoyage(voyageId);
+    console.log("Calling fetchVoyage with ID:", voyageId);
+
+    await handleFetchSingleVoyage(voyageId);
+    if (!voyage.value) {
+      console.error("Voyage not found or failed to load");
+    }
   } catch (error) {
-    console.error("Error loading voyage data:", error);
+    console.log("Error loading voyage data:", error);
   }
 };
-loadVoyageData();
+onUnmounted(() => {
+  loadVoyageData();
+});
 
-watch(
-  () => route.params.id,
-  (newId) => {
-    if (newId) {
-      loadVoyageData();
-    }
+watchEffect(() => {
+  if (props.id || route.params.id) {
+    loadVoyageData();
   }
-);
+});
 </script>
 
 <style scoped></style>
