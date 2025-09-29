@@ -81,6 +81,7 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
 
   // premium features
   const maxImagesPerEntry = computed(() => limits.maxImagesPerEntry);
+
   const canAddMoreImages = computed(() => {
     return formData.value.image_urls.length < maxImagesPerEntry.value;
   });
@@ -586,6 +587,8 @@ export const useImageUpload = (formData: Ref<FormDataType>): ImageActions => {
     handleDragLeave,
     deleteSelectedImage,
     uploadImagesToSupabase,
+    // isPremium: isPremium,
+    maxImagesPerEntry: maxImagesPerEntry,
     handles,
     imageStyle,
     cropBoxStyle,

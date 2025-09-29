@@ -30,106 +30,86 @@ export const usePremium = (userId?: string): PremiumFeatures => {
   const loading = ref(false);
   const error = ref<Error | null>(null);
 
+  const getCurrentUserId = async (): Promise<string> => {
+    if (userId) return userId;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("No user authenticated");
+    }
+    return user.id;
+  };
+
+  const checkSubscriptionStatus = async (
+    currentUserId: string
+  ): Promise<boolean> => {
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from("user_subscriptions")
+      .select("*")
+      .eq("user_id", currentUserId)
+      .eq("status", "active")
+      .single();
+
+    if (subscriptionError && subscriptionError.code !== "PGRST116") {
+      console.warn("Subscription check error:", subscriptionError);
+    }
+
+    return !!subscription;
+  };
+
+  const setPremiumPlan = () => {
+    userPlan.value = {
+      maxImagesPerEntry: 10,
+      maxVoyageEntries: 100,
+      maxPinnedLocations: 50,
+      isPremium: true,
+    };
+  };
+
+  const setFreePlan = () => {
+    userPlan.value = {
+      maxImagesPerEntry: 1,
+      maxVoyageEntries: 10,
+      maxPinnedLocations: 5,
+      isPremium: false,
+    };
+  };
+
   const loadUserPlan = async () => {
     loading.value = true;
     error.value = null;
 
     try {
-      let currentUserId = userId;
+      const currentUserId = await getCurrentUserId();
 
-      // If no userId provided, get current authenticated user
-      if (!currentUserId) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("No user authenticated");
-        }
-        currentUserId = user.id;
-      }
-
-      // First try the external premium service
       try {
         const isUserPremium = await checkPremiumStatus(currentUserId);
-
         if (isUserPremium) {
-          userPlan.value = {
-            maxImagesPerEntry: 10,
-            maxVoyageEntries: 100,
-            maxPinnedLocations: 50,
-            isPremium: true,
-          };
-        } else {
-          // Fallback to checking Supabase subscriptions table
-          const { data: subscription, error: subscriptionError } =
-            await supabase
-              .from("user_subscriptions")
-              .select("*")
-              .eq("user_id", currentUserId)
-              .eq("status", "active")
-              .single();
-
-          if (subscriptionError && subscriptionError.code !== "PGRST116") {
-            console.warn("Subscription check error:", subscriptionError);
-          }
-
-          if (subscription) {
-            userPlan.value = {
-              maxImagesPerEntry: 10,
-              maxVoyageEntries: 100,
-              maxPinnedLocations: 50,
-              isPremium: true,
-            };
-          } else {
-            userPlan.value = {
-              maxImagesPerEntry: 1,
-              maxVoyageEntries: 10,
-              maxPinnedLocations: 5,
-              isPremium: false,
-            };
-          }
+          setPremiumPlan();
+          return;
         }
       } catch (serviceError) {
         console.warn(
           "Premium service unavailable, using fallback:",
           serviceError
         );
+      }
 
-        // Fallback to only Supabase check
-        const { data: subscription } = await supabase
-          .from("user_subscriptions")
-          .select("*")
-          .eq("user_id", currentUserId)
-          .eq("status", "active")
-          .single();
-
-        if (subscription) {
-          userPlan.value = {
-            maxImagesPerEntry: 10,
-            maxVoyageEntries: 100,
-            maxPinnedLocations: 50,
-            isPremium: true,
-          };
-        } else {
-          userPlan.value = {
-            maxImagesPerEntry: 1,
-            maxVoyageEntries: 10,
-            maxPinnedLocations: 5,
-            isPremium: false,
-          };
-        }
+      // Fallback to Supabase subscription check
+      const hasActiveSubscription = await checkSubscriptionStatus(
+        currentUserId
+      );
+      if (hasActiveSubscription) {
+        setPremiumPlan();
+      } else {
+        setFreePlan();
       }
     } catch (err) {
       error.value = err as Error;
       console.error("Error loading user plan:", err);
-
-      // Set default free plan on error
-      userPlan.value = {
-        maxImagesPerEntry: 1,
-        maxVoyageEntries: 10,
-        maxPinnedLocations: 5,
-        isPremium: false,
-      };
+      setFreePlan();
     } finally {
       loading.value = false;
     }
@@ -144,33 +124,19 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     error.value = null;
 
     try {
-      let currentUserId = userId;
-
-      // If no userId provided, get current authenticated user
-      if (!currentUserId) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error("No user authenticated");
-        }
-        currentUserId = user.id;
-      }
-
+      const currentUserId = await getCurrentUserId();
       await upgradeToPremium(currentUserId);
-
-      // Refresh the user plan after upgrade
-      await loadUserPlan();
+      await loadUserPlan(); // Refresh plan after upgrade
     } catch (err) {
       error.value = err as Error;
       console.error("Error upgrading user:", err);
-      throw err; // Re-throw to allow component-level handling
+      throw err;
     } finally {
       loading.value = false;
     }
   };
 
-  // Computed properties for easy access
+  // Computed properties
   const limits = computed(() => userPlan.value);
   const isPremium = computed(() => userPlan.value.isPremium);
 
@@ -185,10 +151,8 @@ export const usePremium = (userId?: string): PremiumFeatures => {
   };
 };
 
-// Legacy alias for backward compatibility
 export const usePlanLimits = () => {
   const premium = usePremium();
-
   return {
     limits: premium.limits,
     isPremium: premium.isPremium,

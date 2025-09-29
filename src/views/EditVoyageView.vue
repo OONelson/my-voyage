@@ -31,12 +31,12 @@
             <i class="fas fa-crown"></i>
             Premium User - Up to {{ maxImagesPerEntry }} images per voyage
           </div>
-          <div v-else class="free-tier-info">
+          <div v-else class="free-tier-info flex flex-col">
             Free Tier - {{ formData.image_urls.length }}/{{ maxImagesPerEntry }}
             images used
-            <button @click="upgradeToPremium" class="upgrade-btn underline">
+            <span @click="upgradeToPremium" class="upgrade-btn underline">
               Upgrade for more images
-            </button>
+            </span>
           </div>
           <input
             type="file"
@@ -416,6 +416,7 @@ const {
   modules,
   activeIndex,
   canAddMoreImages,
+  isPremium,
   maxImagesPerEntry,
 } = useImageUpload(formData);
 
@@ -431,7 +432,7 @@ const {
   removePinAt,
 } = useMap();
 
-const { limits, isPremium } = usePremium();
+const { limits } = usePremium();
 
 // Keep original for diffing
 const original = ref<VoyageTypeInfo | null>(null);
