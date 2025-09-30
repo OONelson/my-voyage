@@ -1,6 +1,10 @@
 import { ref, computed } from "vue";
 import { supabase } from "@/config/supabase";
-import { checkPremiumStatus, upgradeToPremium } from "@/services/premium";
+import {
+  checkPremiumStatus,
+  initiatePremiumCheckout,
+  manageSubscription,
+} from "@/services/premium";
 
 export interface PlanLimits {
   maxImagesPerEntry: number;
@@ -17,6 +21,7 @@ export interface PremiumFeatures {
   checkStatus: () => Promise<void>;
   upgradeUser: () => Promise<void>;
   loadUserPlan: () => Promise<void>;
+  manageBilling: () => Promise<void>;
 }
 
 export const usePremium = (userId?: string): PremiumFeatures => {
@@ -42,22 +47,22 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     return user.id;
   };
 
-  const checkSubscriptionStatus = async (
-    currentUserId: string
-  ): Promise<boolean> => {
-    const { data: subscription, error: subscriptionError } = await supabase
-      .from("user_subscriptions")
-      .select("*")
-      .eq("user_id", currentUserId)
-      .eq("status", "active")
-      .single();
+  // const checkSubscriptionStatus = async (
+  //   currentUserId: string
+  // ): Promise<boolean> => {
+  //   const { data: subscription, error: subscriptionError } = await supabase
+  //     .from("user_subscriptions")
+  //     .select("*")
+  //     .eq("user_id", currentUserId)
+  //     .eq("status", "active")
+  //     .single();
 
-    if (subscriptionError && subscriptionError.code !== "PGRST116") {
-      console.warn("Subscription check error:", subscriptionError);
-    }
+  //   if (subscriptionError && subscriptionError.code !== "PGRST116") {
+  //     console.warn("Subscription check error:", subscriptionError);
+  //   }
 
-    return !!subscription;
-  };
+  //   return !!subscription;
+  // };
 
   const setPremiumPlan = () => {
     userPlan.value = {
@@ -83,30 +88,23 @@ export const usePremium = (userId?: string): PremiumFeatures => {
 
     try {
       const currentUserId = await getCurrentUserId();
+      const isUserPremium = await checkPremiumStatus(currentUserId);
 
-      try {
-        const isUserPremium = await checkPremiumStatus(currentUserId);
-        if (isUserPremium) {
-          setPremiumPlan();
-          return;
-        }
-      } catch (serviceError) {
-        console.warn(
-          "Premium service unavailable, using fallback:",
-          serviceError
-        );
-      }
-
-      // Fallback to Supabase subscription check
-      const hasActiveSubscription = await checkSubscriptionStatus(
-        currentUserId
-      );
-      if (hasActiveSubscription) {
+      if (isUserPremium) {
         setPremiumPlan();
       } else {
         setFreePlan();
       }
     } catch (err) {
+      // Fallback to Supabase subscription check
+      // const hasActiveSubscription = await checkSubscriptionStatus(
+      //   currentUserId
+      // );
+      // if (hasActiveSubscription) {
+      //   setPremiumPlan();
+      // } else {
+      //   setFreePlan();
+      // }
       error.value = err as Error;
       console.error("Error loading user plan:", err);
       setFreePlan();
@@ -119,17 +117,30 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     await loadUserPlan();
   };
 
-  const upgradeUser = async () => {
+  const upgradeUser = async (priceId: string = "price_premium_monthly") => {
     loading.value = true;
     error.value = null;
 
     try {
-      const currentUserId = await getCurrentUserId();
-      await upgradeToPremium(currentUserId);
-      await loadUserPlan(); // Refresh plan after upgrade
+      await initiatePremiumCheckout(priceId);
     } catch (err) {
       error.value = err as Error;
-      console.error("Error upgrading user:", err);
+      console.error("Error initiating premium checkout", err);
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const manageBilling = async () => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await manageSubscription();
+    } catch (err) {
+      error.value = err as Error;
+      console.error("Error managing subscription:", err);
       throw err;
     } finally {
       loading.value = false;
@@ -147,6 +158,7 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     limits: limits.value,
     checkStatus,
     upgradeUser,
+    manageBilling,
     loadUserPlan,
   };
 };
