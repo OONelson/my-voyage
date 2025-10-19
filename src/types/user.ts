@@ -6,7 +6,7 @@ export type UserProfile = {
   email: string;
   profile_image?: string;
   is_premium: boolean;
-  subscription_end?: string;
+  subscription_end?: string | null;
   created_at: string;
   updated_at?: string;
 };

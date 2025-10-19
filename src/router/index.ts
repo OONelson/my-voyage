@@ -72,7 +72,7 @@ const routes: AppRouteRecordRaw[] = [
   {
     path: "/payment/success",
     name: "PaymentSuccess",
-    component: () => import("@/views/PaymentSuccess.vue"),
+    component: () => import("@/views/PaymentSuccessView.vue"),
   },
   {
     path: "/:pathMatch(.*)*",

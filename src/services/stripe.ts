@@ -1,3 +1,5 @@
+// services/stripe.ts
+
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { supabase } from "@/config/supabase";
 
@@ -5,7 +7,7 @@ const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
 
 export interface Price {
   id: string;
-  subscription_id: string;
+  product_id: string;
   unit_amount: number;
   currency: string;
   recurring?: {
@@ -19,6 +21,13 @@ export interface Subscription {
   description: string;
   features: string[];
   prices: Price[];
+}
+
+export interface SubscriptionStatus {
+  status: "active" | "canceled" | "past_due" | "trialing" | "inactive";
+  current_period_end?: string;
+  price_id?: string;
+  isLegacy?: boolean;
 }
 
 export class StripeService {
@@ -41,7 +50,9 @@ export class StripeService {
     return this.stripe;
   }
 
-  async createCheckoutSession(priceId: string): Promise<string> {
+  async createCheckoutSession(
+    priceId: string
+  ): Promise<{ sessionId: string; url?: string }> {
     const { data, error } = await supabase.functions.invoke(
       "create-checkout-session",
       {
@@ -57,7 +68,7 @@ export class StripeService {
       throw new Error(`Failed to create checkout session: ${error.message}`);
     }
 
-    return data.sessionId;
+    return data;
   }
 
   async createCustomerPortalSession(): Promise<string> {
@@ -89,19 +100,17 @@ export class StripeService {
     }
   }
 
-  async getSubscriptionStatus(): Promise<
-    "active" | "canceled" | "past_due" | "trialing" | "inactive"
-  > {
+  async getSubscriptionStatus(): Promise<SubscriptionStatus> {
     const { data, error } = await supabase.functions.invoke(
       "get-subscription-status"
     );
 
     if (error) {
       console.warn("Failed to get subscription status:", error);
-      return "inactive";
+      return { status: "inactive" };
     }
 
-    return data.status;
+    return data;
   }
 }
 

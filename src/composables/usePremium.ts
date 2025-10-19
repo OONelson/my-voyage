@@ -19,7 +19,7 @@ export interface PremiumFeatures {
   error: Error | null;
   limits: PlanLimits;
   checkStatus: () => Promise<void>;
-  upgradeUser: () => Promise<void>;
+  upgradeUser: (priceId: string) => Promise<void>;
   loadUserPlan: () => Promise<void>;
   manageBilling: () => Promise<void>;
 }
@@ -46,23 +46,6 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     }
     return user.id;
   };
-
-  // const checkSubscriptionStatus = async (
-  //   currentUserId: string
-  // ): Promise<boolean> => {
-  //   const { data: subscription, error: subscriptionError } = await supabase
-  //     .from("user_subscriptions")
-  //     .select("*")
-  //     .eq("user_id", currentUserId)
-  //     .eq("status", "active")
-  //     .single();
-
-  //   if (subscriptionError && subscriptionError.code !== "PGRST116") {
-  //     console.warn("Subscription check error:", subscriptionError);
-  //   }
-
-  //   return !!subscription;
-  // };
 
   const setPremiumPlan = () => {
     userPlan.value = {
@@ -96,15 +79,6 @@ export const usePremium = (userId?: string): PremiumFeatures => {
         setFreePlan();
       }
     } catch (err) {
-      // Fallback to Supabase subscription check
-      // const hasActiveSubscription = await checkSubscriptionStatus(
-      //   currentUserId
-      // );
-      // if (hasActiveSubscription) {
-      //   setPremiumPlan();
-      // } else {
-      //   setFreePlan();
-      // }
       error.value = err as Error;
       console.error("Error loading user plan:", err);
       setFreePlan();
@@ -117,7 +91,7 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     await loadUserPlan();
   };
 
-  const upgradeUser = async (priceId: string = "price_premium_monthly") => {
+  const upgradeUser = async (priceId: string) => {
     loading.value = true;
     error.value = null;
 

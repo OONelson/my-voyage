@@ -108,6 +108,7 @@ export const handleAuthCallback = async (): Promise<AuthUser> => {
     profileImage: avatarUrl,
     is_premium: false,
     created_at: new Date(),
+    subscription_end: Date() || null,
   });
 
   return user;

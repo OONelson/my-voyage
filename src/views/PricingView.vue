@@ -98,7 +98,7 @@
               For professionals who need more power
             </p>
             <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">$9</span>
+              <span class="text-4xl font-extrabold text-gray-900">$6</span>
               <span class="text-base font-medium text-gray-500">/month</span>
             </p>
             <button
@@ -152,7 +152,7 @@
             <h2 class="text-lg font-medium text-gray-900">Premium</h2>
             <p class="mt-4 text-sm text-gray-500">Best value - save 20%</p>
             <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">$90</span>
+              <span class="text-4xl font-extrabold text-gray-900">$60</span>
               <span class="text-base font-medium text-gray-500">/year</span>
             </p>
             <button
@@ -226,9 +226,11 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 // import { createCheckoutSession } from "../services/supabase/subscriptions";
-import { upgradeToPremium } from "@/services/premium";
+import { usePremium } from "@/composables/usePremium";
 
 const router = useRouter();
+const { upgradeUser } = usePremium();
+
 const { user } = useAuth();
 
 type Plan = {
@@ -239,6 +241,7 @@ type Plan = {
   description: string;
   features: string[];
   featured: boolean;
+  priceId: string;
 };
 
 const plans = ref<Plan[]>([
@@ -254,11 +257,12 @@ const plans = ref<Plan[]>([
       "Maximum 10 voyage entries",
     ],
     featured: false,
+    priceId: null,
   },
   {
     id: "premium_monthly",
     name: "Premium",
-    price: "$9",
+    price: "$6",
     period: "per month",
     description: "Enhanced features for those who love traveling",
     features: [
@@ -269,11 +273,12 @@ const plans = ref<Plan[]>([
       "Export to PDF feature",
     ],
     featured: true,
+    priceId: "price_your_monthly_price_id_here",
   },
   {
     id: "premium_yearly",
     name: "Premium",
-    price: "$90",
+    price: "$60",
     period: "per year",
     description: "Best value - save 20%",
     features: [
@@ -282,6 +287,7 @@ const plans = ref<Plan[]>([
       "Exclusive yearly content",
     ],
     featured: false,
+    priceId: "price_your_yearly_price_id_here",
   },
 ]);
 
@@ -337,10 +343,11 @@ const handlePlanSelection = async (plan: Plan) => {
 
   try {
     loadingPlan.value = plan.id;
-    if (!user.value) return;
+    if (!plan.priceId) {
+      throw new Error("Price ID not configured for this plan");
+    }
 
-    // Temporary direct upgrade until checkout is implemented
-    await upgradeToPremium(user.value.id);
+    await upgradeUser(plan.priceId);
     user.value.is_premium = true;
     showSuccess.value = true;
   } catch (error) {
