@@ -6,85 +6,71 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
   apiVersion: "2023-10-16",
 });
 
-// CORS headers configuration
-const corsHeaders = (origin: string | null) => ({
-  "Access-Control-Allow-Origin": origin || "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Max-Age": "86400",
-});
-
-
+};
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin");
-  
-  console.log(`Received ${req.method} request from origin: ${origin}`);
-
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    console.log("Handling OPTIONS preflight request");
     return new Response("ok", {
       status: 200,
-      headers: corsHeaders(origin),
+      headers: corsHeaders,
     });
   }
-  // Set common headers for all responses
-  const headers = {
-    ...corsHeaders(origin),
-    "Content-Type": "application/json",
-  };
 
   try {
-    // Only allow POST requests for the main functionality
     if (req.method !== "POST") {
-      return new Response(
-        JSON.stringify({ error: "Method not allowed" }),
-        {
-          headers,
-          status: 405,
-        }
-      );
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 405,
+      });
     }
 
     const body = await req.json();
     const { priceId, successUrl, cancelUrl } = body;
 
-    console.log("Processing checkout session for priceId:", priceId);
-
     if (!priceId) {
-      throw new Error("Price ID is required");
+      return new Response(JSON.stringify({ error: "Price ID is required" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
     }
 
-    // Get the user from the authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Missing authorization header");
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
 
-    // Use correct environment variables
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("PROJECT_URL") || "";
-    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("ANON_KEY") || "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY");
 
     if (!supabaseUrl || !supabaseKey) {
-      throw new Error("Supabase configuration missing");
+      return new Response(JSON.stringify({ error: "Supabase configuration missing" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
     }
 
-    const supabaseClient = createClient(
-      supabaseUrl,
-      supabaseKey,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
 
-    if (userError) {
-      console.error("Auth error:", userError);
-      throw new Error("Authentication failed");
-    }
-
-    if (!user) {
-      throw new Error("User not authenticated");
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Not authenticated" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
 
     console.log("User authenticated:", user.id);
@@ -93,15 +79,11 @@ serve(async (req) => {
     let customerId: string;
 
     // Check if user already has a Stripe customer ID
-    const { data: existingSubscription, error: subscriptionError } = await supabaseClient
+    const { data: existingSubscription } = await supabaseClient
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("user_id", user.id)
       .single();
-
-    if (subscriptionError) {
-      console.log("No existing subscription found, creating new customer");
-    }
 
     if (existingSubscription?.stripe_customer_id) {
       customerId = existingSubscription.stripe_customer_id;
@@ -119,15 +101,11 @@ serve(async (req) => {
       console.log("Created new customer:", customerId);
 
       // Store customer ID in database
-      const { error: insertError } = await supabaseClient.from("subscriptions").insert({
+      await supabaseClient.from("subscriptions").insert({
         user_id: user.id,
         stripe_customer_id: customerId,
         status: "incomplete",
       });
-
-      if (insertError) {
-        console.error("Error storing customer ID:", insertError);
-      }
     }
 
     // Create checkout session
@@ -158,19 +136,19 @@ serve(async (req) => {
         url: session.url,
       }),
       {
-        headers,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       }
     );
   } catch (error) {
     console.error("Error creating checkout session:", error);
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
-        details: error.toString() 
-      }), 
+        details: error.toString(),
+      }),
       {
-        headers,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       }
     );

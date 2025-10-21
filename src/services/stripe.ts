@@ -1,5 +1,3 @@
-// services/stripe.ts
-
 import { loadStripe, type Stripe } from "@stripe/stripe-js";
 import { supabase } from "@/config/supabase";
 
@@ -54,7 +52,7 @@ export class StripeService {
     priceId: string
   ): Promise<{ sessionId: string; url?: string }> {
     const { data, error } = await supabase.functions.invoke(
-      "create-checkout-session",
+      "create-check-out-session",
       {
         body: {
           priceId,
@@ -63,6 +61,8 @@ export class StripeService {
         },
       }
     );
+
+    console.log(priceId);
 
     if (error) {
       throw new Error(`Failed to create checkout session: ${error.message}`);

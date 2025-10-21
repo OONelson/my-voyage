@@ -23,95 +23,52 @@
         <p>Your subscription is now active. Enjoy your premium features!</p>
       </div>
 
-      <!-- Pricing Plans -->
+      <div v-if="loadingPlans" class="text-center py-10">
+        <span>Loading plans...</span>
+      </div>
+      <div v-else-if="errorPlans" class="text-center text-red-500 py-10">
+        {{ errorPlans }}
+      </div>
       <div
+        v-else
         class="mt-16 space-y-8 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8"
       >
-        <!-- Free Plan -->
         <div
+          v-for="plan in plans"
+          :key="plan.id"
           class="relative bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-200"
-        >
-          <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900">Free</h2>
-            <p class="mt-4 text-sm text-gray-500">
-              Basic features to get started
-            </p>
-            <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">$0</span>
-              <span class="text-base font-medium text-gray-500">/forever</span>
-            </p>
-            <button
-              @click="handlePlanSelection(plans[0])"
-              :disabled="isCurrentPlan(plans[0])"
-              :class="[
-                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
-                isCurrentPlan(plans[0])
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'bg-white text-gray-800 hover:bg-gray-50',
-              ]"
-            >
-              {{ getButtonText(plans[0]) }}
-            </button>
-          </div>
-          <div class="pt-6 pb-8 px-6">
-            <h3
-              class="text-xs font-medium text-gray-900 tracking-wide uppercase"
-            >
-              What's included
-            </h3>
-            <ul class="mt-6 space-y-4">
-              <li
-                v-for="feature in plans[0].features"
-                :key="feature"
-                class="flex"
-              >
-                <svg
-                  class="flex-shrink-0 h-5 w-5 text-accent100"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <span class="ml-3 text-base text-gray-500">{{ feature }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Premium Monthly (Featured) -->
-        <div
-          class="relative bg-white border-2 border-accent100 rounded-2xl shadow-sm divide-y divide-gray-200"
+          :class="plan.featured ? 'border-2 border-accent100' : ''"
         >
           <div
+            v-if="plan.featured"
             class="absolute top-0 right-0 bg-accent100 text-white px-4 py-1 text-xs font-bold rounded-bl-lg rounded-tr-lg uppercase tracking-wide"
           >
             Popular
           </div>
           <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900">Premium</h2>
-            <p class="mt-4 text-sm text-gray-500">
-              For professionals who need more power
-            </p>
+            <h2 class="text-lg font-medium text-gray-900">{{ plan.name }}</h2>
+            <p class="mt-4 text-sm text-gray-500">{{ plan.description }}</p>
             <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">$6</span>
-              <span class="text-base font-medium text-gray-500">/month</span>
+              <span class="text-4xl font-extrabold text-gray-900">
+                ${{ plan.prices[0].amount }}
+              </span>
+              <span class="text-base font-medium text-gray-500">
+                /{{ plan.prices[0].interval || "one-time" }}
+              </span>
             </p>
             <button
-              @click="handlePlanSelection(plans[1])"
-              :disabled="isCurrentPlan(plans[1])"
+              @click="handlePlanSelection(plan)"
+              :disabled="isCurrentPlan(plan)"
               :class="[
                 'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
-                isCurrentPlan(plans[1])
+                isCurrentPlan(plan)
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'bg-accent100 text-white hover:bg-accent50',
+                  : plan.featured
+                  ? 'bg-accent100 text-white hover:bg-accent50'
+                  : 'bg-white text-gray-800 hover:bg-gray-50',
               ]"
             >
-              {{ getButtonText(plans[1]) }}
+              {{ getButtonText(plan) }}
             </button>
           </div>
           <div class="pt-6 pb-8 px-6">
@@ -121,77 +78,8 @@
               What's included
             </h3>
             <ul class="mt-6 space-y-4">
-              <li
-                v-for="feature in plans[1].features"
-                :key="feature"
-                class="flex"
-              >
-                <svg
-                  class="flex-shrink-0 h-5 w-5 text-accent50"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-                <span class="ml-3 text-base text-gray-500">{{ feature }}</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Premium Yearly -->
-        <div
-          class="relative bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-200"
-        >
-          <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900">Premium</h2>
-            <p class="mt-4 text-sm text-gray-500">Best value - save 20%</p>
-            <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">$60</span>
-              <span class="text-base font-medium text-gray-500">/year</span>
-            </p>
-            <button
-              @click="handlePlanSelection(plans[2])"
-              :disabled="isCurrentPlan(plans[2])"
-              :class="[
-                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
-                isCurrentPlan(plans[2])
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : 'text-accent100 hover:bg-blue-50',
-              ]"
-            >
-              {{ getButtonText(plans[2]) }}
-            </button>
-          </div>
-          <div class="pt-6 pb-8 px-6">
-            <h3
-              class="text-xs font-medium text-gray-900 tracking-wide uppercase"
-            >
-              What's included
-            </h3>
-            <ul class="mt-6 space-y-4">
-              <li
-                v-for="feature in plans[2].features"
-                :key="feature"
-                class="flex"
-              >
-                <svg
-                  class="flex-shrink-0 h-5 w-5 text-accent50"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
+              <li v-for="feature in plan.features" :key="feature" class="flex">
+                <svg class="flex-shrink-0 h-5 w-5 text-accent100" />
                 <span class="ml-3 text-base text-gray-500">{{ feature }}</span>
               </li>
             </ul>
@@ -225,71 +113,29 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
-// import { createCheckoutSession } from "../services/supabase/subscriptions";
 import { usePremium } from "@/composables/usePremium";
+import { fetchSubscriptionPlans } from "@/services/fetchSubscriptionPlans";
+import type { Plan } from "@/types/plans";
 
 const router = useRouter();
 const { upgradeUser } = usePremium();
-
 const { user } = useAuth();
 
-type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  period: string;
-  description: string;
-  features: string[];
-  featured: boolean;
-  priceId: string;
-};
+const plans = ref([]);
+const loadingPlans = ref(true);
+const errorPlans = ref<string | null>(null);
 
-const plans = ref<Plan[]>([
-  {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    description: "Basic features to get started with travel journaling",
-    features: [
-      "1 image per voyage entry",
-      "Up to 2 pinned locations per voyage entry",
-      "Maximum 10 voyage entries",
-    ],
-    featured: false,
-    priceId: null,
-  },
-  {
-    id: "premium_monthly",
-    name: "Premium",
-    price: "$6",
-    period: "per month",
-    description: "Enhanced features for those who love traveling",
-    features: [
-      "Up to 8 images per travel entry",
-      "Unlimited pinned locations",
-      "Up to 50 travel entries",
-      "Advanced travel statistics",
-      "Export to PDF feature",
-    ],
-    featured: true,
-    priceId: "price_your_monthly_price_id_here",
-  },
-  {
-    id: "premium_yearly",
-    name: "Premium",
-    price: "$60",
-    period: "per year",
-    description: "Best value - save 20%",
-    features: [
-      "Everything in Premium Monthly",
-      "Annual discount",
-      "Exclusive yearly content",
-    ],
-    featured: false,
-    priceId: "price_your_yearly_price_id_here",
-  },
-]);
+onMounted(async () => {
+  try {
+    loadingPlans.value = true;
+    const products = await fetchSubscriptionPlans();
+    plans.value = products;
+  } catch (err: any) {
+    errorPlans.value = err.message || "Failed to load plans";
+  } finally {
+    loadingPlans.value = false;
+  }
+});
 
 const faqs = ref([
   {
@@ -336,8 +182,20 @@ const getButtonText = (plan: Plan) => {
 };
 
 const handlePlanSelection = async (plan: Plan) => {
+  if (!plan.prices?.[0]?.id) {
+    alert("No price available for this plan.");
+    return;
+  }
+
   if (plan.id === "free") {
     router.push("/");
+    return;
+  }
+
+  // Ensure user is authenticated before proceeding
+  if (!user.value) {
+    // Optionally, show a login modal or redirect to login
+    router.push("/login");
     return;
   }
 
@@ -347,7 +205,7 @@ const handlePlanSelection = async (plan: Plan) => {
       throw new Error("Price ID not configured for this plan");
     }
 
-    await upgradeUser(plan.priceId);
+    await upgradeUser(plan.prices[0].id);
     user.value.is_premium = true;
     showSuccess.value = true;
   } catch (error) {
