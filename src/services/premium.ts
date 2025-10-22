@@ -1,10 +1,7 @@
-// services/premium.ts
-
 import { supabase } from "@/config/supabase";
 import type { UserProfile } from "@/types/user";
 import { stripeService } from "@/services/stripe";
 
-// Remove the old upgradeToPremium function since we're using Stripe now
 export const upgradeToPremium = async (
   userId: string
 ): Promise<UserProfile> => {
@@ -13,14 +10,12 @@ export const upgradeToPremium = async (
 
 export const checkPremiumStatus = async (userId: string): Promise<boolean> => {
   try {
-    // First check Stripe subscription status
     const subscriptionData = await stripeService.getSubscriptionStatus();
     const hasActiveSubscription = ["active", "trialing"].includes(
       subscriptionData.status
     );
 
     if (hasActiveSubscription) {
-      // Ensure profile is marked as premium
       const { data: profile } = await supabase
         .from("profiles")
         .select("is_premium, subscription_tier")
@@ -39,7 +34,6 @@ export const checkPremiumStatus = async (userId: string): Promise<boolean> => {
       return true;
     }
 
-    // Fallback to database check for legacy subscriptions
     const { data, error } = await supabase
       .from("profiles")
       .select("is_premium, subscription_end")
@@ -105,7 +99,6 @@ export const manageSubscription = async (): Promise<void> => {
   }
 };
 
-// New function to get subscription details
 export const getSubscriptionDetails = async (userId: string) => {
   const { data, error } = await supabase
     .from("subscriptions")
@@ -116,7 +109,6 @@ export const getSubscriptionDetails = async (userId: string) => {
     .single();
 
   if (error && error.code !== "PGRST116") {
-    // PGRST116 = no rows
     throw error;
   }
 

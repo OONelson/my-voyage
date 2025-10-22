@@ -204,7 +204,7 @@ import { dateAndTime } from "@/utils/date-and-timeUtils";
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useUserProfile } from "@/composables/useUserProfile";
 import { useRoute } from "vue-router";
-import { computed, onUnmounted, ref, watchEffect } from "vue";
+import { computed, onMounted, ref } from "vue";
 
 const { relativeTripDate, relativeCreatedAt } = dateAndTime();
 
@@ -221,7 +221,7 @@ const {
   closeProfileModal,
   openOptionsModal,
   handleEdit,
-  handleDelete,
+  // handleDelete,
   closeModal,
   toggleFavorite,
   favorites,
@@ -265,15 +265,15 @@ const loadVoyageData = async () => {
     console.log("Error loading voyage data:", error);
   }
 };
-onUnmounted(() => {
+onMounted(() => {
   loadVoyageData();
 });
 
-watchEffect(() => {
-  if (props.id || route.params.id) {
-    loadVoyageData();
-  }
-});
+// watchEffect(() => {
+//   if (props.id || route.params.id) {
+//     loadVoyageData();
+//   }
+// });
 </script>
 
 <style scoped></style>
