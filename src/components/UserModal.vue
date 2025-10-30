@@ -40,13 +40,11 @@
     </nav>
 
     <div class="space-y-6 pb-6">
-      <!-- Profile Tab Content -->
       <div v-if="loading" class="flex justify-center items-center py-8">
         <Spinner />
       </div>
 
       <div v-else-if="activeTab === 'profile' && userData" class="space-y-6">
-        <!-- Profile Photo Section -->
         <div class="space-y-4">
           <h3
             class="text-lg font-semibold text-gray-800 dark:text-dark-textblack200"
@@ -63,7 +61,6 @@
             />
 
             <div class="flex flex-col items-center space-y-4">
-              <!-- Profile Image Display -->
               <div class="relative">
                 <div
                   v-if="!userData.profile_image"
@@ -96,7 +93,6 @@
                   </div>
                 </div>
 
-                <!-- Loading state -->
                 <div
                   v-if="isImgLoading"
                   class="absolute inset-0 bg-gray-200 dark:bg-dark-background200 bg-opacity-50 flex items-center justify-center rounded-full"
@@ -145,12 +141,12 @@
             <h3
               class="text-lg font-semibold text-gray-800 dark:text-dark-textblack200"
             >
-              Personal Information
+              Personal Info
             </h3>
             <div class="flex gap-2">
               <ReusableButton
                 v-if="!isEditingProfile"
-                class="text-sm px-4 py-2 bg-accent200 dark:bg-dark-accent200 text-white hover:bg-accent300 dark:hover:bg-dark-accent300"
+                class="text-sm px-2 py-2 bg-accent100 dark:bg-dark-accent100 text-white hover:bg-accent200 dark:hover:bg-dark-accent200"
                 @click="startEditingProfile"
                 label="Edit Profile"
               />
@@ -291,7 +287,7 @@
 
         <!-- Account Actions Section -->
         <div
-          class="space-y-4 pt-6 border-t border-gray-200 dark:border-dark-border100"
+          class="space-y-4 pt-6 -px-6 border-t border-gray-200 dark:border-dark-border100"
         >
           <h3
             class="text-lg font-semibold text-gray-800 dark:text-dark-textblack200"
@@ -311,7 +307,7 @@
               </p>
             </div>
             <ReusableButton
-              class="text-sm px-4 py-2 text-gray-700 dark:text-dark-textblack200 border border-gray-300 dark:border-dark-border100 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-background200"
+              class="text-sm px-2 py-2 text-gray-700 dark:text-dark-textblack200 border border-gray-300 dark:border-dark-border100 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-background200"
               @click="openLogoutModal"
               label="Log Out"
             />
@@ -329,7 +325,7 @@
               </p>
             </div>
             <ReusableButton
-              class="text-sm px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30"
+              class="text-sm px-2 py-2 bg-red-700 dark:bg-red-700/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/30 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30"
               @click="openDeleteAccountModal"
               label="Delete Account"
             />

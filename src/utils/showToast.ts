@@ -1,6 +1,6 @@
 const showToast = async (
   message: string,
-  type: "success" | "error" | "info"
+  type: "success" | "error" | "info" | "warning"
 ) => {
   try {
     const { useToast } = await import("@/composables/useToast");

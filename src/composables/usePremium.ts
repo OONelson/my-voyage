@@ -1,3 +1,4 @@
+// src/composables/usePremium.ts - Updated limits
 import { ref, computed } from "vue";
 import { supabase } from "@/config/supabase";
 import {
@@ -10,6 +11,8 @@ export interface PlanLimits {
   maxImagesPerEntry: number;
   maxVoyageEntries: number;
   maxPinnedLocations: number;
+  canExportPdf: boolean;
+  canShareSocial: boolean;
   isPremium: boolean;
 }
 
@@ -28,7 +31,9 @@ export const usePremium = (userId?: string): PremiumFeatures => {
   const userPlan = ref<PlanLimits>({
     maxImagesPerEntry: 1,
     maxVoyageEntries: 10,
-    maxPinnedLocations: 5,
+    maxPinnedLocations: 2,
+    canExportPdf: false,
+    canShareSocial: true,
     isPremium: false,
   });
 
@@ -49,9 +54,11 @@ export const usePremium = (userId?: string): PremiumFeatures => {
 
   const setPremiumPlan = () => {
     userPlan.value = {
-      maxImagesPerEntry: 10,
-      maxVoyageEntries: 100,
-      maxPinnedLocations: 50,
+      maxImagesPerEntry: 8,
+      maxVoyageEntries: 50,
+      maxPinnedLocations: 8,
+      canExportPdf: true,
+      canShareSocial: true,
       isPremium: true,
     };
   };
@@ -60,7 +67,9 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     userPlan.value = {
       maxImagesPerEntry: 1,
       maxVoyageEntries: 10,
-      maxPinnedLocations: 5,
+      maxPinnedLocations: 2,
+      canExportPdf: false,
+      canShareSocial: true,
       isPremium: false,
     };
   };
@@ -121,7 +130,6 @@ export const usePremium = (userId?: string): PremiumFeatures => {
     }
   };
 
-  // Computed properties
   const limits = computed(() => userPlan.value);
   const isPremium = computed(() => userPlan.value.isPremium);
 

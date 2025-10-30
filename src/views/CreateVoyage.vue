@@ -15,16 +15,26 @@
       <form @submit.prevent="onSubmit" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
-          <div v-if="isPremium" class="premium-badge">
+          <div
+            v-if="isPremium"
+            class="premium-badge bg-accent50 text-white px-3 py-1 rounded-lg text-sm"
+          >
             <i class="fas fa-crown"></i>
-            Premium User - Up to {{ maxImagesPerEntry }} images per voyage
+            Premium - Up to {{ maxImagesPerEntry }} images per voyage
           </div>
-          <div v-else class="free-tier-info">
+          <div
+            v-else
+            class="free-tier-info bg-gray-100 px-3 py-2 rounded-lg text-sm"
+          >
             Free Tier - {{ formData.image_urls.length }}/{{ maxImagesPerEntry }}
             images used
 
-            <button @click="upgradeToPremium" class="upgrade-btn underline">
-              Upgrade for more images
+            <button
+              type="button"
+              @click="upgradeToPremium"
+              class="upgrade-btn underline text-accent100 ml-2"
+            >
+              Upgrade for {{ 8 - maxImagesPerEntry }} more images
             </button>
           </div>
           <input
@@ -61,7 +71,7 @@
               v-if="canAddMoreImages"
               type="button"
               @click="openFileInput"
-              class="w-16 h-16 border-dashed border-2 border-gray-300 text-gray-400 rounded flex items-center justify-center"
+              class="w-16 h-16 border-dashed border-2 border-gray-300 text-gray-400 rounded flex items-center justify-center hover:border-accent50 hover:text-accent50 transition-colors"
               title="Add image"
             >
               +
@@ -71,6 +81,7 @@
           <!-- Action Buttons -->
           <div v-if="showActionButtons" class="flex gap-2 mb-2">
             <button
+              type="button"
               @click="cropImage"
               class="flex md:justify-between items-center gap-1 px-2 bg-accent50 text-white rounded-md hover:bg-accent70 transition-colors"
             >
@@ -78,14 +89,15 @@
               <span class="hidden md:block"> Crop </span>
             </button>
             <button
+              type="button"
               @click="rotate(-90)"
               class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
               <RotateLeft size="24" />
-
               <span class="hidden md:block"> Rotate Left </span>
             </button>
             <button
+              type="button"
               @click="rotate(90)"
               class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
@@ -208,7 +220,7 @@
                   <li
                     v-for="suggestion in locationSuggestions"
                     :key="suggestion.place_id || suggestion.display_name"
-                    @click="selectSuggestionAndMaybePin(suggestion)"
+                    @click="selectAndPinSuggestion(suggestion)"
                     class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                   >
                     {{ suggestion.display_name }}
@@ -228,19 +240,39 @@
             <MapView />
 
             <!-- Pin Controls -->
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                @click="pinSelectedLocation()"
-                class="px-3 py-1 bg-accent50 text-white rounded disabled:opacity-50"
-                :disabled="!selectedLocation || reachedPinLimit"
-                title="Pin the selected map location"
+            <div class="mt-3 p-3 bg-gray-50 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">
+                  Pinned Locations ({{ pins.length }}/{{ maxPinnedLocations }})
+                </span>
+                <button
+                  type="button"
+                  @click="pinSelectedLocation"
+                  :disabled="!selectedLocation || reachedPinLimit"
+                  class="px-3 py-1 text-sm bg-accent50 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent70 transition-colors"
+                  :title="
+                    reachedPinLimit
+                      ? 'Pin limit reached. Upgrade for more pins.'
+                      : 'Pin the selected location'
+                  "
+                >
+                  Pin This Spot
+                </button>
+              </div>
+
+              <div
+                v-if="!isPremium && reachedPinLimit"
+                class="text-xs text-orange-600 mb-2"
               >
-                Pin This Spot
-              </button>
-              <span class="text-sm text-gray-600"
-                >Pins: {{ pins.length }} / {{ pinLimitDisplay }}</span
-              >
+                Free users can pin up to {{ maxPinnedLocations }} locations.
+                <button
+                  type="button"
+                  @click="upgradeToPremium"
+                  class="underline font-medium"
+                >
+                  Upgrade for {{ 8 - maxPinnedLocations }} more pins
+                </button>
+              </div>
             </div>
 
             <!-- Pinned List -->
@@ -248,19 +280,19 @@
               <div
                 v-for="(p, i) in pins"
                 :key="i"
-                class="flex items-center justify-between py-1 border-b last:border-b-0"
+                class="flex items-center justify-between py-2 border-b last:border-b-0"
               >
-                <div class="text-sm">
-                  <p class="font-medium truncate max-w-[360px]">
+                <div class="text-sm flex-1">
+                  <p class="font-medium truncate max-w-[300px]">
                     {{ p.display_name }}
                   </p>
-                  <p class="text-gray-500">
+                  <p class="text-gray-500 text-xs">
                     {{ p.lat.toFixed(4) }}, {{ p.lon.toFixed(4) }}
                   </p>
                 </div>
                 <button
                   type="button"
-                  class="text-red-600 hover:underline"
+                  class="text-red-600 hover:underline text-sm"
                   @click="removePinAt(i)"
                 >
                   Remove
@@ -324,6 +356,7 @@
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-3 pt-4">
           <button
+            type="button"
             @click="navigateToVoyages"
             class="px-4 py-2 border rounded text-textblack100 hover:bg-gray-100"
           >
@@ -332,7 +365,7 @@
           <ReusableButton
             type="submit"
             class="px-4 py-2 bg-accent100 hover:bg-accent50 active:bg-accent50 text-white rounded"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || !canSubmit"
             :label="isSubmitting ? 'Creating...' : 'Create Voyage'"
           />
         </div>
@@ -361,16 +394,17 @@ import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import CropIcon from "@/assets/icons/CropIcon.vue";
 import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
+import LocationIcon from "@/assets/icons/LocationIcon.vue";
 // imports from composables/functions/types
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
 import { usePremium } from "@/composables/usePremium";
 import { genUtils } from "@/utils/genUtils";
-import { MapSuggestion } from "@/types/mapTypes";
+import type { LocationSuggestion } from "@/types/mapTypes";
 import { setupStorageBucket } from "@/utils/storageSetup";
 
-const { isLoading, navigateToVoyages, handleCreateVoyage, formData } =
+const { isLoading, navigateToVoyages, handleCreateVoyage, formData, voyages } =
   useVoyageManager();
 
 const { isSubmitting, formatDateForInput, upgradeToPremium } = genUtils();
@@ -411,7 +445,7 @@ const {
   maxImagesPerEntry,
 } = useImageUpload(formData);
 
-const { limits } = usePremium();
+const { limits, loadUserPlan } = usePremium();
 
 const {
   selectedLocation,
@@ -424,22 +458,38 @@ const {
   useCurrentLocation,
   addPin,
   removePinAt,
+  maxPinnedLocations,
 } = useMap();
 
 onMounted(async () => {
+  await loadUserPlan();
   const isStorageReady = await setupStorageBucket();
   if (!isStorageReady) {
-    // const { useToast } = await import("@/composables/useToast");
-    // const { addToast } = useToast();
-    // addToast('Please create "voyage-images" bucket in Supabase Storage', {
-    //   type: "warning",
-    // });
+    console.warn("Storage bucket not configured");
   }
+});
 
-  // handleFetchVoyages();
+// Check if voyage limit reached
+const canCreateVoyage = computed(() => {
+  return voyages.value.length < limits.maxVoyageEntries;
+});
+
+const canSubmit = computed(() => {
+  return (
+    formData.value.title.trim() &&
+    formData.value.location.trim() &&
+    formData.value.start_date &&
+    formData.value.end_date &&
+    canCreateVoyage.value
+  );
 });
 
 const onSubmit = async () => {
+  if (!canCreateVoyage.value) {
+    upgradeToPremium();
+    return;
+  }
+
   try {
     const uploadedImageUrls = await uploadImagesToSupabase();
 
@@ -450,36 +500,39 @@ const onSubmit = async () => {
     const voyageData = {
       ...formData.value,
       image_urls: uploadedImageUrls,
+      pins: pins.value,
     };
 
-    // Then create the voyage with the proper URLs
     await handleCreateVoyage(voyageData);
-    // navigateToVoyage(voyages.);
   } catch (error) {
     console.error("Error creating voyage:", error);
-    // Handle error (show toast, etc.)
   }
 };
 
 const reachedPinLimit = computed(
-  () => pins.value.length >= limits.maxPinnedLocations
-);
-const pinLimitDisplay = computed(() =>
-  Number.isFinite(limits.maxPinnedLocations) ? limits.maxPinnedLocations : "∞"
+  () => pins.value.length >= maxPinnedLocations.value
 );
 
-const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
-  selectSuggestion(suggestion as any);
+// Auto-pin when selecting suggestion
+const selectAndPinSuggestion = (suggestion: LocationSuggestion) => {
+  selectSuggestion(suggestion);
+
+  // Auto-pin the selected location if not at limit
+  if (!reachedPinLimit.value) {
+    setTimeout(() => {
+      pinSelectedLocation();
+    }, 100);
+  }
 };
 
 const pinSelectedLocation = () => {
   if (!selectedLocation.value) return;
-  addPin({
-    display_name: selectedLocation.value.display_name,
-    lat: selectedLocation.value.lat,
-    lon: selectedLocation.value.lon,
-  });
-  formData.value.pins = pins.value;
+
+  const success = addPin(selectedLocation.value);
+  if (!success && reachedPinLimit.value) {
+    // Show message about limit
+    console.warn("Pin limit reached");
+  }
 };
 
 watch(pins, (nv) => {
@@ -543,8 +596,6 @@ const handleClasses: Record<HandleKey, string> = {
   left: "left-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
   right: "right-0 top-1/2 -translate-y-1/2 cursor-ew-resize",
 };
-
-/* Removed duplicate declaration of pins, addPin, removePinAt, maxPinnedLocations */
 </script>
 
 <style scoped>

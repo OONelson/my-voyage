@@ -23,12 +23,26 @@
         <p>Your subscription is now active. Enjoy your premium features!</p>
       </div>
 
+      <!-- Loading State -->
       <div v-if="loadingPlans" class="text-center py-10">
-        <span>Loading plans...</span>
+        <div
+          class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-accent100"
+        ></div>
+        <p class="mt-4 text-gray-600">Loading plans...</p>
       </div>
+
+      <!-- Error State -->
       <div v-else-if="errorPlans" class="text-center text-red-500 py-10">
-        {{ errorPlans }}
+        <p class="text-lg font-semibold">{{ errorPlans }}</p>
+        <button
+          @click="loadPlans"
+          class="mt-4 px-6 py-2 bg-accent100 text-white rounded-lg hover:bg-accent200"
+        >
+          Try Again
+        </button>
       </div>
+
+      <!-- Plans Grid -->
       <div
         v-else
         class="mt-16 space-y-8 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-x-8"
@@ -36,41 +50,61 @@
         <div
           v-for="plan in plans"
           :key="plan.id"
-          class="relative bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-200"
-          :class="plan.featured ? 'border-2 border-accent100' : ''"
+          class="relative bg-white border-2 rounded-2xl shadow-sm divide-y divide-gray-200 transition-all duration-300 hover:shadow-lg"
+          :class="getPlanBorderClass(plan)"
         >
+          <!-- Current Plan Badge -->
           <div
-            v-if="plan.featured"
-            class="absolute top-0 right-0 bg-accent100 text-white px-4 py-1 text-xs font-bold rounded-bl-lg rounded-tr-lg uppercase tracking-wide"
+            v-if="isCurrentPlan(plan)"
+            class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1 text-xs font-bold rounded-full uppercase tracking-wide shadow-md"
+          >
+            Current Plan
+          </div>
+
+          <!-- Popular Badge -->
+          <div
+            v-else-if="plan.featured"
+            class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-accent100 text-white px-4 py-1 text-xs font-bold rounded-full uppercase tracking-wide shadow-md"
           >
             Popular
           </div>
+
+          <!-- Plan Content -->
           <div class="p-6">
-            <h2 class="text-lg font-medium text-gray-900">{{ plan.name }}</h2>
+            <h2 class="text-2xl font-bold text-gray-900">{{ plan.name }}</h2>
             <p class="mt-4 text-sm text-gray-500">{{ plan.description }}</p>
-            <p class="mt-8">
-              <span class="text-4xl font-extrabold text-gray-900">
+
+            <!-- Price -->
+            <div class="mt-8">
+              <span class="text-5xl font-extrabold text-gray-900">
                 ${{ plan.prices[0].amount }}
               </span>
               <span class="text-base font-medium text-gray-500">
                 /{{ plan.prices[0].interval || "one-time" }}
               </span>
-            </p>
+            </div>
+
+            <!-- Action Button -->
             <button
+              v-if="shouldShowButton(plan)"
               @click="handlePlanSelection(plan)"
-              :disabled="isCurrentPlan(plan)"
-              :class="[
-                'mt-8 block w-full py-3 px-6 border border-accent50 rounded-md text-center font-medium',
-                isCurrentPlan(plan)
-                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                  : plan.featured
-                  ? 'bg-accent100 text-white hover:bg-accent50'
-                  : 'bg-white text-gray-800 hover:bg-gray-50',
-              ]"
+              :disabled="isLoadingPlan(plan) || isCurrentPlan(plan)"
+              :class="getButtonClass(plan)"
+              class="mt-8 block w-full py-3 px-6 border rounded-md text-center font-medium transition-all duration-200"
             >
               {{ getButtonText(plan) }}
             </button>
+
+            <!-- No Button for Free Plan when user is Free -->
+            <div
+              v-else-if="plan.id === 'free' && !isPremiumUser"
+              class="mt-8 block w-full py-3 px-6 text-center text-sm text-gray-500 italic"
+            >
+              You're on this plan
+            </div>
           </div>
+
+          <!-- Features -->
           <div class="pt-6 pb-8 px-6">
             <h3
               class="text-xs font-medium text-gray-900 tracking-wide uppercase"
@@ -78,9 +112,23 @@
               What's included
             </h3>
             <ul class="mt-6 space-y-4">
-              <li v-for="feature in plan.features" :key="feature" class="flex">
-                <svg class="flex-shrink-0 h-5 w-5 text-accent100" />
-                <span class="ml-3 text-base text-gray-500">{{ feature }}</span>
+              <li
+                v-for="feature in plan.features"
+                :key="feature"
+                class="flex items-start"
+              >
+                <svg
+                  class="flex-shrink-0 h-5 w-5 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span class="ml-3 text-base text-gray-700">{{ feature }}</span>
               </li>
             </ul>
           </div>
@@ -88,29 +136,54 @@
       </div>
 
       <!-- FAQ Section -->
-      <div class="w-full max-w-3xl mx-auto">
-        <h4 class="text-2xl font-bold text-gray-900 mt-10 mb-2">
-          Travel Journal FAQs
-        </h4>
-        <p class="text-gray-600 mb-5">
+      <div class="w-full max-w-3xl mx-auto mt-24">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">
+          Frequently Asked Questions
+        </h2>
+        <p class="text-gray-600 mb-8">
           Find answers to common questions about our travel journal plans and
           features.
         </p>
-        <div class="mt-5 max-w-3xl mx-auto divide-y divide-gray-200">
-          <div v-for="(faq, index) in faqs" :key="index" class="py-2">
-            <h3 class="text-lg font-medium text-gray-900">
+
+        <div class="space-y-6">
+          <div
+            v-for="(faq, index) in faqs"
+            :key="index"
+            class="bg-white rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">
               {{ faq.question }}
             </h3>
-            <p class="mt-2text-gray-500">{{ faq.answer }}</p>
+            <p class="text-gray-600">
+              {{ faq.answer }}
+            </p>
           </div>
         </div>
+      </div>
+
+      <!-- CTA Section -->
+      <div
+        class="mt-24 bg-gradient-to-r from-accent100 to-accent200 rounded-2xl p-12 text-center"
+      >
+        <h2 class="text-3xl font-bold text-white mb-4">
+          Ready to Start Your Journey?
+        </h2>
+        <p class="text-xl text-white/90 mb-8">
+          Join thousands of travelers documenting their adventures
+        </p>
+        <button
+          @click="scrollToPlans"
+          class="inline-block px-8 py-4 bg-white text-accent100 rounded-lg font-semibold hover:bg-gray-100 transition-colors shadow-lg"
+        >
+          Choose Your Plan
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 import { usePremium } from "@/composables/usePremium";
@@ -118,50 +191,74 @@ import { fetchSubscriptionPlans } from "@/services/fetchSubscriptionPlans";
 import type { Plan } from "@/types/plans";
 
 const router = useRouter();
-const { upgradeUser } = usePremium();
+const { upgradeUser, checkStatus } = usePremium();
 const { user } = useAuth();
 
-const plans = ref([]);
+const plans = ref<Plan[]>([]);
 const loadingPlans = ref(true);
 const errorPlans = ref<string | null>(null);
-
-onMounted(async () => {
-  try {
-    loadingPlans.value = true;
-    const products = await fetchSubscriptionPlans();
-    plans.value = products;
-  } catch (err: any) {
-    errorPlans.value = err.message || "Failed to load plans";
-  } finally {
-    loadingPlans.value = false;
-  }
-});
+const loadingPlan = ref<string | null>(null);
+const showSuccess = ref(false);
+const isPremiumUser = ref(false);
 
 const faqs = ref([
   {
     question: "Can I switch plans later?",
-    answer: "Yes, you can upgrade or downgrade your plan at any time.",
+    answer:
+      "Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.",
+  },
+  {
+    question: "What happens if I downgrade from Premium to Free?",
+    answer:
+      "You'll keep access to Premium features until the end of your current billing period. After that, your account will revert to Free plan limitations.",
   },
   {
     question: "Do you offer discounts for teams?",
     answer:
-      "We offer special pricing for teams of 5 or more. Contact us for details.",
+      "We offer special pricing for teams of 5 or more. Contact our sales team for custom pricing options.",
   },
   {
     question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards and PayPal.",
+    answer:
+      "We accept all major credit cards (Visa, Mastercard, American Express) and PayPal for your convenience.",
   },
   {
     question: "How can I cancel my subscription?",
     answer:
-      "You can cancel anytime from your account settings with no penalty.",
+      "You can cancel anytime from your account settings. Your access will continue until the end of your current billing period, with no penalty or hidden fees.",
+  },
+  {
+    question: "Is there a free trial for Premium?",
+    answer:
+      "New users get a 14-day free trial of Premium features when they sign up. No credit card required to start!",
   },
 ]);
 
-const loadingPlan = ref<string | null>(null);
-const showSuccess = ref(false);
+// Load plans and check premium status
+const loadPlans = async () => {
+  try {
+    loadingPlans.value = true;
+    errorPlans.value = null;
 
-onMounted(() => {
+    const products = await fetchSubscriptionPlans();
+    plans.value = products;
+
+    // Check if user is premium
+    if (user.value) {
+      await checkStatus();
+      isPremiumUser.value = user.value.is_premium || false;
+    }
+  } catch (err: any) {
+    errorPlans.value = err.message || "Failed to load plans";
+    console.error("Error loading plans:", err);
+  } finally {
+    loadingPlans.value = false;
+  }
+};
+
+onMounted(async () => {
+  await loadPlans();
+
   // Check for success query param
   if (router.currentRoute.value.query.success) {
     showSuccess.value = true;
@@ -169,49 +266,177 @@ onMounted(() => {
   }
 });
 
-const isCurrentPlan = (plan: Plan) => {
+// Check if this is the user's current plan
+const isCurrentPlan = (plan: Plan): boolean => {
   if (!user.value) return false;
-  if (plan.id === "free" && !user.value?.is_premium) return true;
+
+  if (plan.id === "free" && !isPremiumUser.value) {
+    return true;
+  }
+
+  if (plan.id === "premium" && isPremiumUser.value) {
+    return true;
+  }
+
   return false;
 };
 
-const getButtonText = (plan: Plan) => {
-  if (isCurrentPlan(plan)) return "Current Plan";
-  if (loadingPlan.value === plan.id) return "Processing...";
-  return plan.id === "free" ? "Continue with Free" : "Upgrade Now";
+// Determine if button should be shown
+const shouldShowButton = (plan: Plan): boolean => {
+  // Free plan: no button when user is on free
+  if (plan.id === "free" && !isPremiumUser.value) {
+    return false;
+  }
+
+  // Show button for all other cases
+  return true;
 };
 
+// Check if plan is currently loading
+const isLoadingPlan = (plan: Plan): boolean => {
+  return loadingPlan.value === plan.id;
+};
+
+// Get button class based on plan state
+const getButtonClass = (plan: Plan): string => {
+  if (isCurrentPlan(plan)) {
+    return "bg-gray-100 text-gray-500 cursor-not-allowed border-gray-300";
+  }
+
+  if (isLoadingPlan(plan)) {
+    return "bg-gray-200 text-gray-600 cursor-wait border-gray-300";
+  }
+
+  if (plan.featured) {
+    return "bg-accent100 text-white hover:bg-accent200 border-accent100 shadow-lg hover:shadow-xl";
+  }
+
+  return "bg-white text-gray-800 hover:bg-gray-50 border-gray-300 hover:border-accent100";
+};
+
+// Get button text based on plan state
+const getButtonText = (plan: Plan): string => {
+  if (isCurrentPlan(plan)) {
+    return "Current Plan";
+  }
+
+  if (isLoadingPlan(plan)) {
+    return "Processing...";
+  }
+
+  // Free plan logic
+  if (plan.id === "free") {
+    if (isPremiumUser.value) {
+      return "Downgrade to Free";
+    }
+    return "Continue with Free";
+  }
+
+  // Premium plan logic
+  if (isPremiumUser.value && plan.id !== "free") {
+    return "Manage Subscription";
+  }
+
+  return "Upgrade Now";
+};
+
+// Get border class based on plan status
+const getPlanBorderClass = (plan: Plan): string => {
+  if (isCurrentPlan(plan)) {
+    return "border-green-500 ring-2 ring-green-200";
+  }
+
+  if (plan.featured) {
+    return "border-accent100";
+  }
+
+  return "border-gray-200";
+};
+
+// Handle plan selection
 const handlePlanSelection = async (plan: Plan) => {
   if (!plan.prices?.[0]?.id) {
     alert("No price available for this plan.");
     return;
   }
 
+  // Free plan handling
   if (plan.id === "free") {
-    router.push("/");
+    if (isPremiumUser.value) {
+      const confirmed = confirm(
+        "Are you sure you want to downgrade to the Free plan? You'll lose access to premium features at the end of your billing period."
+      );
+      if (confirmed) {
+        router.push("/account/manage-subscription");
+      }
+    } else {
+      router.push("/voyages");
+    }
     return;
   }
 
-  // Ensure user is authenticated before proceeding
+  // Ensure user is authenticated
   if (!user.value) {
-    // Optionally, show a login modal or redirect to login
     router.push("/login");
     return;
   }
 
+  // Premium plan upgrade
   try {
     loadingPlan.value = plan.id;
-    if (!plan.priceId) {
+
+    if (!plan.prices[0].id) {
       throw new Error("Price ID not configured for this plan");
     }
 
     await upgradeUser(plan.prices[0].id);
-    user.value.is_premium = true;
+
+    // Update local state
+    if (user.value) {
+      user.value.is_premium = true;
+      isPremiumUser.value = true;
+    }
+
     showSuccess.value = true;
+    setTimeout(() => {
+      showSuccess.value = false;
+    }, 5000);
   } catch (error) {
     console.error("Subscription error:", error);
+    alert("There was an error processing your subscription. Please try again.");
   } finally {
     loadingPlan.value = null;
   }
 };
+
+// Scroll to plans section
+const scrollToPlans = () => {
+  window.scrollTo({
+    top: 300,
+    behavior: "smooth",
+  });
+};
 </script>
+
+<style scoped>
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    #f6f7f8 0%,
+    #edeef1 20%,
+    #f6f7f8 40%,
+    #f6f7f8 100%
+  );
+  background-size: 1000px 100%;
+}
+</style>

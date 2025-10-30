@@ -55,28 +55,25 @@ export const fetchVoyageById = async (
 
     if (sessionError) {
       console.log("error", sessionError.message);
-
       throw new Error("Authentication error" + sessionError.message);
     }
 
     if (!session) {
       console.log("error");
-
       throw new Error("User must be authenticated to fetch voyages");
     }
-    const response = await supabaseApi.get(`voyages`, {
+
+    // FIX: Use the correct endpoint format for single voyage
+    const response = await supabaseApi.get(`/voyages?id=eq.${id}`, {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
         apiKey: import.meta.env.VITE_SUPABASE_KEY,
         "Content-Type": "application/json",
       },
-      params: {
-        id: `eq.${id}`,
-        select: "*",
-      },
     });
 
-    return response.data?.[0];
+    // FIX: Return the first item from the array or null if empty
+    return response.data?.[0] || null;
   } catch (error: any) {
     console.error("Error fetching voyage:", error);
     throw new Error(

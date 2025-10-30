@@ -4,7 +4,7 @@
       <EditVoyageSkeleton />
     </div>
     <div v-else-if="error">
-      <p>{{ error }}</p>
+      <p class="text-red-600 mb-4">{{ error }}</p>
       <button
         @click="handleFetchSingleVoyage(voyageId)"
         class="px-4 py-2 bg-accent50 text-white rounded"
@@ -12,14 +12,11 @@
         Retry
       </button>
     </div>
-    <main
-      v-else
-      class="max-w-[800px] xl:w-[600px] bg-background100 py-2 mx-auto px-3 my-5"
-    >
+    <main v-else class="bg-background100 py-2 mx-auto px-3 my-5">
       <div class="flex justify-between items-center mb-5">
         <h4 class="text-textblack100">Edit Voyage</h4>
         <CloseIcon
-          @click="navigateToVoyage"
+          @click="navigateToVoyage(voyageId)"
           fillColor="textblack100"
           class="cursor-pointer"
         />
@@ -27,30 +24,38 @@
       <form @submit.prevent="handleEditVoyage" class="space-y-4">
         <!-- Image Section -->
         <div class="space-y-2 relative">
-          <div v-if="isPremium" class="premium-badge">
+          <div
+            v-if="isPremium"
+            class="premium-badge bg-accent50 text-white px-3 py-1 rounded-lg text-sm"
+          >
             <i class="fas fa-crown"></i>
-            Premium User - Up to {{ maxImagesPerEntry }} images per voyage
+            Premium - Up to {{ maxImagesPerEntry }} images per voyage
           </div>
-          <div v-else class="free-tier-info flex flex-col">
-            Free Tier - {{ formData.image_urls.length }}/{{ maxImagesPerEntry }}
-            images used
-            <span @click="upgradeToPremium" class="upgrade-btn underline">
-              Upgrade for more images
-            </span>
+          <div
+            v-else
+            class="free-tier-info bg-gray-100 px-3 py-2 rounded-lg text-sm"
+          >
+            Free Tier - {{ currentImageCount }}/{{ maxImagesPerEntry }} images
+            used
+
+            <button
+              type="button"
+              @click="upgradeToPremium"
+              class="upgrade-btn underline text-accent100 ml-2"
+            >
+              Upgrade for {{ 8 - maxImagesPerEntry }} more images
+            </button>
           </div>
           <input
             type="file"
+            ref="fileInput"
             @change="handleImageUpload"
             accept="image/*"
             class="hidden"
-            ref="fileInput"
           />
 
           <!-- Gallery thumbnails -->
-          <div
-            v-if="formData.image_urls.length"
-            class="flex gap-2 flex-wrap mb-2"
-          >
+          <div v-if="currentImageCount > 0" class="flex gap-2 flex-wrap mb-2">
             <div
               v-for="(thumb, idx) in formData.image_urls"
               :key="idx"
@@ -58,7 +63,11 @@
               :class="{ 'ring-2 ring-accent50': activeIndex === idx }"
               @click="selectImage(idx)"
             >
-              <img :src="thumb" class="w-full h-full object-cover" />
+              <img
+                :src="thumb"
+                class="w-full h-full object-cover"
+                alt="Voyage image"
+              />
               <button
                 type="button"
                 class="absolute -top-2 -right-2 bg-red-600 text-white w-5 h-5 rounded-full text-xs"
@@ -68,20 +77,21 @@
                 ×
               </button>
             </div>
-          </div>
-
-          <div v-if="canAddMoreImages" class="mb-2">
             <button
+              v-if="canAddMoreImages"
               type="button"
               @click="openFileInput"
-              class="px-3 py-1 border border-dashed rounded text-gray-600 hover:bg-gray-50"
+              class="w-16 h-16 border-dashed border-2 border-gray-300 text-gray-400 rounded flex items-center justify-center hover:border-accent50 hover:text-accent50 transition-colors"
+              title="Add image"
             >
-              Add Image
+              +
             </button>
           </div>
 
+          <!-- Action Buttons -->
           <div v-if="showActionButtons" class="flex gap-2 mb-2">
             <button
+              type="button"
               @click="cropImage"
               class="flex md:justify-between items-center gap-1 px-2 bg-accent50 text-white rounded-md hover:bg-accent70 transition-colors"
             >
@@ -89,14 +99,15 @@
               <span class="hidden md:block"> Crop </span>
             </button>
             <button
+              type="button"
               @click="rotate(-90)"
               class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
               <RotateLeft size="24" />
-
               <span class="hidden md:block"> Rotate Left </span>
             </button>
             <button
+              type="button"
               @click="rotate(90)"
               class="flex md:justify-between items-center gap-1 px-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
             >
@@ -143,15 +154,18 @@
               </div>
             </div>
 
+            <!-- Original Image Preview -->
             <img
               v-if="showOriginalImage"
-              :src="formData.image_urls[activeIndex]"
+              :src="formData.image_urls[activeIndex] || formData.image_urls[0]"
               ref="image"
               :style="imageStyle"
               @load="initCropper"
               class="max-w-full max-h-full object-contain"
+              alt="Current voyage image"
             />
 
+            <!-- Crop Box (only visible when editing original) -->
             <div
               v-if="showCropBox"
               ref="cropBox"
@@ -173,6 +187,7 @@
               v-if="showCroppedImage"
               :src="croppedImage"
               class="w-full h-full object-cover"
+              alt="Cropped preview"
             />
 
             <!-- Empty State -->
@@ -206,6 +221,10 @@
                   placeholder="Search for a city or address"
                   class="w-full p-2 border rounded focus:ring-2 focus:ring-accent50 focus:border-transparent"
                 />
+
+                <div v-if="isSearching" class="absolute right-3 top-3">
+                  <Spinner />
+                </div>
                 <ul
                   v-if="locationSuggestions.length > 0"
                   class="absolute z-20 w-full mt-1 bg-white border rounded shadow-lg max-h-60 overflow-auto"
@@ -213,7 +232,7 @@
                   <li
                     v-for="suggestion in locationSuggestions"
                     :key="suggestion.place_id || suggestion.display_name"
-                    @click="selectSuggestionAndMaybePin(suggestion)"
+                    @click="selectAndPinSuggestion(suggestion)"
                     class="p-2 hover:bg-gray-100 cursor-pointer border-b last:border-b-0"
                   >
                     {{ suggestion.display_name }}
@@ -233,19 +252,39 @@
             <MapView />
 
             <!-- Pin Controls -->
-            <div class="mt-3 flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                @click="addPin(selectedLocation)"
-                class="px-3 py-1 bg-accent50 text-white rounded disabled:opacity-50"
-                :disabled="!selectedLocation || reachedPinLimit"
-                title="Pin the selected map location"
+            <div class="mt-3 p-3 bg-gray-50 rounded-lg border">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">
+                  Pinned Locations ({{ pins.length }}/{{ maxPinnedLocations }})
+                </span>
+                <button
+                  type="button"
+                  @click="pinSelectedLocation"
+                  :disabled="!selectedLocation || reachedPinLimit"
+                  class="px-3 py-1 text-sm bg-accent50 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent70 transition-colors"
+                  :title="
+                    reachedPinLimit
+                      ? 'Pin limit reached. Upgrade for more pins.'
+                      : 'Pin the selected location'
+                  "
+                >
+                  Pin This Spot
+                </button>
+              </div>
+
+              <div
+                v-if="!isPremium && reachedPinLimit"
+                class="text-xs text-orange-600 mb-2"
               >
-                Pin This Spot
-              </button>
-              <span class="text-sm text-gray-600"
-                >Pins: {{ pins.length }} / {{ pinLimitDisplay }}</span
-              >
+                Free users can pin up to {{ maxPinnedLocations }} locations.
+                <button
+                  type="button"
+                  @click="upgradeToPremium"
+                  class="underline font-medium"
+                >
+                  Upgrade for {{ 8 - maxPinnedLocations }} more pins
+                </button>
+              </div>
             </div>
 
             <!-- Pinned List -->
@@ -253,19 +292,19 @@
               <div
                 v-for="(p, i) in pins"
                 :key="i"
-                class="flex items-center justify-between py-1 border-b last:border-b-0"
+                class="flex items-center justify-between py-2 border-b last:border-b-0"
               >
-                <div class="text-sm">
-                  <p class="font-medium truncate max-w-[360px]">
+                <div class="text-sm flex-1">
+                  <p class="font-medium truncate max-w-[300px]">
                     {{ p.display_name }}
                   </p>
-                  <p class="text-gray-500">
+                  <p class="text-gray-500 text-xs">
                     {{ p.lat.toFixed(4) }}, {{ p.lon.toFixed(4) }}
                   </p>
                 </div>
                 <button
                   type="button"
-                  class="text-red-600 hover:underline"
+                  class="text-red-600 hover:underline text-sm"
                   @click="removePinAt(i)"
                 >
                   Remove
@@ -273,6 +312,8 @@
               </div>
             </div>
           </div>
+
+          <!-- Date range -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
             <div>
               <label class="block text-textblack100 font-medium mb-1"
@@ -293,6 +334,7 @@
               />
             </div>
           </div>
+
           <!-- Rating -->
           <div>
             <label class="block text-textblack100 font-medium mb-1"
@@ -325,16 +367,17 @@
         </div>
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-3 pt-4">
-          <router-link
-            :to="`/voyages/${voyageId}`"
+          <button
+            type="button"
+            @click="navigateToVoyage(voyageId)"
             class="px-4 py-2 border rounded text-textblack100 hover:bg-gray-100"
           >
             Cancel
-          </router-link>
+          </button>
           <ReusableButton
             type="submit"
             class="px-4 py-2 bg-accent100 hover:bg-accent50 active:bg-accent50 text-white rounded"
-            :disabled="isSubmitting"
+            :disabled="isSubmitting || !hasChanges"
             :label="isSubmitting ? 'Saving...' : 'Save Changes'"
           />
         </div>
@@ -350,11 +393,13 @@ import { useRoute } from "vue-router";
 // imports from PrimeVue
 import Editor from "primevue/editor";
 import Rating from "primevue/rating";
+import Calendar from "primevue/calendar";
 // imports from ui components
 import EditVoyageSkeleton from "@/components/ui/EditVoyageSkeleton.vue";
 import ReusableButton from "@/components/ui/ReusableButton.vue";
 import ReusableInput from "@/components/ui/ReusableInput.vue";
 import Spinner from "@/components/ui/Spinner.vue";
+import MapView from "@/components/MapView.vue";
 // imports from icons
 import EditIcon from "@/assets/icons/EditIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
@@ -362,12 +407,14 @@ import TrashIcon from "@/assets/icons/TrashIcon.vue";
 import CropIcon from "@/assets/icons/CropIcon.vue";
 import RotateRight from "@/assets/icons/RotateRight.vue";
 import RotateLeft from "@/assets/icons/RotateLeft.vue";
-// imports from composables and functions
+import LocationIcon from "@/assets/icons/LocationIcon.vue";
+// imports from composables/functions/types
 import { useVoyageManager } from "@/composables/useVoyageManager";
 import { useImageUpload } from "@/composables/useImageUpload";
 import { useMap } from "@/composables/useMap";
-import { genUtils } from "@/utils/genUtils";
 import { usePremium } from "@/composables/usePremium";
+import { genUtils } from "@/utils/genUtils";
+import type { LocationSuggestion } from "@/types/mapTypes";
 import type { FormDataType } from "@/types/formData";
 import { VoyageTypeInfo } from "@/types/voyage";
 import { showToast } from "@/utils/showToast";
@@ -382,6 +429,7 @@ const {
   navigateToVoyage,
   handleUpdateVoyage,
 } = useVoyageManager();
+
 const { isSubmitting, formatDateForInput, error, upgradeToPremium } =
   genUtils();
 
@@ -399,6 +447,7 @@ const {
   deleteSelectedImage,
   selectImage,
   removeImageAt,
+  modules,
   handles,
   imageStyle,
   cropBoxStyle,
@@ -413,79 +462,147 @@ const {
   showCropBox,
   showCroppedImage,
   showEmptyState,
-  modules,
   activeIndex,
   canAddMoreImages,
   isPremium,
   maxImagesPerEntry,
 } = useImageUpload(formData);
 
+const { limits, loadUserPlan } = usePremium();
+
 const {
   selectedLocation,
   locationSearch,
   locationSuggestions,
+  isSearching,
+  pins,
   searchLocation,
   selectSuggestion,
   useCurrentLocation,
-  pins,
   addPin,
   removePinAt,
+  maxPinnedLocations,
 } = useMap();
-
-const { limits } = usePremium();
 
 // Keep original for diffing
 const original = ref<VoyageTypeInfo | null>(null);
 
+// Computed property to track current image count
+const currentImageCount = computed(() => {
+  return formData.value?.image_urls?.length ?? 0;
+});
+
+const hasChanges = computed(() => {
+  if (!original.value) return false;
+
+  const updates = buildUpdates();
+  return Object.keys(updates).length > 0;
+});
+
+const extractImageUrls = (data: any): string[] => {
+  if (!data) return [];
+
+  if (Array.isArray(data.image_urls) && data.image_urls.length > 0) {
+    return data.image_urls.filter((url: any) => url && typeof url === "string");
+  }
+
+  if (typeof data.image_urls === "string" && data.image_urls.trim()) {
+    try {
+      const parsed = JSON.parse(data.image_urls);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter((url: any) => url && typeof url === "string");
+      }
+    } catch (e) {
+      console.log("JSON parse failed, treating as single URL");
+      return [data.image_urls];
+    }
+  }
+
+  if (data.image_url && typeof data.image_url === "string") {
+    return [data.image_url];
+  }
+
+  return [];
+};
+
 const load = async () => {
-  const voyageId = String(route.params.id);
-  const v = await handleFetchSingleVoyage(voyageId);
+  const id = String(route.params.id);
 
-  if (!v) return;
+  try {
+    const v = await handleFetchSingleVoyage(id);
 
-  original.value = { ...v };
-  formData.value = {
-    image_urls: v.image_urls ?? [],
-    title: v.title ?? "",
-    location: v.location ?? "",
-    start_date: v.start_date ?? "",
-    end_date: v.end_date ?? "",
-    rating: v.rating ?? 0,
-    notes: v.notes ?? "",
-    pins: [],
-    latitude: v.latitude ?? null,
-    longitude: v.longitude ?? null,
-  };
+    if (!v) {
+      error.value = "Failed to load voyage";
+      return;
+    }
+    const imageUrl = extractImageUrls(v);
 
-  if (v.start_date && v.end_date) {
-    dateRange.value = [new Date(v.start_date), new Date(v.end_date)];
-  }
+    original.value = { ...v };
 
-  if (v.location && v.latitude && v.longitude) {
-    selectedLocation.value = {
-      display_name: v.location,
-      lat: v.latitude,
-      lon: v.longitude,
+    // Populate form data with fetched voyage info
+    formData.value = {
+      image_urls: imageUrl,
+      title: v.title ?? "",
+      location: v.location ?? "",
+      start_date: v.start_date ?? "",
+      end_date: v.end_date ?? "",
+      rating: v.rating ?? 0,
+      notes: v.notes ?? "",
+      pins: Array.isArray(v.pins) ? [...v.pins] : [],
+      latitude: v.latitude ?? null,
+      longitude: v.longitude ?? null,
     };
-    locationSearch.value = v.location;
+
+    // Set date range if dates exist
+    if (v.start_date && v.end_date) {
+      try {
+        dateRange.value = [new Date(v.start_date), new Date(v.end_date)];
+      } catch (e) {
+        console.error("Error parsing dates:", e);
+      }
+    }
+
+    // Set location if exists
+    if (v.location && v.latitude && v.longitude) {
+      selectedLocation.value = {
+        display_name: v.location,
+        lat: v.latitude,
+        lon: v.longitude,
+      };
+      locationSearch.value = v.location;
+    }
+
+    // Load existing pins
+    if (v.pins && Array.isArray(v.pins)) {
+      pins.value = [...v.pins];
+    }
+
+    console.log(
+      "Loaded voyage with",
+      formData.value.image_urls.length,
+      "images",
+      formData.value.image_urls
+    );
+  } catch (err) {
+    console.error("Error loading voyage:", err);
+    error.value = "Failed to load voyage. Please try again.";
   }
 };
-onMounted(load);
 
-type MapSuggestion = {
-  display_name: string;
-  lat: string | number;
-  lon: string | number;
-  place_id?: string | number;
-};
+onMounted(async () => {
+  await loadUserPlan();
+  await load();
+});
 
 const buildUpdates = () => {
   const updates: Partial<FormDataType> & {
     latitude?: number | null;
     longitude?: number | null;
   } = {};
+
   if (!original.value) return updates;
 
+  // Compare each field
   if (formData.value.title !== original.value.title)
     updates.title = formData.value.title;
   if (formData.value.location !== original.value.location)
@@ -499,25 +616,49 @@ const buildUpdates = () => {
   if (formData.value.end_date !== original.value.end_date)
     updates.end_date = formData.value.end_date;
 
+  // Compare image URLs
   const origUrl = original.value.image_urls ?? [];
-  if (JSON.stringify(formData.value.image_urls) !== JSON.stringify(origUrl))
-    updates.image_urls = formData.value.image_urls;
+  const currentUrl = formData.value.image_urls ?? [];
+  if (JSON.stringify(currentUrl) !== JSON.stringify(origUrl))
+    updates.image_urls = currentUrl;
+
+  // Compare coordinates
   if (formData.value.latitude !== (original.value.latitude ?? null))
     updates.latitude = formData.value.latitude;
   if (formData.value.longitude !== (original.value.longitude ?? null))
     updates.longitude = formData.value.longitude;
+
+  // Compare pins
+  const origPins = original.value.pins ?? [];
+  if (JSON.stringify(pins.value) !== JSON.stringify(origPins))
+    updates.pins = pins.value;
+
   return updates;
 };
 
 const reachedPinLimit = computed(
-  () => pins.value.length >= limits.maxPinnedLocations
-);
-const pinLimitDisplay = computed(() =>
-  Number.isFinite(limits.maxPinnedLocations) ? limits.maxPinnedLocations : "∞"
+  () => pins.value.length >= maxPinnedLocations.value
 );
 
-const selectSuggestionAndMaybePin = (suggestion: MapSuggestion) => {
-  selectSuggestion(suggestion as any);
+// Auto-pin when selecting suggestion
+const selectAndPinSuggestion = (suggestion: LocationSuggestion) => {
+  selectSuggestion(suggestion);
+
+  // Auto-pin the selected location if not at limit
+  if (!reachedPinLimit.value) {
+    setTimeout(() => {
+      pinSelectedLocation();
+    }, 100);
+  }
+};
+
+const pinSelectedLocation = () => {
+  if (!selectedLocation.value) return;
+
+  const success = addPin(selectedLocation.value);
+  if (!success && reachedPinLimit.value) {
+    showToast("Pin limit reached. Upgrade for more pins.", "warning");
+  }
 };
 
 const handleEditVoyage = async () => {
@@ -539,18 +680,25 @@ const handleEditVoyage = async () => {
     });
 
     if (updated) {
+      showToast("Voyage updated successfully!", "success");
       navigateToVoyage(voyageId.value);
     }
   } catch (err) {
     console.error("Error updating voyage:", err);
+    showToast("Failed to update voyage. Please try again.", "error");
   } finally {
     isSubmitting.value = false;
   }
 };
 
-watch(pins, (nv) => {
-  formData.value.pins = nv;
-});
+// Watch pins for changes
+watch(
+  pins,
+  (nv) => {
+    formData.value.pins = nv;
+  },
+  { deep: true }
+);
 
 interface DateRange extends Array<Date> {
   0: Date;
@@ -567,6 +715,7 @@ const handleDateRangeChange = (range: DateRange | null) => {
     formData.value.end_date = "";
   }
 };
+
 // Date constraints
 const minSelectableDate = computed(() => new Date());
 const maxSelectableDate = computed(() => {
@@ -574,6 +723,7 @@ const maxSelectableDate = computed(() => {
   date.setFullYear(date.getFullYear() + 1);
   return date;
 });
+
 // Watch for location changes and update form data
 watch(selectedLocation, (newLocation) => {
   if (newLocation) {
@@ -587,6 +737,9 @@ watch(selectedLocation, (newLocation) => {
   }
 });
 
+const typedHandles = handles as HandleKey[];
+
+// Add handleClasses mapping for crop handles
 type HandleKey =
   | "top-left"
   | "top-right"
@@ -596,8 +749,6 @@ type HandleKey =
   | "bottom"
   | "left"
   | "right";
-
-const typedHandles = handles as HandleKey[];
 
 const handleClasses: Record<HandleKey, string> = {
   "top-left": "top-0 left-0 cursor-nwse-resize",

@@ -1,14 +1,3 @@
-export type Plan = {
-  id: string;
-  name: string;
-  prices: string | number;
-  period: string;
-  description: string;
-  features: string[];
-  featured: boolean;
-  priceId: string;
-};
-
 export interface StripePrice {
   id: string;
   amount: number;
@@ -21,7 +10,18 @@ export interface StripeProduct {
   id: string;
   name: string;
   description: string;
-  features: string[];
+  features: string[] | string;
   featured: boolean;
   prices: StripePrice[];
 }
+
+export type Plan = {
+  id: string;
+  name: string;
+  prices: string | number | StripePrice[];
+  period?: string;
+  description: string;
+  features: string[] | string;
+  featured: boolean;
+  priceId?: string;
+};

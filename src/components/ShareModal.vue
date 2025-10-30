@@ -3,7 +3,7 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
   >
     <div class="bg-white rounded-lg w-full max-w-md overflow-hidden shadow-xl">
-      <!-- Header with close button -->
+      <!-- Header -->
       <div class="p-6 pb-4 border-b">
         <header class="flex justify-between items-center mb-2">
           <div class="w-min p-4 bg-gray-100 rounded-full">
@@ -16,9 +16,7 @@
         <div class="flex justify-between items-start">
           <div>
             <h2 class="text-xl font-bold text-gray-900">Share with Friends</h2>
-            <p class="text-sm text-gray-500 mt-1">
-              Ask them what they think about your Trip
-            </p>
+            <p class="text-sm text-gray-500 mt-1">Share your amazing journey</p>
           </div>
         </div>
       </div>
@@ -49,11 +47,47 @@
         </div>
 
         <!-- PDF Download Button -->
-        <!-- <PremiumButton
-          :isPremium="user.isPremium"
-          @click="handleDownloadPdf"
-          label="Export as PDF"
-        /> -->
+        <div class="mb-6">
+          <button
+            @click="handleDownloadPdf"
+            :disabled="isExporting"
+            :class="[
+              'w-full flex justify-center items-center gap-2 px-4 py-2.5 rounded-md shadow-sm text-sm font-medium transition-colors',
+              canExportPdf
+                ? 'bg-accent100 text-white hover:bg-accent200'
+                : 'bg-gray-100 text-gray-500 cursor-not-allowed relative group',
+            ]"
+          >
+            <DownloadIcon :fillColor="canExportPdf ? '#fff' : '#6b7280'" />
+            <span>{{
+              isExporting ? "Generating PDF..." : "Export as PDF"
+            }}</span>
+
+            <!-- Premium badge for free users -->
+            <PremiumIcon
+              v-if="!canExportPdf"
+              fillColor="#f59e0b"
+              size="16"
+              class="ml-1"
+            />
+
+            <!-- Tooltip for free users -->
+            <div
+              v-if="!canExportPdf"
+              class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
+            >
+              Premium feature - Upgrade to export PDFs
+              <div
+                class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1"
+              >
+                <div
+                  class="border-4 border-transparent border-t-gray-800"
+                ></div>
+              </div>
+            </div>
+          </button>
+        </div>
+
         <!-- Social Share Buttons -->
         <div>
           <p class="text-sm font-medium text-gray-700 mb-3">Share to</p>
@@ -93,32 +127,32 @@ import ShareIcon from "@/assets/icons/ShareIcon.vue";
 import CloseIcon from "@/assets/icons/CloseIcon.vue";
 import CopyIcon from "@/assets/icons/CopyIcon.vue";
 import CopiedIcon from "@/assets/icons/CopiedIcon.vue";
-// import PremiumButton from "@/components/ui/PremiumButton.vue";
-
+import DownloadIcon from "@/assets/icons/DownloadIcon.vue";
+import PremiumIcon from "@/assets/icons/PremiumIcon.vue";
 import type { Platform } from "@/types/social";
 import { platforms } from "@/constants/constant";
-// import { usePdfExport } from "@/composables/usePdfExport";
+import { usePdfExport } from "@/composables/usePdfExport";
+import { useToast } from "@/composables/useToast";
 
-// const user = ref({
-//   isPremium: false, // Will show tooltip on hover
-// });
+interface Props {
+  contentElementId?: string;
+  defaultFilename?: string;
+}
 
-// interface Props {
-//   contentElementId?: string;
-//   defaultFilename?: string;
-// }
+const props = withDefaults(defineProps<Props>(), {
+  contentElementId: "journal-content",
+  defaultFilename: "my-voyage",
+});
 
-// const props = withDefaults(defineProps<Props>(), {
-//   contentElementId: "share-content",
-//   defaultFilename: "my-journal",
-// });
+const emit = defineEmits(["close"]);
 
-// const emit = defineEmits(["close"]);
+const { exportToPdf, canExportPdf } = usePdfExport();
+const { addToast } = useToast();
 
-// const { exportToPdf } = usePdfExport();
 const urlInput = ref<HTMLInputElement | null>(null);
 const pageUrl = ref(window.location.href);
 const isCopied = ref(false);
+const isExporting = ref(false);
 
 const selectUrlText = () => {
   if (urlInput.value) {
@@ -130,19 +164,32 @@ const copyLink = async () => {
   try {
     await navigator.clipboard.writeText(pageUrl.value);
     isCopied.value = true;
+    addToast("Link copied to clipboard!", { type: "success" });
     setTimeout(() => {
       isCopied.value = false;
     }, 2000);
   } catch (err) {
     console.error("Failed to copy:", err);
+    addToast("Failed to copy link", { type: "error" });
     selectUrlText();
   }
 };
 
-// const handleDownloadPdf = () => {
-//   exportToPdf(props.contentElementId, props.defaultFilename);
-//   emit("close");
-// };
+const handleDownloadPdf = async () => {
+  if (!canExportPdf) {
+    return; // Button is disabled, but just in case
+  }
+
+  isExporting.value = true;
+  try {
+    await exportToPdf(props.contentElementId, props.defaultFilename);
+    emit("close");
+  } catch (error) {
+    console.error("PDF export failed:", error);
+  } finally {
+    isExporting.value = false;
+  }
+};
 
 const share = (platform: Platform) => {
   const shareUrl = new URL(pageUrl.value);
@@ -175,5 +222,6 @@ const share = (platform: Platform) => {
   }
 
   window.open(url, "_blank", "noopener,noreferrer");
+  addToast(`Sharing to ${platform.socialMedia}...`, { type: "info" });
 };
 </script>

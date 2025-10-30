@@ -49,7 +49,7 @@ interface VoyageManager {
   // Actions
   editVoyage: (voyageId: string) => void;
   confirmDeleteVoyage: (voyageId: string) => void;
-  handleEdit: () => void;
+  // handleEdit: () => void;
   handleFetchVoyages: () => Promise<void>;
   handleFetchSingleVoyage: (voyageId: string) => Promise<VoyageTypeInfo | null>;
   handleCreateVoyage: (
@@ -193,7 +193,10 @@ export const useVoyageManager = (): VoyageManager => {
     isLoading.value = true;
     error.value = null;
     try {
+      console.log("Fetching voyage with ID:", voyageId);
       const foundVoyage = await fetchVoyageById(voyageId);
+      console.log("Found voyage:", foundVoyage);
+
       if (!foundVoyage) {
         error.value = "Voyage not found";
         return null;
@@ -320,12 +323,12 @@ export const useVoyageManager = (): VoyageManager => {
     navigateToEdit(voyageId);
   };
 
-  const handleEdit = () => {
-    if (currentVoyageId.value) {
-      editVoyage(currentVoyageId.value);
-      closeModal();
-    }
-  };
+  // const handleEdit = () => {
+  //   if (currentVoyageId.value) {
+  //     editVoyage(currentVoyageId.value);
+  //     closeModal();
+  //   }
+  // };
 
   const handleDeleteVoyage = async (voyageId: string): Promise<void> => {
     try {
@@ -411,7 +414,7 @@ export const useVoyageManager = (): VoyageManager => {
     openOptionsModal,
     editVoyage,
     confirmDeleteVoyage,
-    handleEdit,
+    // handleEdit,
     handleFetchSingleVoyage,
     handleCreateVoyage,
     handleFetchVoyages,

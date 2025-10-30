@@ -1,6 +1,6 @@
 <template>
   <main
-    class="h-full pb-5 bg-background100 dark:bg-dark-background100 transition-colors"
+    class="h-screen pb-5 bg-background100 dark:bg-dark-background100 transition-colors"
   >
     <header
       class="flex justify-between items-center sticky top-0 z-50 w-full bg-white dark:bg-dark-background100 border-b border-gray-200 dark:border-dark-border100 transition-shadow px-2 py-2"

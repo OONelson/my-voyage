@@ -3,7 +3,7 @@
     <Transition name="modal" appear>
       <div
         v-if="isOpen"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center py-4 px-2"
         @click.self="closeModal"
       >
         <!-- Backdrop -->

@@ -1,4 +1,4 @@
-import { ref, onUnmounted, computed } from "vue";
+import { ref, onUnmounted, onMounted, computed } from "vue";
 import maplibregl, {
   type Map,
   type Marker,
@@ -10,9 +10,7 @@ import { debounce } from "@/utils/debounce";
 import type { LocationSuggestion, SelectedLocation } from "@/types/mapTypes";
 
 export const useMap = () => {
-  const { limits } = usePremium(); // limits should be a computed ref
-
-  // Defensive default for maxPinnedLocations
+  const { limits } = usePremium();
   const maxPinnedLocations = computed(() => limits.maxPinnedLocations ?? 3);
 
   const map = ref<Map>();
@@ -370,6 +368,11 @@ export const useMap = () => {
     map.value?.remove();
   });
 
+  onMounted(async () => {
+    if (mapContainer.value) {
+      await initMap(mapContainer.value);
+    }
+  });
   return {
     map,
     mapContainer,
